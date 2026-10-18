@@ -11,7 +11,7 @@ playwright-report
 test-results
 *.local
 .vite
-.claude/settings.local.json
+.claude/*
 
 # Duplicate copy of the spec pack (D4); specs/ is the source of truth
 Digital_III_Missions_Spec_Pack/
