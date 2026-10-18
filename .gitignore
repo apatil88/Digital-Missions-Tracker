@@ -12,3 +12,6 @@ test-results
 *.local
 .vite
 .claude/settings.local.json
+
+# Duplicate copy of the spec pack (D4); specs/ is the source of truth
+Digital_III_Missions_Spec_Pack/
