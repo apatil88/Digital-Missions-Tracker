@@ -351,7 +351,7 @@ export function Notice({ tone = 'info', children }: { tone?: 'info' | 'warning';
       )}
     >
       <Info aria-hidden className="mt-0.5 size-4 shrink-0" />
-      <div>{children}</div>
+      <div className="min-w-0 break-words">{children}</div>
     </div>
   )
 }

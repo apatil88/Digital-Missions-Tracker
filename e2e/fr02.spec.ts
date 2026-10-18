@@ -254,4 +254,34 @@ test.describe('FR02 administrator controls', () => {
     await expectNoHorizontalOverflow(fam)
     await ctx.close()
   })
+
+  test('D-FR02-1 / D-FR02-5 a 120-character cycle name without spaces wraps instead of widening the page', async ({ page, browser }) => {
+    await signInAs(page, FIXTURE_EMAILS.admin1)
+    const name = ('Longname' + Math.random().toString(36).slice(2, 8)).padEnd(120, 'W')
+    expect(name).toHaveLength(120)
+    await createCycle(page, name)
+    await expectNoHorizontalOverflow(page)
+    await expectTouchTargets(page)
+
+    await page.getByRole('button', { name: `Edit ${name}`, exact: true }).click()
+    await expectNoHorizontalOverflow(page)
+    await page.getByRole('button', { name: 'Cancel', exact: true }).click()
+
+    await assignStudents(page, name, ['Sample Child A2'])
+    await expect(page.getByRole('region', { name: 'Results' })).toContainText('Sample Child A2: Assigned')
+    await expectNoHorizontalOverflow(page)
+
+    await page.goto('/admin/settings/cycles')
+    await page.getByRole('button', { name: `Archive ${name}`, exact: true }).click()
+    await page.getByRole('button', { name: 'Archive cycle', exact: true }).click()
+    await expect(page.getByText('Every assignment must be approved')).toBeVisible()
+    await expectNoHorizontalOverflow(page)
+
+    const ctx = await browser.newContext({ viewport: { width: 360, height: 740 } })
+    const fam = await ctx.newPage()
+    await signInAs(fam, FIXTURE_EMAILS.familyA)
+    await expect(fam.getByRole('region', { name: 'Assigned missions' })).toContainText(name)
+    await expectNoHorizontalOverflow(fam)
+    await ctx.close()
+  })
 })

@@ -134,7 +134,7 @@ function CycleForm({
   const graduationChanged = editing && grad !== cycle.graduation_date
   return (
     <form onSubmit={onSubmit} noValidate id="cycle-form" className="flex flex-col gap-4 rounded-card border border-line bg-card p-4">
-      <h2 className="text-lg font-semibold">{editing ? `Edit ${cycle.name}` : 'New cycle'}</h2>
+      <h2 className="break-words text-lg font-semibold">{editing ? `Edit ${cycle.name}` : 'New cycle'}</h2>
       {locked && (
         <Notice>
           Missions are assigned in this cycle. Activity dates, timezone and cutoff are locked here. Changes to them need the cutoff controls or a separately approved change plan. You can still rename the cycle or move the graduation date.
@@ -336,7 +336,7 @@ export function AdminCycles() {
           const count = cycles.data?.counts.get(c.id) ?? 0
           return (
             <li key={c.id} className="flex flex-col gap-2 rounded-card border border-line bg-card p-4">
-              <p className="text-lg font-semibold">{c.name}</p>
+              <p className="break-words text-lg font-semibold">{c.name}</p>
               <p className="text-sm font-semibold">{c.archived_at ? 'Archived' : 'Active'}</p>
               <p className="text-sm text-muted">
                 Activities {plainDate(c.activity_start_date)} to {plainDate(c.activity_end_date)} · Graduation {plainDate(c.graduation_date)}

@@ -119,10 +119,10 @@ export function Family() {
         <ul className="flex flex-col gap-2">
           {assigned.data?.map((a) => (
             <li key={a.id} className="rounded-card border border-line bg-card p-4">
-              <p className="font-semibold">
+              <p className="break-words font-semibold">
                 {a.student?.display_name}: {a.template ? missionName(a.template.type) : 'Mission'}
               </p>
-              <p className="text-sm text-muted">{a.cycle?.name}</p>
+              <p className="break-words text-sm text-muted">{a.cycle?.name}</p>
               {a.cycle && (
                 <p className="text-sm text-muted">
                   Cutoff {formatInstant(a.cycle.cutoff_at, a.cycle.timezone)} ({a.cycle.timezone})
