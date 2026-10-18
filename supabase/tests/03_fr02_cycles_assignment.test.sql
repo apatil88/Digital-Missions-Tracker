@@ -2,7 +2,7 @@
 -- Builds its own fictional data inside the transaction; everything rolls back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(152);
+select plan(159);
 
 -- ------------------------------------------------------------------ fixture
 insert into auth.users (id, email, email_confirmed_at) values
@@ -384,6 +384,32 @@ select throws_ok($$delete from public.submissions where id = '5b200000-0000-4000
 select lives_ok($$update public.assignments set state = 'in_progress' where id = (select (r->'data'->>'assignment_id')::uuid from r_a1)$$,
   'FR02-R04 later features can still advance the assignment state');
 update public.assignments set state = 'not_started' where id = (select (r->'data'->>'assignment_id')::uuid from r_a1);
+
+-- ------------------------------------- one mission per type (FR02-R07, AC08)
+update public.mission_templates set enabled = true where id = '7e200000-0000-4000-8000-000000000002';
+select set_config('request.jwt.claims', '{"sub":"ad200000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+set local role authenticated;
+select is(public.assign_mission('a5200000-0000-4000-8000-0000000000a2', '7e200000-0000-4000-8000-000000000005',
+    (select (r->'data'->>'cycle_id')::uuid from r_draft), gen_random_uuid())->'error'->>'code',
+  'INVALID_STATE', 'FR02-AC08 a second Teamwork version for the same student and cycle is rejected');
+select is((select count(*)::int from public.assignments where student_id = 'a5200000-0000-4000-8000-0000000000a2'
+    and cycle_id = (select (r->'data'->>'cycle_id')::uuid from r_draft) and mission_type = 'teamwork'), 1,
+  'FR02-AC08 the student still has exactly one Teamwork assignment');
+select is(public.assign_mission('a5200000-0000-4000-8000-0000000000a2', '7e200000-0000-4000-8000-000000000002',
+    (select (r->'data'->>'cycle_id')::uuid from r_draft), gen_random_uuid())->'data'->>'created',
+  'true', 'FR02-AC08 Respect can still be assigned to the same student in the same cycle');
+select is(public.assign_mission('a5200000-0000-4000-8000-0000000000a2', '7e200000-0000-4000-8000-000000000001',
+    (select (r->'data'->>'cycle_id')::uuid from r_draft), gen_random_uuid())->'data'->>'created',
+  'false', 'FR02-AC08 re-assigning the same Teamwork version still returns the existing assignment');
+reset role;
+select throws_ok($$insert into public.assignments (school_id, student_id, cycle_id, template_id, frozen_template_version, frozen_instructions, frozen_required_count, frozen_repeat_limit)
+  values ('57200000-0000-4000-8000-000000000001', 'a5200000-0000-4000-8000-0000000000a2', (select (r->'data'->>'cycle_id')::uuid from r_draft), '7e200000-0000-4000-8000-000000000005', 2, 'x', 50, 2)$$,
+  '23505', null, 'FR02-AC08 the database itself refuses a second assignment of the same type');
+select is((select mission_type from public.assignments where id = (select (r->'data'->>'assignment_id')::uuid from r_a2)), 'teamwork',
+  'FR02-AC08 the mission type is taken from the template');
+select throws_ok($$update public.assignments set mission_type = 'respect' where id = (select (r->'data'->>'assignment_id')::uuid from r_a2)$$,
+  '42501', null, 'FR02-AC08 the mission type of an assignment cannot be changed');
+update public.mission_templates set enabled = false where id = '7e200000-0000-4000-8000-000000000002';
 
 -- ------------------------------------------ prior-cycle history (AC05)
 -- Prior cycle: approved mission with one record.

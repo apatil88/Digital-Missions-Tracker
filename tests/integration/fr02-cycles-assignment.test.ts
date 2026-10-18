@@ -131,6 +131,32 @@ describe('FR02-AC01 duplicates and concurrency', () => {
     expect((await assign(admin, fid('student-a1'), cycle.id)).ok).toBe(true)
   })
 
+  it('FR02-R07 two Teamwork versions raced for one student and cycle: exactly one assignment exists', async () => {
+    const sb = serviceClient()
+    const version = 1000 + Math.floor(Math.random() * 1_000_000)
+    const { data: v2, error } = await sb
+      .from('mission_templates')
+      .insert({ school_id: '00000000-0000-4000-8000-000000000001', type: 'teamwork', version, approved_instructions: 'SAMPLE race version', enabled: true, approved_content: true })
+      .select('id')
+      .single()
+    if (error) throw error
+    try {
+      const cycle = await newCycle()
+      const results = await Promise.all([
+        assign(admin, fid('student-a1'), cycle.id),
+        rpc(admin, 'assign_mission', { p_student_id: fid('student-a1'), p_template_id: v2.id, p_cycle_id: cycle.id, p_request_id: randomUUID() }),
+      ])
+      expect(results.filter((r) => r.ok)).toHaveLength(1)
+      expect(results.find((r) => !r.ok)?.error?.code).toBe('INVALID_STATE')
+      const { data } = await sb.from('assignments').select('mission_type').eq('cycle_id', cycle.id).eq('student_id', fid('student-a1'))
+      expect(data).toEqual([{ mission_type: 'teamwork' }])
+    } finally {
+      // Leave the seed school as found: the throwaway template and anything assigned from it go.
+      await sb.from('assignments').delete().eq('template_id', v2.id)
+      await sb.from('mission_templates').delete().eq('id', v2.id)
+    }
+  })
+
   it('FR02-R03 the same request id returns the first result, a changed payload is refused', async () => {
     const cycle = await newCycle()
     const key = randomUUID()
