@@ -7,7 +7,7 @@ Stack (D11, proposed)
 React, TypeScript and Vite. Tailwind CSS with shadcn/ui components. React Router and TanStack Query. Supabase Postgres, Auth and row-level security. Transactional commands as Postgres functions called through Supabase RPC. Edge Functions only for privileged provider calls such as sending invitations. vite-plugin-pwa for the service worker. Vitest for unit tests, pgTAP through the Supabase CLI for database and policy tests, Playwright for browser tests.
 
 Commands (created by F00, then kept stable)
-npm run dev, npm run build, npm run lint, npm run typecheck, npm run test (Vitest), npm run test:db (supabase test db), npm run test:e2e (Playwright), npm run db:reset (local stack only: reruns migrations and the demo seed). supabase start and supabase stop control the local stack.
+npm run dev, npm run build, npm run lint, npm run typecheck, npm run test (Vitest), npm run test:db (supabase test db), npm run test:e2e (Playwright), npm run db:reset (local stack only: reruns migrations and the demo seed). npm run db:start starts the local stack including the Edge Function runtime and Mailpit (plain supabase start does not start them, and invitation tests need both). npm run env:local writes the local .env.local. Docker must be running. supabase stop stops the stack.
 
 Users
 Parent or guardian manages children. Adult student manages their adult profile. Both use family permissions. Instructor reviews school submissions. School administrator has instructor rights plus invitations, assignment, catalog enablement, cutoff configuration, and exceptions. A person might have family and staff memberships. Children have no login. One managing adult account per family for the pilot.
@@ -47,8 +47,12 @@ Do not commit .env files, keys, tokens or test passwords. Keep variable names in
 Add schema changes as new files in supabase/migrations. Do not edit a migration that has already been merged.
 Do not disable row-level security, loosen a policy, skip a test, or weaken an assertion to make a test pass.
 Explain any new dependency outside D11 in the plan before installing it.
-Do not push or merge. The owner reviews the diff.
+Do not push or merge unless the owner asks in the current session. The owner reviews the diff.
 Evidence means the command you ran and the result you observed.
+Keep DEFECTS.md and specs/reports/ untracked and update them locally. When a defect is fixed, update both DEFECTS.md and the originating feature report, then check the edit applied.
+Commit as the name apatil with no email address, and keep personal data out of commits, messages and tracked files.
+Run lint, typecheck, build, test, test:db and test:e2e on the result before any merge.
+After each feature, give the owner a paste-ready verification prompt for a fresh session and a table of open and fixed defect counts and percentages from DEFECTS.md.
 
 Reference documents
 specs/02_SHARED_CONTRACTS.txt
