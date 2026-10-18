@@ -14,4 +14,4 @@ test-results
 .claude/*
 
 # Duplicate copy of the spec pack (D4); specs/ is the source of truth
-Digital_III_Missions_Spec_Pack/
+Digital_III_Missions_*Spec_Pack/
