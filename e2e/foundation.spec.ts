@@ -51,7 +51,8 @@ test.describe('F00-R04 routes and guards', () => {
     await page.goto('/staff/reviews')
     await expect(page.getByText('The review queue is not available yet')).toBeVisible()
     await page.goto('/admin/settings')
-    await expect(page.getByText('Administrator settings is not available yet')).toBeVisible()
+    // FR02 delivers the administrator settings; the honest placeholder remains for features not built yet.
+    await expect(page.getByRole('link', { name: 'Graduation cycles' })).toBeVisible()
   })
 
   test('unknown routes show a not-found page', async ({ page }) => {
@@ -105,7 +106,7 @@ test.describe('F00-AC04 360px layout, keyboard and touch', () => {
 test.describe('F00-AC05 no cached authenticated data after logout', () => {
   test('F00-AC05 logout then offline reload shows no family record, and no API response is cached', async ({ page, context }) => {
     await signIn(page, FIXTURE_EMAILS.familyA)
-    await expect(page.getByText('Sample Child A1')).toBeVisible()
+    await expect(page.getByText('Sample Child A1').first()).toBeVisible()
     await page.evaluate(() => navigator.serviceWorker.ready)
 
     await page.getByRole('button', { name: 'Sign out' }).click()
@@ -131,7 +132,7 @@ test.describe('F00-AC05 no cached authenticated data after logout', () => {
 
   test('F00-AC05 switching accounts never shows the previous family', async ({ page }) => {
     await signIn(page, FIXTURE_EMAILS.familyA)
-    await expect(page.getByText('Sample Child A1')).toBeVisible()
+    await expect(page.getByText('Sample Child A1').first()).toBeVisible()
     await page.getByRole('button', { name: 'Sign out' }).click()
     await signIn(page, FIXTURE_EMAILS.familyB)
     await expect(page.getByText('Sample Child B1')).toBeVisible()

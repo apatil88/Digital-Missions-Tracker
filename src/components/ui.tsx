@@ -274,6 +274,7 @@ export function ConfirmDialog({
   onConfirm,
   busy,
   destructive,
+  children,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -283,6 +284,7 @@ export function ConfirmDialog({
   onConfirm: () => void
   busy?: boolean
   destructive?: boolean
+  children?: ReactNode
 }) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -291,6 +293,7 @@ export function ConfirmDialog({
         <Dialog.Content className="fixed left-1/2 top-1/2 w-[calc(100vw-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-card bg-card p-5 shadow-lg">
           <Dialog.Title className="text-lg font-semibold">{title}</Dialog.Title>
           <Dialog.Description className="mt-2 text-muted">{description}</Dialog.Description>
+          {children}
           <div className="mt-5 flex flex-wrap justify-end gap-2">
             <Dialog.Close asChild>
               <Button variant="secondary">Cancel</Button>
