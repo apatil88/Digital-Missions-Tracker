@@ -1,4 +1,4 @@
-[Unverified] Project specification v0.2. Proposed behavior pending the decisions in specs/03_DECISIONS.txt. This text is copied to AGENTS.md at the project root, and CLAUDE.md imports it.
+Project specification v0.2. Proposed behavior pending the decisions in specs/03_DECISIONS.txt. This text is copied to AGENTS.md at the project root, and CLAUDE.md imports it.
 
 Product
 Digital III Missions Tracker for one martial arts school. Build a mobile-first PWA with a Supabase backend as proposed in the PRD, using a terminal coding agent. Use the D11 stack. Inspect the existing repository and integrations before adding libraries or generating migrations. Do not switch backend products without product-owner agreement.
