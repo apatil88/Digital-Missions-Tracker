@@ -135,7 +135,7 @@ test.describe('F00-AC05 no cached authenticated data after logout', () => {
     await expect(page.getByText('Sample Child A1').first()).toBeVisible()
     await page.getByRole('button', { name: 'Sign out' }).click()
     await signIn(page, FIXTURE_EMAILS.familyB)
-    await expect(page.getByText('Sample Child B1')).toBeVisible()
+    await expect(page.getByText('Sample Child B1').first()).toBeVisible()
     await expect(page.getByText('Sample Child A1')).toHaveCount(0)
   })
 })
