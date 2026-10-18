@@ -2,7 +2,7 @@
 
 Mobile-first PWA for one martial arts school: families log and attest Teamwork and Respect mission activities, instructors review. React + TypeScript + Vite, Tailwind, shadcn/ui-style components, Supabase (Postgres, Auth, RLS). All data in this repository is fictional.
 
-Status: **F00 foundation and FR01 (account invitations and family profiles).** FR02 to FR15 are not built. Specifications live in `specs/`; start at `specs/00_START_HERE.txt`.
+Status: **F00 foundation and FR01 (account invitations and family profiles).** FR02 to FR15 are not built. Specifications live in `specs/`; start at `specs/00_START_HERE.md`.
 
 ## Prerequisites
 

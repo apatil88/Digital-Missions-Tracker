@@ -1,28 +1,42 @@
-[Unverified] FR02 Mission configuration and assignment
+# [Unverified] FR02 Mission configuration and assignment
+
 Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+
 Status Proposed for fictional-data implementation
+
 Source PRD FR02 and workflow discussion
+
 Priority Required MVP feature
+
 Build position 2 after F00
 
-1 Outcome
+## 1 Outcome
+
 An administrator defines a cycle and assigns one versioned mission to each selected student.
 
-2 Context required for the coding agent
-Read 01_PROJECT_KNOWLEDGE.txt, 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt and 05_TEST_FIXTURES.txt with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+## 2 Context required for the coding agent
+
+Read 01_PROJECT_KNOWLEDGE.md, 02_SHARED_CONTRACTS.md, 03_DECISIONS.md and 05_TEST_FIXTURES.md with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+
 Dependencies: F00, FR01. Implemented prerequisites must have acceptance evidence. If a prerequisite is absent, report the exact missing dependency. Do not silently fake backend behavior.
 
-3 Users and permissions
+## 3 Users and permissions
+
 Parent: view assigned missions, no self-assignment.
+
 Adult student: view own assignment, no self-assignment.
+
 Instructor: read school assignments.
+
 Administrator: configure cycle, assign mission, enable approved catalog, archive eligible cycles.
 
-4 User workflow and screens
+## 4 User workflow and screens
+
 Open /admin/settings/cycles, create a cycle, enter dates and explicit timezone/cutoff, and review the summary. Open roster, select students and a mission type, then assign. Show per-student success or failure. Families see assignments in their workspace. For the early build use explicitly seeded cutoffs until FR10 provides the final configuration interface.
 
-5 Functional requirements
-FR02-R01 Require cycle name, activity start/end, graduation date, school timezone and resolved cutoff. Validate start <= end and end <= graduation. No inferred production timezone or cutoff time.
+## 5 Functional requirements
+
+FR02-R01 Require cycle name, activity start/end, graduation date, school timezone and resolved cutoff. Validate start \<= end and end \<= graduation. No inferred production timezone or cutoff time.
 
 FR02-R02 Assign exactly one student/template/cycle combination. Copy template version, instructions, count 50 and repeat limit 2 into the assignment. Required means every assigned mission counts toward mission completion.
 
@@ -34,20 +48,30 @@ FR02-R05 Allow draft cycle edits before assignment. After assignment, cutoff cha
 
 FR02-R06 Archive only under C03 rules, with an administrator Restore cycle action before any later reopening. Restore changes archive status without resetting missions. New cycle assignments start at zero. Catalog enablement does not modify submitted content. Pilot catalog enablement requires approved content status.
 
-6 Data and logical operation contracts
+## 6 Data and logical operation contracts
+
 create_cycle(name, dates, timezone, explicit_cutoff, request_id) -> cycle_id, version.
+
 update_cycle(cycle_id, permitted_fields, expected_version, request_id) -> cycle, version. Cutoff semantics delegated to FR10.
+
 assign_mission(student_id, template_id, cycle_id, request_id) -> assignment_id, created boolean.
+
 set_catalog_enabled(template_id, enabled, expected_version, request_id) -> enabled.
+
 archive_cycle(cycle_id, expected_version, request_id) -> archive result.
+
 restore_cycle(cycle_id, reason, expected_version, request_id) -> restored cycle and version. Admin only, audited, no mission state changes.
+
 Admin-only mutations. Reads scoped to staff or owning family. No content editor beyond these controls.
+
 Logical names are proposed. Map to actual inspected backend operations and preserve behavior. All reads and writes inherit C01 and C04. All UI states inherit C08.
 
-7 Errors and recovery
+## 7 Errors and recovery
+
 INVALID_DATE_RANGE, POLICY_NOT_CONFIGURED, CONTENT_NOT_APPROVED, CYCLE_ARCHIVED, CYCLE_HAS_UNFINISHED_WORK, plus C04 errors. Partial bulk success names only authorized students.
 
-8 Acceptance scenarios
+## 8 Acceptance scenarios
+
 FR02-AC01 Given valid cycle and active student, when assigning Teamwork twice, then one assignment exists with frozen template rules.
 
 FR02-AC02 Given missing cutoff time or timezone, when creating a live cycle, then validation blocks creation.
@@ -61,24 +85,33 @@ FR02-AC05 Given an approved prior-cycle mission, when a new cycle is assigned, t
 FR02-AC06 Given any assignment not approved, including a submitted mission awaiting review, when an administrator archives the cycle, then the archive fails and affected assignments are identified.
 
 FR02-AC07 Given an archived approved cycle, when an administrator restores with a reason, then archive status clears while approved states and historical snapshots remain unchanged.
+
 These scenarios are specified, not executed. Test actual behavior and backend authorization. Record PASS, FAIL or NOT RUN with evidence for every identifier.
 
-9 Implementation task sequence
-Map configuration schema. Add template version freezing and unique assignment constraint. Implement cycle/assignment commands. Build cycle and roster controls. Add duplicate, partial-batch, and unauthorized tests.
-Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.txt.
+## 9 Implementation task sequence
 
-10 Exclusions
+Map configuration schema. Add template version freezing and unique assignment constraint. Implement cycle/assignment commands. Build cycle and roster controls. Add duplicate, partial-batch, and unauthorized tests.
+
+Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.md.
+
+## 10 Exclusions
+
 Curriculum authoring, third mission invention, automatic belt eligibility, bulk activity completion, and historical reassignment migrations.
 
-11 Decisions and policy gates
+## 11 Decisions and policy gates
+
 P01, P03, P04, D07, D10. FR10 completes cutoff and exception interfaces. Seeded explicit cutoffs are demo-only until then.
+
 Demo defaults do not imply founder approval. No real participants or publishing as a side effect of feature completion.
 
-12 Planning prompt for a coding agent
-Plan FR02 only for Digital III Missions Tracker. Do not edit files or run commands that change state. This is a planning step. Read specs/FR02_mission_configuration_and_assignment.txt in full, AGENTS.md and the shared documents in specs/. Read the completion report in specs/reports/ for every dependency listed in section 2. If a report is missing or shows a blocking FAIL, stop and report the exact missing dependency. Inspect the existing code, supabase/migrations and tests before proposing changes. List the components, Postgres command functions, migrations and row-level security policies to add or change, the task sequence mapped to FR02-R identifiers, and the test for every FR02-AC identifier with its layer, Vitest, pgTAP or Playwright. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan and wait for approval before changing code. Do not broaden scope.
+## 12 Planning prompt for a coding agent
 
-13 Build instruction for a coding agent
+Plan FR02 only for Digital III Missions Tracker. Do not edit files or run commands that change state. This is a planning step. Read specs/FR02_mission_configuration_and_assignment.md in full, AGENTS.md and the shared documents in specs/. Read the completion report in specs/reports/ for every dependency listed in section 2. If a report is missing or shows a blocking FAIL, stop and report the exact missing dependency. Inspect the existing code, supabase/migrations and tests before proposing changes. List the components, Postgres command functions, migrations and row-level security policies to add or change, the task sequence mapped to FR02-R identifiers, and the test for every FR02-AC identifier with its layer, Vitest, pgTAP or Playwright. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan and wait for approval before changing code. Do not broaden scope.
+
+## 13 Build instruction for a coding agent
+
 Implement the approved FR02 plan and this specification. Work on the current feature branch. Keep requirement and acceptance IDs in the task checklist and test names. Use the shared protected commands and real persistence in the local Supabase stack, with fictional test records. Add schema changes as new migration files. Do not replace failed backend behavior with UI-only validation or mocked success, and do not weaken row-level security, tests or assertions to make them pass. Run npm run lint, npm run typecheck, npm run test, npm run test:db and the relevant npm run test:e2e specs, and fix failures within scope. Do not push, deploy or touch a remote Supabase project. If a shared contract needs to change, stop and describe the proposed specification change before applying conflicting behavior. Finish with a short summary of what changed and which commands ran.
 
-14 Verification prompt for a coding agent
-Verify FR02 in this fresh session against every requirement and acceptance ID in specs/FR02_mission_configuration_and_assignment.txt. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.txt to specs/reports/FR02_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
+## 14 Verification prompt for a coding agent
+
+Verify FR02 in this fresh session against every requirement and acceptance ID in specs/FR02_mission_configuration_and_assignment.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR02_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.

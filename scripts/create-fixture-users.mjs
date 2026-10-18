@@ -1,4 +1,4 @@
-// Creates FICTIONAL fixture identities (05_TEST_FIXTURES.txt) in the LOCAL stack.
+// Creates FICTIONAL fixture identities (05_TEST_FIXTURES.md) in the LOCAL stack.
 // Passwords come from FIXTURE_PASSWORD; the service-role key from the environment.
 // Idempotent: deterministic ids, existing rows are left alone.
 import { createClient } from '@supabase/supabase-js'

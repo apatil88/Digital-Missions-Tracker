@@ -1,36 +1,46 @@
-Digital III Missions Tracker
+# Digital III Missions Tracker
+
 Specification Driven Development pack v0.2, Claude Code and Codex edition
+
 Prepared October 17 2026 America New York. Adapted for terminal coding agents October 17 2026.
 
-[Unverified] Proposed implementation specifications derived from the PRD and workflow discussion. School policies and new design choices require the decisions identified in 03_DECISIONS.txt. No application code has been built or tested by producing this pack.
+[Unverified] Proposed implementation specifications derived from the PRD and workflow discussion. School policies and new design choices require the decisions identified in 03_DECISIONS.md. No application code has been built or tested by producing this pack.
 
-Purpose
+## Purpose
+
 Build one school application with a terminal coding agent, Claude Code or OpenAI Codex, through small, verifiable features. This pack defines a project-specific specification-driven process. No particular SDD framework or command-line toolkit is required.
 
-Change note v0.2
+## Change note v0.2
+
 Tooling and workflow only. The earlier platform handoff steps, Plan mode instructions and per-feature prompts were rewritten for Claude Code and Codex. Decision D11 states the build stack that the earlier platform supplied implicitly. F00 gains requirement F00-R09 and acceptance scenarios F00-AC07 and F00-AC08 for project setup and secret handling. No product rule, FR requirement, FR acceptance scenario or founder decision changed. The v0.1 edition is preserved in ../_original_v0.1.
 
-Source baseline
+## Source baseline
+
 Digital III Missions Tracker PRD v0.1 dated October 17 2026, 11 pages. Read from the current saved document on October 17 2026. This pack supplements the PRD and does not change the original file. Where the PRD leaves behavior open, decisions below identify a proposed implementation default or a founder decision.
 
-What changes with a coding agent
+## What changes with a coding agent
+
 The earlier platform supplied a scaffolded React project, a managed Supabase connection, hosting and a live browser preview. A coding agent supplies none of these. F00 now creates the repository structure, the D11 stack, a local Supabase environment and the test tooling. Hosting a demo is a separate, owner-approved step after release checks pass.
+
 A coding agent can run commands, so evidence is real command output: migrations, lint, type checks, unit and database tests, and Playwright browser runs. Checks on a physical phone remain the owner's job.
 
-Owner prerequisites
+## Owner prerequisites
+
 Node.js LTS, Git, Docker Desktop for the local Supabase stack, the Supabase CLI, and Claude Code or the Codex CLI. Local development needs no Supabase cloud project. A hosted demo needs a separate Supabase project holding fictional data only. Keep keys in .env.local. Never paste secret keys into an agent chat or commit them.
 
-One-time setup
-1. Read 03_DECISIONS.txt. Demo defaults authorize fictional-data behavior only. Resolve live-pilot gates before introducing real families.
+## One-time setup
+
+1. Read 03_DECISIONS.md. Demo defaults authorize fictional-data behavior only. Resolve live-pilot gates before introducing real families.
 2. Create an empty project folder and run git init. Copy this whole pack into the project as specs/ with file names unchanged.
 3. Create the agent instruction files at the project root.
-   AGENTS.md contains the full text of specs/01_PROJECT_KNOWLEDGE.txt. Codex reads AGENTS.md automatically at the start of each session.
+   AGENTS.md contains the full text of specs/01_PROJECT_KNOWLEDGE.md. Codex reads AGENTS.md automatically at the start of each session.
    CLAUDE.md contains one line: @AGENTS.md. Claude Code reads CLAUDE.md automatically, and the @ line imports AGENTS.md, so both agents share one source.
-   If 01_PROJECT_KNOWLEDGE.txt changes, edit it first and copy it to AGENTS.md again, so the two never drift.
+   If 01_PROJECT_KNOWLEDGE.md changes, edit it first and copy it to AGENTS.md again, so the two never drift.
 4. Create the folder specs/reports/ for feature completion reports.
 5. Commit this baseline before any application code exists.
 
-Per-feature loop, for F00 and then each FR in build order
+## Per-feature loop, for F00 and then each FR in build order
+
 1. Start a fresh agent session. Claude Code: /clear or a new session. Codex: a new session. One feature per session keeps context focused on the right specification.
 2. Create a feature branch, for example feature/FR01.
 3. Plan. Claude Code: press Shift+Tab until plan mode is shown, then paste the feature's planning prompt. Codex: use read-only mode, or plan mode if your Codex version provides one, then paste the planning prompt. The prompt itself also forbids file changes, so it is safe in either tool.
@@ -39,56 +49,95 @@ Per-feature loop, for F00 and then each FR in build order
 6. Verify in a new session, so the verifier does not grade its own reasoning. Paste the verification prompt. Require actual evidence for each acceptance ID. Mark unavailable tests NOT RUN, never PASS. The agent writes the completion report to specs/reports/.
 7. Review the diff and the completion report yourself, then commit and merge. Move to the next feature only after its blocking scenarios pass. If a prerequisite changes, rerun the affected downstream scenarios.
 
-Using Claude Code and Codex together, optional
+## Using Claude Code and Codex together, optional
+
 One agent builds and the other verifies. Both read the same AGENTS.md and specs, so the prompts work unchanged in either tool. Never let two agents edit the same branch at the same time.
 
-Suggested build order
+## Suggested build order
+
 F00 foundation
+
 FR01 accounts and profiles
+
 FR02 mission setup and assignment
+
 FR07 repetition engine
+
 FR04 suggested and custom activities
+
 FR05 record and attest
+
 FR06 edit and remove
+
 FR10 cutoffs and exceptions
+
 FR08 submission validation
+
 FR03 family dashboard
+
 FR09 submission and snapshots
+
 FR12 review commands and decision integrity
+
 FR11 instructor review interface
+
 FR13 graduation mission status
+
 FR14 printable record
+
 FR15 in-app notices
 
-Why the numbering differs from build order
+## Why the numbering differs from build order
+
 The PRD numbers identify product features. Dependencies determine implementation order. Repetition checks precede recording. Cutoff rules precede submission. Shared review commands precede the instructor interface. Keep the FR identifiers unchanged for traceability.
 
-Demo release
-Implement the complete Teamwork journey with fictional records. Include submit, return, correction, resubmit, and approval. Include repetition and cutoff rejection examples. Respect uses the same engine and is enabled with approved content before the pilot.
-Deploying the demo is outside feature completion. After the release checks in 06_TRACEABILITY_AND_RELEASE.txt pass, the owner chooses a static host and a separate demo Supabase project, and explicitly asks the agent to prepare the deployment.
+## Demo release
 
-What each feature includes
+Implement the complete Teamwork journey with fictional records. Include submit, return, correction, resubmit, and approval. Include repetition and cutoff rejection examples. Respect uses the same engine and is enabled with approved content before the pilot.
+
+Deploying the demo is outside feature completion. After the release checks in 06_TRACEABILITY_AND_RELEASE.md pass, the owner chooses a static host and a separate demo Supabase project, and explicitly asks the agent to prepare the deployment.
+
+## What each feature includes
+
 User outcomes, role interactions, dependencies, screens, numbered requirements, logical backend contracts, errors, acceptance scenarios, implementation tasks, exclusions, and copy-paste planning, build and verification prompts for a coding agent.
 
-Spec change procedure
+## Spec change procedure
+
 Before changing a shared rule, identify the affected requirement and decision IDs, document the reason and proposed behavior, and obtain product-owner agreement. Update the shared contract and affected feature specs before implementation. Record a version and change note. Do not silently relax rules to make tests pass.
+
 Agents do not edit files in specs/ other than specs/reports/. An agent proposes a specification change in its reply, and the owner applies it.
 
-Required completion report
-Saved as specs/reports/<feature>_completion.md, for example specs/reports/FR01_completion.md.
+## Required completion report
+
+Saved as specs/reports/\<feature>_completion.md, for example specs/reports/FR01_completion.md.
+
 Feature and spec version
+
 Branch and commit reviewed
+
 Implemented requirement IDs
+
 Changed components, backend operations, migrations, and access policies
+
 Commands run, such as lint, typecheck, unit, database and browser tests, with observed results
-Acceptance ID | PASS / FAIL / NOT RUN | evidence
+
+| Acceptance ID | PASS / FAIL / NOT RUN | evidence |
+| --- | --- | --- |
+
 Manual checks and device coverage
+
 Known gaps and unresolved decisions
+
 Migration and rollback considerations
+
 Next permitted feature
 
-Sources for agent handoff instructions
+## Sources for agent handoff instructions
+
 [Unverified] The tool behavior described here reflects Claude Code and Codex as understood on October 17 2026: CLAUDE.md loading and @ imports, Claude Code plan mode, AGENTS.md loading and approval modes in Codex. Confirm against current documentation before relying on a specific key or command.
+
 Claude Code documentation: https://docs.claude.com/en/docs/claude-code/overview
+
 Codex documentation: https://developers.openai.com/codex
+
 The development workflow and specifications in this pack are project proposals, not an official SDD standard for either tool.

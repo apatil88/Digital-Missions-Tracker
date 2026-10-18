@@ -1,37 +1,59 @@
 [Unverified] F00 Shared foundation specification v0.2. Proposed implementation. Required before FR01 to FR15. v0.2 adapts F00 for a coding agent working in a new repository and adds F00-R09, F00-AC07 and F00-AC08.
 
-Outcome
+## Outcome
+
 A working mobile shell, protected backend foundation, schema contracts, repeatable fictional fixtures, a reproducible local development environment, and a verified environment boundary. No feature is complete from appearance alone.
 
-Scope and requirements
+## Scope and requirements
+
 F00-R01 Inspect the repository. If it holds only specs/ and the agent instruction files, scaffold the D11 stack. If application code exists, for example a project exported from another platform, record the framework, authentication integration, database, migrations and design components, and map them to D11 before changing anything. Use the D11 architecture unless the owner approves a change. Do not invent credentials, APIs, or working integrations.
+
 F00-R02 Create or map the C02 data model with foreign keys, unique constraints, version columns, and immutable snapshot boundaries. Use migration files in supabase/migrations with a documented test-data reset approach. Reset runs only against the local stack and refuses to run against any other database. Keep production-data deletion outside reset scripts.
+
 F00-R03 Implement shared auth checks, school and family scoping, error envelope, idempotency receipt storage, transaction/version strategy, and audit support. Enable row-level security on every table. Default deny until each feature exposes its protected operations. Protected commands are Postgres functions that resolve the actor from the authenticated session. Disable direct client mutation of submissions, reviews, roles, and audit records. Read server time through one database function that local test setup can override. Production requests and request input cannot override it.
+
 F00-R04 Add routes /sign-in, /family, /family/students/:studentId/missions/:assignmentId, /staff/reviews, /staff/status, /admin/settings. Define route guards and error pages. Future-feature routes display honest unavailable states, without fake success or populated mock production dashboards.
+
 F00-R05 Apply the specified brand tokens and responsive structure. Provide reusable labeled fields, errors, status badges, confirmations, loading states and empty states. Keyboard navigation, focus management, 44-pixel targets, and 360-pixel viewport are required.
+
 F00-R06 Implement online-first PWA shell, manifest, icons, optional installation guidance, and service-worker exclusions for all authenticated data. Supabase API, auth and storage requests use network-only handling. Clear family data on logout and account switch. No offline mutation queue. Refresh stale app assets without discarding an unsaved form silently.
+
 F00-R07 Seed fictional identities and content only in the local demo/test environment. Seed valid school configuration without implying school approval. Create fixture auth users with a server-side script that reads the local service-role key and fixture passwords from the environment. Bootstrap the first admin through a controlled server-side script that takes the email as an argument. No hard-coded credentials committed to source or exposed on a public demo page.
+
 F00-R08 Provide the npm scripts listed in AGENTS.md and a README with prerequisites and setup steps from a fresh clone. Add tests for auth isolation and fixture integrity. Verify that Docker and the local Supabase stack start, and report unavailable tools or services as blockers.
+
 F00-R09 Prepare the agent workspace. A .gitignore covers .env files, node_modules, build output and Supabase temporary files. A .env.example lists variable names without values. specs/reports/ exists. Source documents in specs/ are unchanged.
 
-Acceptance scenarios
+## Acceptance scenarios
+
 F00-AC01 Given a new test environment, when migrations and demo seed run twice, then schema is valid and fixture identities do not duplicate.
+
 F00-AC02 Given anonymous or family A sessions, when accessing protected family B data directly, then no protected record or count returns.
+
 F00-AC03 Given a family session, when posting role, approval, snapshot edit, or audit delete directly, then the backend rejects the request.
+
 F00-AC04 Given the app at 360 pixels, when navigating with keyboard and touch, then controls remain reachable, labeled, and free of horizontal overflow.
+
 F00-AC05 Given a signed-in family, when viewing data then logging out and going offline, then no cached authenticated response or previous family's record is displayed.
+
 F00-AC06 Given a disconnected provider, when loading the app, then a truthful unavailable state appears and no fabricated saved record appears.
+
 F00-AC07 Given a fresh clone and the documented prerequisites, when following the README setup steps, then the local stack starts, migrations and seed apply, the app runs, and lint, typecheck, unit, database and browser test commands execute.
+
 F00-AC08 Given a production build and the repository, when searching built assets and tracked files, then no service-role key, password, token or .env file with values is present.
 
-Build tasks
+## Build tasks
+
 Inspect repository. Scaffold or map the D11 stack. Record architecture mapping. Add migrations and constraints. Add common authorization and command helpers. Add UI shell. Configure PWA exclusions. Seed fixtures. Add scripts, README and workspace files. Run the eight acceptance scenarios and report evidence. Do not expose unfinished protected actions.
 
-Planning prompt for a coding agent
-Plan F00 only for Digital III Missions Tracker. Do not edit files or run commands that change state. This is a planning step. Read AGENTS.md, specs/02_SHARED_CONTRACTS.txt, specs/03_DECISIONS.txt, specs/04_FOUNDATION.txt and specs/05_TEST_FIXTURES.txt. Inspect the repository first and state whether you will scaffold or map existing code. Check which prerequisites are installed: Node.js, Git, Docker and the Supabase CLI. List the stack and dependency versions, project structure, schema mapping, row-level security policies, Postgres command functions, migrations, components, seed and bootstrap scripts, npm scripts, and the test for every F00-AC identifier with its layer, Vitest, pgTAP or Playwright. Use fictional data. Flag unresolved implementation blockers, distinguish them from deferred founder decisions, and present a bounded plan. Wait for approval before changing code.
+## Planning prompt for a coding agent
 
-Build instruction for a coding agent
+Plan F00 only for Digital III Missions Tracker. Do not edit files or run commands that change state. This is a planning step. Read AGENTS.md, specs/02_SHARED_CONTRACTS.md, specs/03_DECISIONS.md, specs/04_FOUNDATION.md and specs/05_TEST_FIXTURES.md. Inspect the repository first and state whether you will scaffold or map existing code. Check which prerequisites are installed: Node.js, Git, Docker and the Supabase CLI. List the stack and dependency versions, project structure, schema mapping, row-level security policies, Postgres command functions, migrations, components, seed and bootstrap scripts, npm scripts, and the test for every F00-AC identifier with its layer, Vitest, pgTAP or Playwright. Use fictional data. Flag unresolved implementation blockers, distinguish them from deferred founder decisions, and present a bounded plan. Wait for approval before changing code.
+
+## Build instruction for a coding agent
+
 Implement the approved F00 plan and this specification. Work on the current feature branch. Keep requirement and acceptance IDs in the task checklist and test names. Use the local Supabase stack only, with fictional records. Do not commit secrets. Run npm run lint, npm run typecheck, npm run test, npm run test:db and npm run test:e2e, and fix failures within scope. Do not implement FR01 to FR15 behavior. Do not push, deploy or touch a remote Supabase project. If a shared contract needs to change, stop and describe the proposed specification change. Finish with a short summary of what changed and which commands ran.
 
-Verification prompt for a coding agent
-Verify F00 in this fresh session against every F00-AC identifier. Do not rely on earlier summaries. Follow the README from setup, run npm run db:reset twice, and run every test command yourself. Test direct backend access with anonymous and other-family sessions, not only hidden controls. Search the build output and tracked files for secrets. Report PASS, FAIL or NOT RUN for each identifier with the command and observed result as evidence. Do not change tests or acceptance criteria to fit the implementation. Do not claim later FR features complete. Write the completion report defined in specs/00_START_HERE.txt to specs/reports/F00_completion.md with changed files and remaining blockers. List defects rather than fixing them unless asked.
+## Verification prompt for a coding agent
+
+Verify F00 in this fresh session against every F00-AC identifier. Do not rely on earlier summaries. Follow the README from setup, run npm run db:reset twice, and run every test command yourself. Test direct backend access with anonymous and other-family sessions, not only hidden controls. Search the build output and tracked files for secrets. Report PASS, FAIL or NOT RUN for each identifier with the command and observed result as evidence. Do not change tests or acceptance criteria to fit the implementation. Do not claim later FR features complete. Write the completion report defined in specs/00_START_HERE.md to specs/reports/F00_completion.md with changed files and remaining blockers. List defects rather than fixing them unless asked.

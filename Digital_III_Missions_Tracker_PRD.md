@@ -1,7 +1,9 @@
-Digital III Missions Tracker
+# Digital III Missions Tracker
+
 Product Requirements Document
 
-Martial Arts School | Version 0.1 | October 17, 2026
+| Martial Arts School | Version 0.1 | October 17, 2026 |
+| --- | --- | --- |
 
 [Unverified] Proposed requirements for product review. School rules below reflect your supplied account, without independent school verification. New product behavior, targets, and defaults are proposals pending approval.
 
@@ -17,17 +19,17 @@ A parent records a completed activity on a phone, understands remaining work, su
 
 School rules reported by you
 
-Rule | Reported requirement
-Mission size | 50 activities per mission.
-Repetition | The same or similar activity appears no more than twice.
-Deadline | Paper submission is due two days before graduation. Exact time is unconfirmed.
-Review | Instructor checks completion and repetition compliance.
-Graduation | Missing required missions blocks graduation. Other eligibility rules are outside this product.
+| Rule | Reported requirement |
+| --- | --- |
+| Mission size | 50 activities per mission. |
+| Repetition | The same or similar activity appears no more than twice. |
+| Deadline | Paper submission is due two days before graduation. Exact time is unconfirmed. |
+| Review | Instructor checks completion and repetition compliance. |
+| Graduation | Missing required missions blocks graduation. Other eligibility rules are outside this product. |
 
 Release boundary
 
 Founder demo: complete Teamwork workflow with fictional families and a real persisted backend. Pilot MVP: Respect and Teamwork, 5 to 10 families, 1 to 2 instructors, and one graduation cycle where practical. Treat the 30-day pilot as a proposal, subject to graduation timing.
-
 
 2 Scope and user access
 
@@ -39,11 +41,12 @@ Excluded from this release
 
 Multi-school administration, curriculum-network reporting, payments, attendance, belt-technique content, child logins, chat, leaderboards, rewards, photos, videos, AI recommendations, semantic duplicate detection, native app-store releases, offline submission, and automated email or push campaigns. Show deadline reminders inside the application.
 
-Role | Allowed scope
-Parent or guardian | Manage linked student profiles, record and attest to child activities, submit missions, view feedback, and print own records.
-Adult student | Use an adult profile within the same family account. Record own participation and self-attest. School acceptance requires confirmation.
-Instructor | View assigned school missions, inspect entries, resolve review flags, approve or return submissions, and view mission status.
-School administrator | Instructor rights plus invitations, assignments, mission catalog settings, graduation dates, explicit cutoffs, and deadline exceptions.
+| Role | Allowed scope |
+| --- | --- |
+| Parent or guardian | Manage linked student profiles, record and attest to child activities, submit missions, view feedback, and print own records. |
+| Adult student | Use an adult profile within the same family account. Record own participation and self-attest. School acceptance requires confirmation. |
+| Instructor | View assigned school missions, inspect entries, resolve review flags, approve or return submissions, and view mission status. |
+| School administrator | Instructor rights plus invitations, assignments, mission catalog settings, graduation dates, explicit cutoffs, and deadline exceptions. |
 
 Proposed simplification: one managing adult account per family during the pilot. Support multiple student profiles and an optional adult profile. Shared custody, multiple guardians, and account transfers need a later design. One instructor account also holds school administration rights.
 
@@ -58,7 +61,6 @@ FR02 Mission setup and assignment
 An administrator configures mission type, instructions, age bands, cycle dates, graduation date, school timezone, and submission cutoff. Assign one mission instance per student, mission type, and cycle. Archive completed cycles without resetting their history.
 
 Acceptance: duplicate assignment attempts return the existing assignment. Parents see only assigned missions. A new cycle starts at zero and does not reuse prior completion credit. Production assignment requires an explicit cutoff and timezone.
-
 
 3 Parent activity workflow
 
@@ -92,7 +94,6 @@ Logging boundary
 
 No bulk completion, prefilled attestation, or automatic credit from suggested activities. Multiple activities on one day are allowed under the proposed design because no daily limit was reported. Confirm this policy with the founder before the pilot.
 
-
 4 Validation and accountability
 
 FR07 Deterministic repetition checks
@@ -113,12 +114,13 @@ Acceptance: unresolved custom classifications block approval, while permitting s
 
 FR08 Submission validation
 
-Check | Expected behavior
-Count | Require exactly 50 active completed records. Disable further additions at 50. Allow editing and removal before submission.
-Completeness | Every record has a description, valid date, and current attestation.
-Repetition | Reject known counts above two. Route unresolved custom similarities to instructor review.
-Time and state | Require an open cutoff or authorized exception and an editable mission state.
-Concurrency | Validate and commit submission atomically against the latest record version.
+| Check | Expected behavior |
+| --- | --- |
+| Count | Require exactly 50 active completed records. Disable further additions at 50. Allow editing and removal before submission. |
+| Completeness | Every record has a description, valid date, and current attestation. |
+| Repetition | Reject known counts above two. Route unresolved custom similarities to instructor review. |
+| Time and state | Require an open cutoff or authorized exception and an editable mission state. |
+| Concurrency | Validate and commit submission atomically against the latest record version. |
 
 Meaning of progress
 
@@ -126,19 +128,19 @@ The displayed count measures recorded activities, not independent proof of parti
 
 Show correction feedback beside affected entries. Do not credit a single logged occurrence to multiple missions. Cross-mission similarities remain a founder policy question, without introducing an unapproved restriction on separate genuine occurrences.
 
-
 5 Submission states and deadlines
 
 FR09 Submit and preserve a version
 
 Show a review screen with the 50 entries, validation results, custom items awaiting instructor review, and cutoff. On submission, save an immutable numbered snapshot and receipt timestamp. Lock parent editing until an instructor returns the mission. Approval always references a specific submitted version.
 
-State | Transition and editing rule
-Not started | Zero active entries. First saved entry moves the mission to In progress.
-In progress | Parent edits entries. Ready to submit is a derived display state when the 50-record submission checks pass.
-Submitted | Backend accepts and snapshots the version. Parent access is read-only. Instructor reviews this version.
-Needs changes | Instructor returns the submission with a required reason. Parent edits and re-attests changed records, then resubmits a new version.
-Approved | Instructor accepts the submitted version. Records are read-only. Reopening requires administrator action and a logged reason.
+| State | Transition and editing rule |
+| --- | --- |
+| Not started | Zero active entries. First saved entry moves the mission to In progress. |
+| In progress | Parent edits entries. Ready to submit is a derived display state when the 50-record submission checks pass. |
+| Submitted | Backend accepts and snapshots the version. Parent access is read-only. Instructor reviews this version. |
+| Needs changes | Instructor returns the submission with a required reason. Parent edits and re-attests changed records, then resubmits a new version. |
+| Approved | Instructor accepts the submitted version. Records are read-only. Reopening requires administrator action and a logged reason. |
 
 Deadline status is separate from mission status. Closing submissions does not erase progress, reject an already submitted mission, or block instructor review. A reopened approval becomes Needs changes, retains the earlier decision, and removes the current Approved indicator.
 
@@ -155,7 +157,6 @@ Corrections and exceptions
 Proposed default pending founder approval: parents retain draft access after cutoff, but new submissions and resubmissions require an administrator-granted extension. Each extension names one assignment, a revised expiry, and a reason. Apply the extension consistently in the UI and backend.
 
 Acceptance: a returned mission after cutoff shows the feedback and extension requirement. An authorized extension permits resubmission until its expiry. Expired or revoked exceptions fail. Instructors without administrator rights cannot grant exceptions.
-
 
 6 Instructor review and paper continuity
 
@@ -191,20 +192,20 @@ Display in-app notices seven days before cutoff, one day before cutoff, after cu
 
 Acceptance: the notice opens the relevant student mission. Returned missions show the correction action and any extension. The MVP does not promise notifications to a closed application.
 
-
 7 Mobile experience and visual design
 
 Core screens
 
-Screen | Primary content and action
-Sign in and setup | Invitation, authentication, pilot notice, and minimal student profile.
-Family dashboard | Student selector, assigned missions, progress, cutoff, and next action.
-Mission detail | Activity history, issues, instructor feedback, Add activity, and submission review.
-Activity selection | Approved suggestions, usage, age and setting filters, and custom entry.
-Completion form | Actual participation, completion date, explicit attestation, and Save.
-Submission review | All records, validation results, confirmation, and receipt.
-Instructor workspace | Queue, submission detail, classifications, and approval or return.
-School settings | Roster invitations, assignments, catalog enablement, cycle, cutoff, and exceptions.
+| Screen | Primary content and action |
+| --- | --- |
+| Sign in and setup | Invitation, authentication, pilot notice, and minimal student profile. |
+| Family dashboard | Student selector, assigned missions, progress, cutoff, and next action. |
+| Mission detail | Activity history, issues, instructor feedback, Add activity, and submission review. |
+| Activity selection | Approved suggestions, usage, age and setting filters, and custom entry. |
+| Completion form | Actual participation, completion date, explicit attestation, and Save. |
+| Submission review | All records, validation results, confirmation, and receipt. |
+| Instructor workspace | Queue, submission detail, classifications, and approval or return. |
+| School settings | Roster invitations, assignments, catalog enablement, cycle, cutoff, and exceptions. |
 
 PWA requirements
 
@@ -226,7 +227,6 @@ Use Inter, light backgrounds, white cards, subtle borders, and 8 to 12 pixel cor
 
 These tokens are proposed, not verified brand specifications. Check contrast for actual text sizes and component states before release. Obtain permission before presenting the school logo or application as officially endorsed.
 
-
 8 Data and technical requirements
 
 Proposed implementation
@@ -235,16 +235,17 @@ Build the mobile-first interface with a Supabase PostgreSQL backend and managed 
 
 Implement authorization, count rules, attestation checks, transitions, cutoff checks, submission snapshots, and reviewer decisions in the backend. UI validation provides immediate feedback but never acts as the sole control. Use transactions and version checks for concurrent changes.
 
-Entity | Minimum information
-Account and membership | Authentication reference, school, role, family link, invitation status, notice acceptance.
-Student | Identifier, managing family, display name, age band, child or adult type, active status.
-Mission template | Type, approved instructions, required count, repeat limit, content version, enabled age bands.
-Activity catalog | Mission, family identifier, description, age bands, setting, approved status, aliases.
-Graduation cycle | School timezone, activity window, graduation date, explicit cutoff timestamp.
-Mission assignment | Student, template version, cycle, status, current submission, version number.
-Activity record | Assignment, catalog or custom text, family classification, participation, date, attestation, active status.
-Submission and review | Immutable entry snapshot, version, timestamps, validation results, reviewer, decision, feedback.
-Exception and audit | Assignment, expiry, reason, actor, action, timestamp, affected record and version.
+| Entity | Minimum information |
+| --- | --- |
+| Account and membership | Authentication reference, school, role, family link, invitation status, notice acceptance. |
+| Student | Identifier, managing family, display name, age band, child or adult type, active status. |
+| Mission template | Type, approved instructions, required count, repeat limit, content version, enabled age bands. |
+| Activity catalog | Mission, family identifier, description, age bands, setting, approved status, aliases. |
+| Graduation cycle | School timezone, activity window, graduation date, explicit cutoff timestamp. |
+| Mission assignment | Student, template version, cycle, status, current submission, version number. |
+| Activity record | Assignment, catalog or custom text, family classification, participation, date, attestation, active status. |
+| Submission and review | Immutable entry snapshot, version, timestamps, validation results, reviewer, decision, feedback. |
+| Exception and audit | Assignment, expiry, reason, actor, action, timestamp, affected record and version. |
 
 Data consistency
 
@@ -255,7 +256,6 @@ Use unique constraints for assignment identity and request identifiers for retri
 Minimal administration
 
 Seed the catalog through a controlled import for the demo and pilot. A full curriculum editor is excluded. Provide simple catalog enable or disable controls and the operational settings required for the pilot. Production administrators cannot switch into arbitrary parent accounts.
-
 
 9 Privacy quality and test gates
 
@@ -275,20 +275,20 @@ Verify persistence after refresh, session renewal, and a second device. Define b
 
 Release acceptance tests
 
-Scenario | Required outcome
-49 records then submit | Submission blocked. Show one remaining activity.
-50 valid records | One immutable submitted version and receipt, including under repeated taps.
-Third repeated activity | Save or submission blocked, including via direct backend request.
-Custom semantic overlap | Instructor classification exposes a third occurrence and approval is blocked.
-Cutoff boundary | At cutoff accepted, after cutoff rejected, regardless of device timezone.
-Returned after cutoff | Editing allowed. Resubmission requires a valid extension.
-Two reviewers or stale form | One valid action commits. Conflicting action requests a refresh.
-Cross-family access | Read, edit, print, and submission requests denied.
-Offline or expired session | No false success, no phantom record, clear recovery action.
-Multiple assignments | One approval leaves other mission requirements pending.
+| Scenario | Required outcome |
+| --- | --- |
+| 49 records then submit | Submission blocked. Show one remaining activity. |
+| 50 valid records | One immutable submitted version and receipt, including under repeated taps. |
+| Third repeated activity | Save or submission blocked, including via direct backend request. |
+| Custom semantic overlap | Instructor classification exposes a third occurrence and approval is blocked. |
+| Cutoff boundary | At cutoff accepted, after cutoff rejected, regardless of device timezone. |
+| Returned after cutoff | Editing allowed. Resubmission requires a valid extension. |
+| Two reviewers or stale form | One valid action commits. Conflicting action requests a refresh. |
+| Cross-family access | Read, edit, print, and submission requests denied. |
+| Offline or expired session | No false success, no phantom record, clear recovery action. |
+| Multiple assignments | One approval leaves other mission requirements pending. |
 
 Complete the core journey on a representative iPhone and Android phone, plus a desktop instructor browser. Include browser installation, keyboard navigation, readable print output, date validation, self-review rejection, and administrator exception expiry.
-
 
 10 Delivery and founder demonstration
 
@@ -322,33 +322,34 @@ Planning rule
 
 Do not commit to the earlier one-to-two-week estimate before validating authentication, backend rules, snapshot handling, and mobile behavior. Estimate remaining work after Increment 1. Keep deferred features outside the MVP unless a confirmed school requirement blocks the core workflow.
 
-
 11 Pilot measures and open decisions
 
 Pilot evaluation
 
 Proposed scope: 5 to 10 families and 1 to 2 instructors for 30 days, aligned with a graduation deadline where feasible. Continue the existing accepted paper process until the school authorizes digital submission. If the pilot ends before a cutoff, do not claim an on-time submission outcome.
 
-Measure | Definition and proposed target
-Activation | At least 80% of invited families save a first attested activity within seven days.
-Weekly participation | At least 70% of families with an unfinished mission save one activity or resubmit during each full pilot week.
-Review effort | Median active instructor review time under 3 minutes per submission. Report sample count and range.
-Parent satisfaction | Average score at least 4 of 5 among respondents. Report response count.
-Deadline outcome | Report on-time first submissions / assignments due during pilot. Establish a baseline before setting an improvement target.
-Release quality | Zero unresolved critical defects at pilot end. Critical includes unauthorized access, lost records, incorrect approval, or cutoff bypass.
+| Measure | Definition and proposed target |
+| --- | --- |
+| Activation | At least 80% of invited families save a first attested activity within seven days. |
+| Weekly participation | At least 70% of families with an unfinished mission save one activity or resubmit during each full pilot week. |
+| Review effort | Median active instructor review time under 3 minutes per submission. Report sample count and range. |
+| Parent satisfaction | Average score at least 4 of 5 among respondents. Report response count. |
+| Deadline outcome | Report on-time first submissions / assignments due during pilot. Establish a baseline before setting an improvement target. |
+| Release quality | Zero unresolved critical defects at pilot end. Critical includes unauthorized access, lost records, incorrect approval, or cutoff bypass. |
 
 Track invitation, first activity, activity saved, submission attempt and outcome, review decision, return, resubmission, and print events using pseudonymous identifiers. Measure review effort through observed sessions or explicit timers. Record parent logging effort and instructor paper-review effort before the pilot for comparison.
 
 Founder decisions before real use
 
-Decision | Proposed default or required answer
-Curriculum and brand | Approve digitization, suggestion content, proposed name, and logo usage.
-Official submissions | Keep paper authoritative until digital acceptance is explicit. Confirm print layout.
-Deadline policy | Confirm school timezone, two-calendar-day interpretation, exact cutoff, and corrections after cutoff.
-Activity validity | Confirm similar-activity grouping, same-day entries, mission windows, and cross-mission credit rules.
-Adult participation | Confirm self-attestation or identify another verifier. Defer adult pilot access if unresolved.
-Review responsibility | Name reviewers and exception authority. Provide a second reviewer for own-family conflicts.
-Privacy and operations | Approve notice, authorization, retention, deletion, data ownership, support, and hosting responsibility.
-Commercial ownership | Agree application and curriculum rights and any pilot costs. Defer pricing and network expansion.
+| Decision | Proposed default or required answer |
+| --- | --- |
+| Curriculum and brand | Approve digitization, suggestion content, proposed name, and logo usage. |
+| Official submissions | Keep paper authoritative until digital acceptance is explicit. Confirm print layout. |
+| Deadline policy | Confirm school timezone, two-calendar-day interpretation, exact cutoff, and corrections after cutoff. |
+| Activity validity | Confirm similar-activity grouping, same-day entries, mission windows, and cross-mission credit rules. |
+| Adult participation | Confirm self-attestation or identify another verifier. Defer adult pilot access if unresolved. |
+| Review responsibility | Name reviewers and exception authority. Provide a second reviewer for own-family conflicts. |
+| Privacy and operations | Approve notice, authorization, retention, deletion, data ownership, support, and hosting responsibility. |
+| Commercial ownership | Agree application and curriculum rights and any pilot costs. Defer pricing and network expansion. |
 
 Pilot exit decision: proceed when the core workflow succeeds, families and instructors accept the process, and critical defects are resolved. Revise if logging or review remains burdensome. Pause live use if privacy arrangements, curriculum permission, or school acceptance remain unresolved.

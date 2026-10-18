@@ -1,30 +1,44 @@
-[Unverified] FR15 In app deadline and feedback notices
+# [Unverified] FR15 In app deadline and feedback notices
+
 Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+
 Status Proposed for fictional-data implementation
+
 Source PRD FR15 and workflow discussion
+
 Priority Required MVP feature
+
 Build position 15 after F00
 
-1 Outcome
+## 1 Outcome
+
 Families opening the app see the highest-priority next action for their assigned mission.
 
-2 Context required for the coding agent
-Read 01_PROJECT_KNOWLEDGE.txt, 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt and 05_TEST_FIXTURES.txt with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+## 2 Context required for the coding agent
+
+Read 01_PROJECT_KNOWLEDGE.md, 02_SHARED_CONTRACTS.md, 03_DECISIONS.md and 05_TEST_FIXTURES.md with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+
 Dependencies: FR03, FR10, FR12. Implemented prerequisites must have acceptance evidence. If a prerequisite is absent, report the exact missing dependency. Do not silently fake backend behavior.
 
-3 Users and permissions
+## 3 Users and permissions
+
 Parent: view notices for own children and open the correct mission.
+
 Adult student: view own notices.
+
 Instructor: creates feedback by returning a submission, not by sending a separate message.
+
 Administrator: configures proposed reminder thresholds and manages extensions affecting notice timing.
 
-4 User workflow and screens
+## 4 User workflow and screens
+
 On family dashboard load and foreground refresh, compute notices from current state, effective cutoff and unread-or-current feedback context. Select a notice to open the associated mission or affected-entry feedback. Show one primary action per assignment, with deadline detail retained underneath. Recompute after submission, return, approval, extension or expiry.
 
-5 Functional requirements
+## 5 Functional requirements
+
 FR15-R01 Use read-time computed notices, not a scheduled messaging service. No email, push, SMS or background delivery requirement. Closed applications receive no promised alert.
 
-FR15-R02 Default thresholds are seven days and one day expressed as elapsed durations of 7*24 and 24 hours before effective cutoff. These are proposed implementation defaults. Exact cutoff display remains in school-local time.
+FR15-R02 Default thresholds are seven days and one day expressed as elapsed durations of 7\*24 and 24 hours before effective cutoff. These are proposed implementation defaults. Exact cutoff display remains in school-local time.
 
 FR15-R03 Priority: Needs changes feedback first, closed-submission notice next for editable missions, one-day notice, then seven-day notice. Do not show duplicate one-day and seven-day banners for the same assignment.
 
@@ -34,16 +48,22 @@ FR15-R05 Notices use the effective exception cutoff and refresh after changes. C
 
 FR15-R06 Provide accessible status text and action links. No persistent dismissal, read receipts or notification inbox in MVP. Refresh or sign-in recomputes current relevance rather than reusing stale cached notices.
 
-6 Data and logical operation contracts
+## 6 Data and logical operation contracts
+
 get_family_notices() -> assignment_id, student display context, notice_type, message, target_route, effective_cutoff, generated_at, primary_action.
-set_reminder_thresholds(seven_day_hours, urgent_hours, expected_settings_version, request_id) -> settings. Admin only, positive integer hours, urgent <= early. This is FR15-owned school-setting command using C04.
+
+set_reminder_thresholds(seven_day_hours, urgent_hours, expected_settings_version, request_id) -> settings. Admin only, positive integer hours, urgent \<= early. This is FR15-owned school-setting command using C04.
+
 Persist thresholds only. Compute notices from authoritative assignments and feedback. No notification table required in MVP.
+
 Logical names are proposed. Map to actual inspected backend operations and preserve behavior. All reads and writes inherit C01 and C04. All UI states inherit C08.
 
-7 Errors and recovery
+## 7 Errors and recovery
+
 Invalid threshold settings return VALIDATION_FAILED. Unauthorized settings mutation returns FORBIDDEN. Failed reads show unavailable status without claiming no upcoming deadlines.
 
-8 Acceptance scenarios
+## 8 Acceptance scenarios
+
 FR15-AC01 Given an editable mission within seven-day threshold but outside one-day threshold, when opening dashboard, then one early deadline notice appears.
 
 FR15-AC02 Given an editable mission within one-day threshold, when computing notices, then the urgent notice replaces the early notice.
@@ -57,24 +77,33 @@ FR15-AC05 Given an administrator extension, when refreshing, then notice timing 
 FR15-AC06 Given FAMILY_B, when reading notices, then no FAMILY_A identifiers or counts appear.
 
 FR15-AC07 Given an ordinary instructor changing thresholds, when the command executes, then access is denied. Given admin invalid threshold order, then validation rejects.
+
 These scenarios are specified, not executed. Test actual behavior and backend authorization. Record PASS, FAIL or NOT RUN with evidence for every identifier.
 
-9 Implementation task sequence
-Implement pure notice-priority calculation and scoped read model. Add admin threshold controls. Connect dashboard and feedback links. Test time boundaries, suppression, extensions and access.
-Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.txt.
+## 9 Implementation task sequence
 
-10 Exclusions
+Implement pure notice-priority calculation and scoped read model. Add admin threshold controls. Connect dashboard and feedback links. Test time boundaries, suppression, extensions and access.
+
+Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.md.
+
+## 10 Exclusions
+
 Push subscriptions, email campaigns, notification inbox, reminders to a closed app, and persistent dismissal state.
 
-11 Decisions and policy gates
+## 11 Decisions and policy gates
+
 D09, P03. Feedback and deadline notices are distinct from proof of activity completion.
+
 Demo defaults do not imply founder approval. No real participants or publishing as a side effect of feature completion.
 
-12 Planning prompt for a coding agent
-Plan FR15 only for Digital III Missions Tracker. Do not edit files or run commands that change state. This is a planning step. Read specs/FR15_in_app_deadline_and_feedback_notices.txt in full, AGENTS.md and the shared documents in specs/. Read the completion report in specs/reports/ for every dependency listed in section 2. If a report is missing or shows a blocking FAIL, stop and report the exact missing dependency. Inspect the existing code, supabase/migrations and tests before proposing changes. List the components, Postgres command functions, migrations and row-level security policies to add or change, the task sequence mapped to FR15-R identifiers, and the test for every FR15-AC identifier with its layer, Vitest, pgTAP or Playwright. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan and wait for approval before changing code. Do not broaden scope.
+## 12 Planning prompt for a coding agent
 
-13 Build instruction for a coding agent
+Plan FR15 only for Digital III Missions Tracker. Do not edit files or run commands that change state. This is a planning step. Read specs/FR15_in_app_deadline_and_feedback_notices.md in full, AGENTS.md and the shared documents in specs/. Read the completion report in specs/reports/ for every dependency listed in section 2. If a report is missing or shows a blocking FAIL, stop and report the exact missing dependency. Inspect the existing code, supabase/migrations and tests before proposing changes. List the components, Postgres command functions, migrations and row-level security policies to add or change, the task sequence mapped to FR15-R identifiers, and the test for every FR15-AC identifier with its layer, Vitest, pgTAP or Playwright. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan and wait for approval before changing code. Do not broaden scope.
+
+## 13 Build instruction for a coding agent
+
 Implement the approved FR15 plan and this specification. Work on the current feature branch. Keep requirement and acceptance IDs in the task checklist and test names. Use the shared protected commands and real persistence in the local Supabase stack, with fictional test records. Add schema changes as new migration files. Do not replace failed backend behavior with UI-only validation or mocked success, and do not weaken row-level security, tests or assertions to make them pass. Run npm run lint, npm run typecheck, npm run test, npm run test:db and the relevant npm run test:e2e specs, and fix failures within scope. Do not push, deploy or touch a remote Supabase project. If a shared contract needs to change, stop and describe the proposed specification change before applying conflicting behavior. Finish with a short summary of what changed and which commands ran.
 
-14 Verification prompt for a coding agent
-Verify FR15 in this fresh session against every requirement and acceptance ID in specs/FR15_in_app_deadline_and_feedback_notices.txt. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.txt to specs/reports/FR15_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
+## 14 Verification prompt for a coding agent
+
+Verify FR15 in this fresh session against every requirement and acceptance ID in specs/FR15_in_app_deadline_and_feedback_notices.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR15_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
