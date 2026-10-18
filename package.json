@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc --noEmit && vite build",
     "lint": "eslint .",
-    "typecheck": "tsc -b --noEmit",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:db": "supabase test db",
     "test:e2e": "playwright test",
@@ -16,9 +16,11 @@
     "bootstrap:admin": "node scripts/bootstrap-admin.mjs",
     "env:local": "node scripts/setup-env.mjs",
     "db:start": "supabase start -x studio,imgproxy,edge-runtime,logflare,vector,mailpit,realtime,storage-api,supavisor,postgres-meta",
-    "db:stop": "supabase stop"
+    "db:stop": "supabase stop",
+    "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
     "@radix-ui/react-dialog": "^1.3.1",
     "@radix-ui/react-slot": "^1.5.0",
     "@supabase/supabase-js": "^2.118.0",
