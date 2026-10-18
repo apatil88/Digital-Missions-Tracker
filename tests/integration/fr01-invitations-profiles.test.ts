@@ -405,3 +405,56 @@ describe('FR01-R02 delivery and expiry', () => {
     expect(res.error).not.toBeNull()
   })
 })
+
+describe('FR01 owner limits', () => {
+  it('FR01-R03 a family holds at most 10 profiles; existing ones stay editable', async () => {
+    const f = await newFamilyOwner('cap')
+    const band = await firstAgeBandId()
+    let first = ''
+    for (let i = 1; i <= 10; i++) {
+      const res = await saveProfile(f.sb, { name: `Cap Child ${i}`, band })
+      expect(res.data.ok, `profile ${i}`).toBe(true)
+      if (i === 1) first = res.data.data.student.id
+    }
+    const eleventh = await saveProfile(f.sb, { name: 'Cap Child 11', band })
+    expect(eleventh.data.error.code).toBe('PROFILE_LIMIT')
+    const adult = await saveProfile(f.sb, { name: 'Cap Adult', band, kind: 'adult' })
+    expect(adult.data.error.code).toBe('PROFILE_LIMIT')
+    expect((await f.sb.from('students').select('id')).data).toHaveLength(10)
+    expect((await saveProfile(f.sb, { name: 'Renamed Cap Child', band, id: first, version: 1 })).data.ok).toBe(true)
+  })
+
+  it('FR01-R03 an account that already manages a family can neither be invited to nor accept another family', async () => {
+    const owner = await newFamilyOwner('twofam')
+    const token = await plantInvitation(owner.email, 'family')
+    const res = await accept(owner.sb, token)
+    expect(res.data.error.code).toBe('INVALID_STATE')
+
+    const admin = await signIn(FIXTURE_EMAILS.admin1)
+    const sent = await inviteViaFunction(admin, owner.email, 'family')
+    const body = sent.error ? await (sent.error as { context?: Response }).context?.json() : sent.data
+    expect(body.ok).toBe(false)
+    expect(body.error.code).toBe('INVALID_STATE')
+    expect(await countRows('family_memberships', 'user_id', owner.user.id)).toBe(1)
+    // The database itself allows one managed family per account.
+    const { data: extra } = await serviceClient().from('families').insert({ school_id: SCHOOL_ID }).select('id').single()
+    const dup = await serviceClient().from('family_memberships').insert({ family_id: extra!.id, user_id: owner.user.id })
+    expect(dup.error?.code).toBe('23505')
+  })
+
+  it('FR01-R02 an invitation can be sent at most 3 times, then the person must contact the school', async () => {
+    const admin = await signIn(FIXTURE_EMAILS.admin1)
+    const email = uniqueEmail('three')
+    const sent = await inviteViaFunction(admin, email, 'family')
+    const id = sent.data.data.invitation_id as string
+    const resend = () => admin.functions.invoke('send-invitation', { body: { action: 'resend', invitation_id: id, request_id: randomUUID(), origin: 'http://localhost:4173' } })
+    expect((await resend()).data.ok).toBe(true)
+    expect((await resend()).data.ok).toBe(true)
+    const fourth = await resend()
+    const body = fourth.error ? await (fourth.error as { context?: Response }).context?.json() : fourth.data
+    expect(body.ok).toBe(false)
+    expect(body.error.code).toBe('INVALID_STATE')
+    const row = await admin.from('invitations').select('send_count').eq('id', id).single()
+    expect(row.data?.send_count).toBe(3)
+  })
+})

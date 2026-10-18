@@ -2,7 +2,7 @@
 -- Builds its own fictional data inside the transaction; everything rolls back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(66);
+select plan(76);
 
 -- ------------------------------------------------------------------ fixture
 insert into auth.users (id, email, email_confirmed_at) values
@@ -48,6 +48,8 @@ insert into public.invitations (school_id, intended_role, invited_email, token_h
    encode(sha256(convert_to('tok-revoked', 'UTF8')), 'hex'), '2026-11-08 12:00:00-05', '2026-10-31 12:00:00-05'),
   ('57000000-0000-4000-8000-000000000001', 'family', 'unverified@fr01.example.test',
    encode(sha256(convert_to('tok-unverified', 'UTF8')), 'hex'), '2026-11-08 12:00:00-05', null),
+  ('57000000-0000-4000-8000-000000000002', 'family', 'fam-b@fr01.example.test',
+   encode(sha256(convert_to('tok-second-family', 'UTF8')), 'hex'), '2026-11-08 12:00:00-05', null),
   ('57000000-0000-4000-8000-000000000001', 'admin', 'someone-else@fr01.example.test',
    encode(sha256(convert_to('tok-admin', 'UTF8')), 'hex'), '2026-11-08 12:00:00-05', null);
 
@@ -199,6 +201,14 @@ grant select on r_pending to public;
 select is(public.resend_invitation((select (r->'data'->>'invitation_id')::uuid from r_pending),
     encode(sha256(convert_to('tok-second', 'UTF8')), 'hex'), gen_random_uuid())->>'ok', 'true',
   'FR01-R02 resend succeeds for a pending invitation');
+select is(public.resend_invitation((select (r->'data'->>'invitation_id')::uuid from r_pending),
+    encode(sha256(convert_to('tok-third', 'UTF8')), 'hex'), gen_random_uuid())->>'ok', 'true',
+  'FR01-R02 the second resend (third send) succeeds');
+select is(public.resend_invitation((select (r->'data'->>'invitation_id')::uuid from r_pending),
+    encode(sha256(convert_to('tok-fourth', 'UTF8')), 'hex'), gen_random_uuid())->'error'->>'code', 'INVALID_STATE',
+  'FR01-R02 an invitation cannot be sent more than 3 times');
+select is((select send_count from public.invitations where id = (select (r->'data'->>'invitation_id')::uuid from r_pending)), 3,
+  'FR01-R02 the send count is visible to administrators and stops at 3');
 reset role;
 select set_config('request.jwt.claims', '{"sub":"ee000000-0000-4000-8000-000000000005","role":"authenticated"}', true);
 set local role authenticated;
@@ -254,6 +264,37 @@ select is((select adult_user_id from public.students where kind = 'adult' and fa
 select is(public.save_student_profile('Adult Two', 'b4000000-0000-4000-8000-000000000001', 'adult', gen_random_uuid())->'error'->>'code',
   'PROFILE_LIMIT', 'FR01-R03 a second adult profile is refused');
 reset role;
+
+-- ------------------------------------------------------- limits (owner decisions)
+select set_config('request.jwt.claims', '{"sub":"fa000000-0000-4000-8000-00000000000a","role":"authenticated"}', true);
+set local role authenticated;
+select count(*) from (
+  select public.save_student_profile('Bulk ' || g, 'b4000000-0000-4000-8000-000000000001', 'child', gen_random_uuid())
+  from generate_series(1, 7) g) bulk;
+select is((select count(*)::int from public.students where family_id = 'fa100000-0000-4000-8000-0000000000a1' and active), 10,
+  'FR01-R03 a family can hold 10 profiles');
+select is(public.save_student_profile('Eleventh', 'b4000000-0000-4000-8000-000000000001', 'child', gen_random_uuid())->'error'->>'code',
+  'PROFILE_LIMIT', 'FR01-R03 an 11th profile is refused');
+select is(public.save_student_profile('Renamed at limit', 'b4000000-0000-4000-8000-000000000001', 'child', gen_random_uuid(),
+    'a5100000-0000-4000-8000-0000000000a1', 1)->>'ok', 'true', 'FR01-R03 existing profiles can still be edited at the limit');
+reset role;
+
+select set_config('request.jwt.claims', '{"sub":"ad000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+set local role authenticated;
+select is(public.invite_account('fam-a@fr01.example.test', 'family', gen_random_uuid(),
+    encode(sha256(convert_to('tok-owner', 'UTF8')), 'hex'))->'error'->>'code', 'INVALID_STATE',
+  'FR01-R03 an account that already manages a family cannot be invited to another family');
+reset role;
+
+select set_config('request.jwt.claims', '{"sub":"fb000000-0000-4000-8000-00000000000b","role":"authenticated"}', true);
+set local role authenticated;
+select is(public.accept_invitation('tok-second-family', 'demo-notice-v1', gen_random_uuid())->'error'->>'code', 'INVALID_STATE',
+  'FR01-R03 a family owner cannot accept an invitation to another family, even at another school');
+select is((select count(*)::int from public.family_memberships where user_id = 'fb000000-0000-4000-8000-00000000000b'), 1,
+  'FR01-R03 the owner still has exactly one family');
+reset role;
+select throws_ok($$insert into public.family_memberships (family_id, user_id) values ('fa100000-0000-4000-8000-0000000000a1', 'fb000000-0000-4000-8000-00000000000b')$$,
+  '23505', null, 'FR01-R03 the database allows one managed family per account');
 
 select * from finish();
 rollback;

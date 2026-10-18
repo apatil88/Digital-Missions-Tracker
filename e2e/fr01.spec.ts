@@ -81,7 +81,7 @@ test.describe('FR01-AC02 and R06 link problems show a safe next step', () => {
     await expect(page.getByRole('heading', { name: 'This invitation link is not valid' })).toBeVisible()
     await page.goto('/invite?token=anything#error=access_denied&error_code=otp_expired&error_description=expired')
     await expect(page.getByRole('heading', { name: 'This link has expired' })).toBeVisible()
-    await expect(page.getByText('Ask the school to resend your invitation.')).toBeVisible()
+    await expect(page.getByText('Contact the school to get a new invitation.')).toBeVisible()
     await expectNoHorizontalOverflow(page)
   })
 
@@ -308,5 +308,33 @@ test.describe('FR01 sign-out clears the family state', () => {
     await expect(page.getByText('Private Child Name')).toHaveCount(0)
     void accept
     void signIn
+  })
+})
+
+test.describe('FR01 limits in the interface', () => {
+  test('FR01-R02 the admin sees how many times an invitation was sent, and resend stops after 3', async ({ page }) => {
+    const email = uniqueEmail('ui-three')
+    await adminInvites(page, email, 'Family adult')
+    const row = page.getByRole('listitem').filter({ hasText: email })
+    await expect(row.getByText('Sent 1 of 3')).toBeVisible()
+    await row.getByRole('button', { name: `Resend invitation to ${email}` }).click()
+    await expect(row.getByText('Sent 2 of 3')).toBeVisible()
+    await row.getByRole('button', { name: `Resend invitation to ${email}` }).click()
+    await expect(row.getByText('Sent 3 of 3')).toBeVisible()
+    await expect(row.getByRole('button', { name: `Resend invitation to ${email}` })).toBeDisabled()
+    await expect(row.getByText(/should contact the school/)).toBeVisible()
+  })
+
+  test('FR01-R03 at 10 profiles the Add button is disabled and says why', async ({ page }) => {
+    const family = await newFamilyOwner('ui-cap')
+    const band = (await serviceClient().from('age_bands').select('id').eq('active', true).limit(1).single()).data!.id
+    for (let i = 1; i <= 10; i++) {
+      await family.sb.rpc('save_student_profile', { p_display_name: `UI Cap ${i}`, p_age_band_id: band, p_kind: 'child', p_request_id: crypto.randomUUID() })
+    }
+    await signInAs(page, family.email)
+    await page.goto('/family/profiles')
+    await expect(page.getByRole('button', { name: 'Add a profile' })).toBeDisabled()
+    await expect(page.getByText('A family can have at most 10 profiles.')).toBeVisible()
+    await expectNoHorizontalOverflow(page)
   })
 })

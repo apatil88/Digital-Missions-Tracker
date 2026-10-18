@@ -106,6 +106,7 @@ export function FamilyProfiles() {
   }
 
   const hasAdult = students.data.some((s) => s.kind === 'adult')
+  const atLimit = students.data.length >= 10 // the backend enforces the same limit
   const bandLabel = (id: string | null) => bands.data.find((b) => b.id === id)?.label ?? 'No age band'
 
   function startEdit(p: Profile) {
@@ -216,9 +217,12 @@ export function FamilyProfiles() {
       </ul>
 
       {!editing && (
-        <Button onClick={startAdd} disabled={!notice.data} className="self-start">
-          Add a profile
-        </Button>
+        <>
+          <Button onClick={startAdd} disabled={!notice.data || atLimit} className="self-start">
+            Add a profile
+          </Button>
+          {atLimit && <Notice>A family can have at most 10 profiles.</Notice>}
+        </>
       )}
 
       {editing && (

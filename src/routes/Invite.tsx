@@ -11,10 +11,10 @@ import { Button, CheckboxField, ErrorSummary, Field, Notice, type FormError } fr
 type Accepted = { role: 'family' | 'instructor'; family_id: string | null }
 
 const SAFE_NEXT: Record<string, string> = {
-  INVITATION_EXPIRED: 'Ask the school to resend your invitation.',
-  INVITATION_REVOKED: 'Ask the school for a new invitation.',
+  INVITATION_EXPIRED: 'Contact the school to get a new invitation.',
+  INVITATION_REVOKED: 'Contact the school to get a new invitation.',
   INVITATION_USED: 'This invitation was already used. If that was you, sign in from the start page.',
-  NOT_FOUND: 'Open the newest invitation email, or ask the school to resend it.',
+  NOT_FOUND: 'Open the newest invitation email, or contact the school.',
   EMAIL_MISMATCH: 'Sign out, then open the link again with the invited email address.',
 }
 
@@ -49,7 +49,7 @@ export function Invite() {
   if (initialAuthLink.errorCode && status !== 'authenticated') {
     return (
       <Panel title="This link has expired">
-        <p className="text-muted">The sign-in link in your email is no longer valid. Ask the school to resend your invitation.</p>
+        <p className="text-muted">The sign-in link in your email is no longer valid. Contact the school to get a new invitation.</p>
         <Link to="/sign-in" className="min-h-11 font-semibold text-primary-strong underline">
           Go to sign in
         </Link>
@@ -59,7 +59,7 @@ export function Invite() {
   if (!token) {
     return (
       <Panel title="This invitation link is not valid">
-        <p className="text-muted">The link is incomplete. Open the newest invitation email, or ask the school to resend it.</p>
+        <p className="text-muted">The link is incomplete. Open the newest invitation email, or contact the school.</p>
       </Panel>
     )
   }

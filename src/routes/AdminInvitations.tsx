@@ -16,6 +16,7 @@ type Invitation = {
   accepted_at: string | null
   revoked_at: string | null
   delivery_status: 'pending' | 'sent' | 'failed'
+  send_count: number
   created_at: string
 }
 type Sent = { invitation_id: string; delivery_status: Invitation['delivery_status']; expires_at: string }
@@ -50,7 +51,7 @@ export function AdminInvitations() {
       // Columns are listed on purpose: the token hash is not readable by any API role.
       const { data, error } = await supabase
         .from('invitations')
-        .select('id, intended_role, invited_email, expires_at, accepted_at, revoked_at, delivery_status, created_at')
+        .select('id, intended_role, invited_email, expires_at, accepted_at, revoked_at, delivery_status, send_count, created_at')
         .order('created_at', { ascending: false })
       if (error) throw error
       return data as Invitation[]
@@ -127,7 +128,7 @@ export function AdminInvitations() {
         Back to settings
       </Link>
       <h1 className="text-2xl font-bold">Invitations</h1>
-      <p className="text-muted">Invite a family adult or an instructor. Invitations expire after 7 days and work once. Administrators are set up through trusted setup, not here.</p>
+      <p className="text-muted">Invite a family adult or an instructor. Invitations expire after 7 days, work once and can be sent at most 3 times. Administrators are set up through trusted setup, not here.</p>
 
       <form id="invite-form" onSubmit={onSubmit} noValidate className="flex flex-col gap-4 rounded-card border border-line bg-card p-4">
         <h2 className="text-lg font-semibold">Invite someone</h2>
@@ -176,10 +177,15 @@ export function AdminInvitations() {
                   {i.intended_role === 'family' ? 'Family adult' : i.intended_role === 'instructor' ? 'Instructor' : 'Administrator'} · {state}
                   {state === 'Pending' || state === 'Expired' ? ` · ${deliveryText[i.delivery_status]}` : ''}
                 </p>
-                <p className="text-sm text-muted">Expires {new Date(i.expires_at).toLocaleString()}</p>
+                <p className="text-sm text-muted">
+                  Expires {new Date(i.expires_at).toLocaleString()} · Sent {i.send_count} of 3
+                </p>
+                {(state === 'Pending' || state === 'Expired') && i.send_count >= 3 && (
+                  <p className="text-sm text-warning">Sent 3 times. The person should contact the school. You can revoke this invitation and issue a new one.</p>
+                )}
                 {(state === 'Pending' || state === 'Expired') && (
                   <div className="flex flex-wrap gap-2">
-                    <Button variant="secondary" disabled={rowBusy} onClick={() => void resend(i)} aria-label={`Resend invitation to ${i.invited_email}`}>
+                    <Button variant="secondary" disabled={rowBusy || i.send_count >= 3} onClick={() => void resend(i)} aria-label={`Resend invitation to ${i.invited_email}`}>
                       Resend
                     </Button>
                     <Button variant="secondary" disabled={rowBusy} onClick={() => setRevoking(i)} aria-label={`Revoke invitation to ${i.invited_email}`}>
