@@ -338,3 +338,14 @@ test.describe('FR01 limits in the interface', () => {
     await expectNoHorizontalOverflow(page)
   })
 })
+
+test.describe('D-FR01-1 error summaries keep 44 px targets', () => {
+  test('FR01-AC05 the error summary links and every control stay at least 44 px after an error is shown', async ({ page }) => {
+    await signInAs(page, FIXTURE_EMAILS.admin1)
+    await page.goto('/admin/settings/invitations')
+    await page.getByRole('button', { name: 'Send invitation', exact: true }).click()
+    await expect(page.getByRole('alert').filter({ hasText: 'Please fix the following' })).toBeVisible()
+    await expectNoHorizontalOverflow(page)
+    await expectTouchTargets(page)
+  })
+})

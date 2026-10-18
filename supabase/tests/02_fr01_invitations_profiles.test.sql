@@ -2,7 +2,7 @@
 -- Builds its own fictional data inside the transaction; everything rolls back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(76);
+select plan(80);
 
 -- ------------------------------------------------------------------ fixture
 insert into auth.users (id, email, email_confirmed_at) values
@@ -96,13 +96,15 @@ create temp table r_invite as
 grant select on r_invite to public;
 select is((select r->>'ok' from r_invite), 'true', 'FR01-R02 an administrator can invite a family adult');
 select is((select r->'data'->>'delivery_status' from r_invite), 'pending', 'FR01-R06 delivery starts as pending');
+select is((select r->'data'->>'token_is_current' from r_invite), 'true', 'D-FR01-4 the first execution reports token_is_current');
+select ok((select r::text not like '%token_hash%' from r_invite), 'D-FR01-4 the invite result carries no token hash');
 select is((select r->'data'->>'expires_at' from r_invite)::timestamptz, '2026-11-08 12:00:00-05'::timestamptz,
   'FR01-R02 the invitation expires seven days after the server time');
 select is(public.invite_account('New-Family@FR01.example.test', 'family', '11111111-0000-4000-8000-000000000001',
-    encode(sha256(convert_to('tok-new', 'UTF8')), 'hex')), (select r from r_invite),
+    encode(sha256(convert_to('tok-new', 'UTF8')), 'hex')), (select r #- '{data,token_is_current}' from r_invite),
   'FR01-AC01 a retry with the same request id returns the first result');
 select is(public.invite_account('new-family@fr01.example.test', 'family', '11111111-0000-4000-8000-000000000001',
-    encode(sha256(convert_to('tok-retry-fresh', 'UTF8')), 'hex')), (select r from r_invite),
+    encode(sha256(convert_to('tok-retry-fresh', 'UTF8')), 'hex')), (select r #- '{data,token_is_current}' from r_invite),
   'FR01-R02 a retry that carries a fresh token still returns the first result');
 select is((select count(*)::int from public.invitations where lower(invited_email) = 'new-family@fr01.example.test'), 1,
   'FR01-AC01 the retry created no second invitation');
@@ -209,6 +211,10 @@ select is(public.resend_invitation((select (r->'data'->>'invitation_id')::uuid f
   'FR01-R02 an invitation cannot be sent more than 3 times');
 select is((select send_count from public.invitations where id = (select (r->'data'->>'invitation_id')::uuid from r_pending)), 3,
   'FR01-R02 the send count is visible to administrators and stops at 3');
+select ok((select r::text not like '%token_hash%' from r_pending), 'D-FR01-4 the first send result carries no token hash');
+reset role;
+select is((select count(*)::int from public.mutation_receipts where operation_name in ('invite_account','resend_invitation') and outcome::text like '%token_hash%'), 0,
+  'D-FR01-4 no stored idempotency receipt holds a token hash');
 reset role;
 select set_config('request.jwt.claims', '{"sub":"ee000000-0000-4000-8000-000000000005","role":"authenticated"}', true);
 set local role authenticated;

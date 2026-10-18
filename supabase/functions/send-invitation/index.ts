@@ -78,12 +78,12 @@ Deno.serve(async (req) => {
       unauthenticated ? 401 : 503,
     )
   }
-  const envelope = rpc.data as { ok: boolean; data: Record<string, string> | null }
+  const envelope = rpc.data as { ok: boolean; data: Record<string, string | boolean> | null }
   if (!envelope.ok || !envelope.data) return json(envelope)
 
-  const { token_hash: storedHash, ...publicData } = envelope.data
-  // A retry with the same request ID returns the first result; its token is not ours, so no new email.
-  if (storedHash !== tokenHash) return json({ ...envelope, data: publicData })
+  const { token_is_current: tokenIsCurrent, token_hash: _legacy, ...publicData } = envelope.data
+  // A retry with the same request ID returns the first result; it carries no token_is_current flag, so no new email.
+  if (tokenIsCurrent !== true) return json({ ...envelope, data: publicData })
 
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } })
   const { data: invitation } = await admin.from('invitations').select('invited_email').eq('id', publicData.invitation_id).single()

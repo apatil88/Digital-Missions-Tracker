@@ -447,6 +447,7 @@ describe('FR01 owner limits', () => {
     const email = uniqueEmail('three')
     const sent = await inviteViaFunction(admin, email, 'family')
     const id = sent.data.data.invitation_id as string
+    expect(JSON.stringify(sent.data)).not.toMatch(/token_hash|token_is_current/)
     const resend = () => admin.functions.invoke('send-invitation', { body: { action: 'resend', invitation_id: id, request_id: randomUUID(), origin: 'http://localhost:4173' } })
     expect((await resend()).data.ok).toBe(true)
     expect((await resend()).data.ok).toBe(true)
@@ -456,5 +457,11 @@ describe('FR01 owner limits', () => {
     expect(body.error.code).toBe('INVALID_STATE')
     const row = await admin.from('invitations').select('send_count').eq('id', id).single()
     expect(row.data?.send_count).toBe(3)
+  })
+
+  it('D-FR01-3 the provider refuses a password shorter than 8 characters', async () => {
+    const sb = await signIn(FIXTURE_EMAILS.admin1)
+    const short = await sb.auth.updateUser({ password: 'Ab1!x' })
+    expect(short.error).not.toBeNull()
   })
 })

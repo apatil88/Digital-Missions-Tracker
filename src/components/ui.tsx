@@ -231,7 +231,7 @@ export function ErrorSummary({ errors, title = 'Please fix the following' }: { e
       <ul className="mt-1 list-disc pl-5 text-sm">
         {errors.map((e) => (
           <li key={e.fieldId}>
-            <a className="underline" href={`#${e.fieldId}`}>
+            <a className="inline-flex min-h-11 items-center py-2 underline" href={`#${e.fieldId}`}>
               {e.message}
             </a>
           </li>
