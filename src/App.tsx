@@ -3,7 +3,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from '@/lib/auth'
 import { AppShell } from '@/components/AppShell'
 import { Gate, RequireAdmin, RequireAuth, RequireStaff } from '@/routes/guards'
+import { AdminCatalog } from '@/routes/AdminCatalog'
+import { AdminCycles } from '@/routes/AdminCycles'
 import { AdminInvitations } from '@/routes/AdminInvitations'
+import { AdminRoster } from '@/routes/AdminRoster'
 import { FamilyProfiles } from '@/routes/FamilyProfiles'
 import { Invite } from '@/routes/Invite'
 import { ForgotPassword, ResetPassword } from '@/routes/Recovery'
@@ -42,6 +45,9 @@ export default function App() {
                   <Route element={<RequireAdmin />}>
                     <Route path="admin/settings" element={<AdminSettings />} />
                     <Route path="admin/settings/invitations" element={<AdminInvitations />} />
+                    <Route path="admin/settings/cycles" element={<AdminCycles />} />
+                    <Route path="admin/settings/roster" element={<AdminRoster />} />
+                    <Route path="admin/settings/catalog" element={<AdminCatalog />} />
                   </Route>
                   <Route path="forbidden" element={<Forbidden />} />
                 </Route>

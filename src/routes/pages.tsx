@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { useUnsavedChangesGuard } from '@/lib/useUnsavedChangesGuard'
 import { Button, EmptyState, ErrorSummary, Field, LoadingState, Notice, UnavailableFeature, type FormError } from '@/components/ui'
+import { formatInstant, missionName } from '@/lib/cycles'
 
 function homeFor(isStaff: boolean, hasFamily: boolean) {
   return isStaff && !hasFamily ? '/staff/reviews' : '/family'
@@ -60,6 +61,12 @@ export function SignIn() {
 }
 
 type StudentRow = { id: string; display_name: string; kind: 'child' | 'adult' }
+type AssignedRow = {
+  id: string
+  student: { display_name: string } | null
+  template: { type: string; version: number } | null
+  cycle: { name: string; cutoff_at: string | null; timezone: string; archived_at: string | null } | null
+}
 
 /** F00 proves an authenticated, row-level-secured read. FR03 replaces this with the dashboard. */
 export function Family() {
@@ -70,6 +77,17 @@ export function Family() {
       const { data, error } = await supabase.from('students').select('id, display_name, kind').order('display_name')
       if (error) throw error
       return data as StudentRow[]
+    },
+  })
+  const assigned = useQuery({
+    queryKey: ['assigned-missions', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('assignments')
+        .select('id, student:students(display_name), template:mission_templates(type, version), cycle:graduation_cycles(name, cutoff_at, timezone, archived_at)')
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      return data as unknown as AssignedRow[]
     },
   })
   return (
@@ -91,6 +109,29 @@ export function Family() {
       <Link to="/family/profiles" className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
         Manage student profiles
       </Link>
+      <section aria-labelledby="assigned-missions" className="flex flex-col gap-2">
+        <h2 id="assigned-missions" className="text-lg font-semibold">
+          Assigned missions
+        </h2>
+        {assigned.isPending && <LoadingState label="Loading missions" />}
+        {assigned.isError && <Notice tone="warning">We could not load your missions. Nothing is shown because it could not be verified. Reload to retry.</Notice>}
+        {assigned.data && assigned.data.length === 0 && <EmptyState title="No missions assigned yet">The school assigns missions. They appear here.</EmptyState>}
+        <ul className="flex flex-col gap-2">
+          {assigned.data?.map((a) => (
+            <li key={a.id} className="rounded-card border border-line bg-card p-4">
+              <p className="break-words font-semibold">
+                {a.student?.display_name}: {a.template ? missionName(a.template.type) : 'Mission'}
+              </p>
+              <p className="break-words text-sm text-muted">{a.cycle?.name}</p>
+              {a.cycle && (
+                <p className="text-sm text-muted">
+                  Cutoff {formatInstant(a.cycle.cutoff_at, a.cycle.timezone)} ({a.cycle.timezone})
+                </p>
+              )}
+            </li>
+          ))}
+        </ul>
+      </section>
       <UnavailableFeature feature="The mission dashboard" id="FR03" />
     </div>
   )
@@ -125,10 +166,16 @@ export const StaffStatus = () => (
 export const AdminSettings = () => (
   <div className="flex flex-col gap-4">
     <h1 className="text-2xl font-bold">School settings</h1>
-    <Link to="/admin/settings/invitations" className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
-      Invitations
-    </Link>
-    <UnavailableFeature feature="Administrator settings" id="FR02" />
+    {[
+      ['/admin/settings/cycles', 'Graduation cycles'],
+      ['/admin/settings/roster', 'Assign missions'],
+      ['/admin/settings/catalog', 'Missions'],
+      ['/admin/settings/invitations', 'Invitations'],
+    ].map(([to, label]) => (
+      <Link key={to} to={to} className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
+        {label}
+      </Link>
+    ))}
   </div>
 )
 

@@ -48,6 +48,8 @@ FR02-R05 Allow draft cycle edits before assignment. After assignment, cutoff cha
 
 FR02-R06 Archive only under C03 rules, with an administrator Restore cycle action before any later reopening. Restore changes archive status without resetting missions. New cycle assignments start at zero. Catalog enablement does not modify submitted content. Pilot catalog enablement requires approved content status.
 
+FR02-R07 A student has at most one assignment per mission type in a cycle. Assigning a different template version of a type the student already holds in that cycle is rejected with INVALID_STATE and creates no second assignment. Different mission types, such as Teamwork and Respect, can both be assigned.
+
 ## 6 Data and logical operation contracts
 
 create_cycle(name, dates, timezone, explicit_cutoff, request_id) -> cycle_id, version.
@@ -85,6 +87,8 @@ FR02-AC05 Given an approved prior-cycle mission, when a new cycle is assigned, t
 FR02-AC06 Given any assignment not approved, including a submitted mission awaiting review, when an administrator archives the cycle, then the archive fails and affected assignments are identified.
 
 FR02-AC07 Given an archived approved cycle, when an administrator restores with a reason, then archive status clears while approved states and historical snapshots remain unchanged.
+
+FR02-AC08 Given a student with a Teamwork assignment in a cycle, when an administrator assigns a different Teamwork template version to that student in the same cycle, then the assignment is rejected and the student still has exactly one Teamwork assignment, while assigning Respect to that student succeeds.
 
 These scenarios are specified, not executed. Test actual behavior and backend authorization. Record PASS, FAIL or NOT RUN with evidence for every identifier.
 
