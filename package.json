@@ -15,7 +15,7 @@
     "fixtures:users": "node scripts/create-fixture-users.mjs",
     "bootstrap:admin": "node scripts/bootstrap-admin.mjs",
     "env:local": "node scripts/setup-env.mjs",
-    "db:start": "supabase start -x studio,imgproxy,edge-runtime,logflare,vector,mailpit,realtime,storage-api,supavisor,postgres-meta",
+    "db:start": "supabase start -x studio,imgproxy,logflare,vector,realtime,storage-api,supavisor,postgres-meta",
     "db:stop": "supabase stop",
     "preview": "vite preview"
   },

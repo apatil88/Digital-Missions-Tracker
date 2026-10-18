@@ -2,7 +2,7 @@
 
 Mobile-first PWA for one martial arts school: families log and attest Teamwork and Respect mission activities, instructors review. React + TypeScript + Vite, Tailwind, shadcn/ui-style components, Supabase (Postgres, Auth, RLS). All data in this repository is fictional.
 
-Status: **F00 foundation only.** Feature behavior (FR01 to FR15) is not built. Specifications live in `specs/`; start at `specs/00_START_HERE.txt`.
+Status: **F00 foundation and FR01 (account invitations and family profiles).** FR02 to FR15 are not built. Specifications live in `specs/`; start at `specs/00_START_HERE.txt`.
 
 ## Prerequisites
 
@@ -16,7 +16,7 @@ Status: **F00 foundation only.** Feature behavior (FR01 to FR15) is not built. S
 
 ```bash
 npm install
-npm run db:start          # starts the LOCAL Supabase stack in Docker (first run pulls images)
+npm run db:start          # starts the LOCAL Supabase stack in Docker (first run pulls images; includes the Edge Function runtime and Mailpit)
 npm run env:local         # writes .env.local from the local stack + a random fixture password
 npm run db:reset          # reruns migrations + demo seed, then creates fictional fixture users
 npm run dev               # http://localhost:5173
@@ -33,6 +33,10 @@ Sign in with a fixture account (password is `FIXTURE_PASSWORD` in your `.env.loc
 | Administrator (also owns a family) | admin-1@example.test |
 
 Stop the stack with `npm run db:stop`.
+
+### Invitations locally (FR01)
+
+Accounts are created by invitation only. As `admin-1@example.test`, open **Settings > Invitations**, enter an email and send. Local emails are never delivered: open Mailpit at http://127.0.0.1:54324, follow the link in the message, set a password, accept the (sample) notice, and you land in the family or staff workspace. The privileged email call is the `send-invitation` Edge Function (`supabase/functions/send-invitation`); the local stack serves it automatically.
 
 ## Commands
 
@@ -52,6 +56,7 @@ Stop the stack with `npm run db:stop`.
 
 ## Layout
 
+- `supabase/functions/` Edge Functions (privileged provider calls only)
 - `supabase/migrations/` schema, helpers and RLS (never edit a merged migration; add a new one)
 - `supabase/seed.sql` fictional school, templates, catalog, cycle
 - `supabase/tests/` pgTAP tests

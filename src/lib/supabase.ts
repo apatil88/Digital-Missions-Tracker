@@ -5,7 +5,12 @@ import { createClient } from '@supabase/supabase-js'
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
-export const providerConfigured = Boolean(url && anonKey)
+// The provider puts link results in the URL fragment (type=invite|recovery, or an error). The client
+// removes them after reading, so capture them once at load. Used only to choose a message.
+const hash = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.hash.slice(1))
+export const initialAuthLink = { type: hash.get('type'), errorCode: hash.get('error_code') }
+
+export const providerConfigured =Boolean(url && anonKey)
 export const supabaseUrl = url ?? ''
 
 export const supabase = createClient(url ?? 'http://provider-not-configured.invalid', anonKey ?? 'not-configured', {

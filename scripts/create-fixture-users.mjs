@@ -72,6 +72,13 @@ await upsert(
   'id',
 )
 
+// FR01: fixture families have already accepted the sample notice (profiles require it).
+await upsert(
+  'notice_acceptances',
+  ['family-a', 'family-b', 'reviewer-1', 'reviewer-2', 'admin-1'].map((k) => ({ user_id: id('user-' + k), notice_version: 'demo-notice-v1' })),
+  'user_id,notice_version',
+)
+
 // Empty teamwork assignments (M0 shape). A2 deliberately has none (M_NONE).
 const tmpl = md5uuid('tmpl-teamwork-1')
 const { data: t, error: te } = await sb.from('mission_templates').select('*').eq('id', tmpl).single()

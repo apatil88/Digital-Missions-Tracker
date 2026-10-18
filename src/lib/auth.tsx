@@ -19,6 +19,8 @@ type AuthValue = {
   isAdmin: boolean
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
+  /** Re-reads the memberships for the current session (after accepting an invitation). */
+  refreshContext: () => Promise<MyContext | null>
   retry: () => void
 }
 
@@ -105,6 +107,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     lastUserId.current = null
   }, [clearPrivateState])
 
+  const refreshContext = useCallback(async () => {
+    const { data: ctx, error } = await supabase.rpc('get_my_context')
+    if (error || !ctx) return null
+    setContext(ctx as MyContext)
+    return ctx as MyContext
+  }, [])
+
   const value = useMemo<AuthValue>(
     () => ({
       status,
@@ -114,9 +123,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAdmin: context?.staff.some((s) => s.role === 'admin') ?? false,
       signIn,
       signOut,
+      refreshContext,
       retry: () => setAttempt((n) => n + 1),
     }),
-    [status, user, context, signIn, signOut],
+    [status, user, context, signIn, signOut, refreshContext],
   )
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>
 }

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
@@ -13,6 +13,10 @@ function homeFor(isStaff: boolean, hasFamily: boolean) {
 export function SignIn() {
   const { status, signIn, isStaff, context } = useAuth()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  // Only same-site paths are honored, so a crafted link cannot send a user elsewhere.
+  const rawNext = params.get('next')
+  const next = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : null
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState<FormError[]>([])
@@ -20,7 +24,7 @@ export function SignIn() {
   useUnsavedChangesGuard(false)
 
   if (status === 'authenticated') {
-    return <Navigate to={homeFor(isStaff, (context?.families.length ?? 0) > 0)} replace />
+    return <Navigate to={next ?? homeFor(isStaff, (context?.families.length ?? 0) > 0)} replace />
   }
 
   async function onSubmit(e: FormEvent) {
@@ -34,7 +38,7 @@ export function SignIn() {
     const { error } = await signIn(email.trim(), password)
     setBusy(false)
     if (error) setErrors([{ fieldId: 'email', message: error }])
-    else navigate('/family')
+    else navigate(next ?? '/family')
   }
 
   const msg = (id: string) => errors.find((x) => x.fieldId === id)?.message
@@ -48,6 +52,9 @@ export function SignIn() {
       <Button type="submit" disabled={busy}>
         {busy ? 'Signing in…' : 'Sign in'}
       </Button>
+      <Link to="/forgot-password" className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
+        Forgot your password?
+      </Link>
     </form>
   )
 }
@@ -81,6 +88,9 @@ export function Family() {
           ))}
         </ul>
       )}
+      <Link to="/family/profiles" className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
+        Manage student profiles
+      </Link>
       <UnavailableFeature feature="The mission dashboard" id="FR03" />
     </div>
   )
@@ -115,6 +125,9 @@ export const StaffStatus = () => (
 export const AdminSettings = () => (
   <div className="flex flex-col gap-4">
     <h1 className="text-2xl font-bold">School settings</h1>
+    <Link to="/admin/settings/invitations" className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
+      Invitations
+    </Link>
     <UnavailableFeature feature="Administrator settings" id="FR02" />
   </div>
 )

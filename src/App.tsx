@@ -3,6 +3,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from '@/lib/auth'
 import { AppShell } from '@/components/AppShell'
 import { Gate, RequireAdmin, RequireAuth, RequireStaff } from '@/routes/guards'
+import { AdminInvitations } from '@/routes/AdminInvitations'
+import { FamilyProfiles } from '@/routes/FamilyProfiles'
+import { Invite } from '@/routes/Invite'
+import { ForgotPassword, ResetPassword } from '@/routes/Recovery'
 import { AdminSettings, Family, Forbidden, MissionDetail, NotFound, SignIn, StaffReviews, StaffStatus } from '@/routes/pages'
 
 // No persisted query cache: authenticated data lives in page memory only.
@@ -24,8 +28,12 @@ export default function App() {
               <Route element={<Gate />}>
                 <Route index element={<Home />} />
                 <Route path="sign-in" element={<SignIn />} />
+                <Route path="invite" element={<Invite />} />
+                <Route path="forgot-password" element={<ForgotPassword />} />
+                <Route path="reset-password" element={<ResetPassword />} />
                 <Route element={<RequireAuth />}>
                   <Route path="family" element={<Family />} />
+                  <Route path="family/profiles" element={<FamilyProfiles />} />
                   <Route path="family/students/:studentId/missions/:assignmentId" element={<MissionDetail />} />
                   <Route element={<RequireStaff />}>
                     <Route path="staff/reviews" element={<StaffReviews />} />
@@ -33,6 +41,7 @@ export default function App() {
                   </Route>
                   <Route element={<RequireAdmin />}>
                     <Route path="admin/settings" element={<AdminSettings />} />
+                    <Route path="admin/settings/invitations" element={<AdminInvitations />} />
                   </Route>
                   <Route path="forbidden" element={<Forbidden />} />
                 </Route>

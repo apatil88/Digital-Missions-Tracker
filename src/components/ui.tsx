@@ -1,4 +1,13 @@
-import { forwardRef, useEffect, useId, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from 'react'
+import {
+  forwardRef,
+  useEffect,
+  useId,
+  useRef,
+  type ButtonHTMLAttributes,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+} from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import * as Dialog from '@radix-ui/react-dialog'
 import { cva, type VariantProps } from 'class-variance-authority'
@@ -75,6 +84,136 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(({ label, hint, er
   )
 })
 Field.displayName = 'Field'
+
+// ------------------------------------------------------------ SelectField
+type SelectFieldProps = SelectHTMLAttributes<HTMLSelectElement> & {
+  label: string
+  hint?: string
+  error?: string
+  options: { value: string; label: string }[]
+  placeholder?: string
+}
+
+export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
+  ({ label, hint, error, id, options, placeholder, className, ...props }, ref) => {
+    const auto = useId()
+    const fieldId = id ?? auto
+    const hintId = hint ? `${fieldId}-hint` : undefined
+    const errorId = error ? `${fieldId}-error` : undefined
+    return (
+      <div className="flex flex-col gap-1">
+        <label htmlFor={fieldId} className="text-sm font-semibold">
+          {label}
+        </label>
+        {hint && (
+          <p id={hintId} className="text-sm text-muted">
+            {hint}
+          </p>
+        )}
+        <select
+          ref={ref}
+          id={fieldId}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={[hintId, errorId].filter(Boolean).join(' ') || undefined}
+          className={cn('min-h-11 w-full rounded-control border bg-card px-3 py-2 text-base', error ? 'border-danger' : 'border-line', className)}
+          {...props}
+        >
+          <option value="">{placeholder ?? 'Choose…'}</option>
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        {error && (
+          <p id={errorId} className="flex items-center gap-1 text-sm font-medium text-danger">
+            <AlertTriangle aria-hidden className="size-4 shrink-0" /> {error}
+          </p>
+        )}
+      </div>
+    )
+  },
+)
+SelectField.displayName = 'SelectField'
+
+// ------------------------------------------------------------ CheckboxField
+export function CheckboxField({
+  label,
+  error,
+  id,
+  ...props
+}: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & { label: ReactNode; error?: string }) {
+  const auto = useId()
+  const fieldId = id ?? auto
+  const errorId = error ? `${fieldId}-error` : undefined
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor={fieldId} className="flex min-h-11 items-start gap-3 py-2 text-base">
+        <input
+          id={fieldId}
+          type="checkbox"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={errorId}
+          className="mt-0.5 size-6 shrink-0 accent-primary-strong"
+          {...props}
+        />
+        <span>{label}</span>
+      </label>
+      {error && (
+        <p id={errorId} className="flex items-center gap-1 text-sm font-medium text-danger">
+          <AlertTriangle aria-hidden className="size-4 shrink-0" /> {error}
+        </p>
+      )}
+    </div>
+  )
+}
+
+// -------------------------------------------------------------- ChoiceGroup
+export function ChoiceGroup({
+  legend,
+  name,
+  value,
+  onChange,
+  options,
+  error,
+  id,
+}: {
+  legend: string
+  name: string
+  value: string
+  onChange: (value: string) => void
+  options: { value: string; label: string; disabled?: boolean; hint?: string }[]
+  error?: string
+  id?: string
+}) {
+  return (
+    <fieldset id={id} className="flex flex-col gap-1" aria-invalid={error ? true : undefined}>
+      <legend className="text-sm font-semibold">{legend}</legend>
+      {options.map((o) => (
+        <label key={o.value} className={cn('flex min-h-11 items-start gap-3 py-2 text-base', o.disabled && 'text-muted')}>
+          <input
+            type="radio"
+            name={name}
+            value={o.value}
+            checked={value === o.value}
+            disabled={o.disabled}
+            onChange={() => onChange(o.value)}
+            className="mt-0.5 size-6 shrink-0 accent-primary-strong"
+          />
+          <span>
+            {o.label}
+            {o.hint && <span className="block text-sm text-muted">{o.hint}</span>}
+          </span>
+        </label>
+      ))}
+      {error && (
+        <p className="flex items-center gap-1 text-sm font-medium text-danger">
+          <AlertTriangle aria-hidden className="size-4 shrink-0" /> {error}
+        </p>
+      )}
+    </fieldset>
+  )
+}
 
 // ------------------------------------------------------------ ErrorSummary
 export type FormError = { fieldId: string; message: string }
