@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+coverage
+.env
+.env.*
+!.env.example
+supabase/.temp
+supabase/.branches
+playwright-report
+test-results
+*.local
+.vite
+.claude/settings.local.json

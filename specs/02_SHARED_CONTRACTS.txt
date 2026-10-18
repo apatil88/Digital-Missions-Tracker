@@ -1,0 +1,92 @@
+[Unverified] Shared implementation contract v0.1. All names below are proposed logical contracts, not existing APIs. Map them to the inspected project and document the mapping. Preserve behavior if implementation names differ.
+
+C01 Authentication and authority
+Use authentication-provider user identifiers. school_memberships maps account to instructor or administrator rights. family_memberships maps one managing adult to a family for the pilot. students.family_id determines family scope. Staff also need family membership to edit their own family entries. Staff rights alone grant no family-write rights.
+Administrators inherit reviewer rights. Parents and adult students are personas using family permission, not separate authentication systems. Reject all anonymous record reads. Deny access to another family's identifiers without leaking names, existence, counts, or errors containing protected data. Use NOT_FOUND for an unauthorized resource identifier and FORBIDDEN for a disallowed operation on an otherwise visible resource.
+First administrator provisioning uses a trusted server-side setup step outside public registration. No role switcher, public admin signup, client-side role claims, or browser-held privileged keys. Self-service role escalation is forbidden.
+
+C02 Data model minimum
+All primary identifiers are UUIDs. Every school-owned record carries school_id or an unambiguous protected relationship. Use foreign keys, timestamps from the backend, and explicit active flags. Authorization follows relationships rather than user-submitted school identifiers.
+schools: id, display_name, timezone, environment_mode demo/pilot, policy settings, version.
+school_memberships: school_id, user_id, role instructor/admin, active. Unique school/user/role.
+families: id, school_id, active.
+family_memberships: family_id, user_id, owner=true, active. One active managing user per family in MVP.
+students: id, family_id, display_name, age_band_id, kind child/adult, adult_user_id nullable, active, version. Adult profile maps to the managing adult. One own adult profile per family. Several child profiles allowed.
+age_bands: id, school_id, label, catalog_key, active. School-configured labels, no full birth dates.
+invitations: id, school_id, intended_role, invited_email, token_hash or provider reference, expires_at, accepted_by, accepted_at, revoked_at. Do not expose tokens in logs.
+notice_acceptances: user_id, notice_version, accepted_at. Pilot notice content supplied before real use.
+mission_templates: id, school_id, type teamwork/respect, version, approved_instructions, required_count=50, repeat_limit=2, enabled, approved_content flag. Version rather than overwrite instructions used by assignments.
+activity_groups: id, template_type, stable grouping_key. Groups represent the same or similar action under school policy.
+catalog_activities: id, school_id, template_type, activity_group_id, title, age_band_ids, setting, active, approved_content, version.
+catalog_aliases: normalized_title, activity_group_id, template_type. Ambiguous aliases require review instead of automatic matching.
+graduation_cycles: id, school_id, name, activity_start_date, activity_end_date, graduation_date, timezone, cutoff_at, archived_at, version. Dates use the configured school timezone, cutoff_at stores an absolute instant.
+assignments: id, school_id, student_id, cycle_id, template_id, frozen_template_version/instructions/count/limit, state, content_version, lifecycle_version, current_submission_id. Unique student/template/cycle.
+activity_records: id, assignment_id, source catalog/custom, catalog_id nullable, activity_group_id nullable, original_title, normalized_title, participation, completed_on, attestation_type parent/self, attested_by, attested_at, active, revision, created_at, updated_at.
+submissions: id, assignment_id, sequence, submitted_at, submitted_by, source_content_version, frozen_student_display_name, frozen_mission_label, frozen_cycle_label, frozen_policy_metadata. Unique assignment/sequence.
+submission_entries: submission_id, source_record_id, source_revision, ordinal, copied title/participation/date/catalog/group/attestation fields. Immutable to application roles after insert.
+review_classifications: submission_id, source_record_id, review_group_key, reviewer_id, classified_at. Unique submission/entry. Does not modify the submitted statement.
+review_decisions: id, submission_id, outcome approved/returned, reviewer_id, reason, flagged_entry_ids, decided_at. One final review decision per submission. Reopening does not erase an approval.
+deadline_exceptions: id, assignment_id, expires_at, granted_by, granted_at, reason, revoked_at. At most one active exception per assignment. Updating an exception revokes the old row and creates a new row in one transaction.
+audit_events: actor_id, action, entity_id, entity_version, occurred_at, structured change references. Append-only, school-scoped. Full student narratives remain in protected records, not analytics logs.
+mutation_receipts: actor_id, operation_name, request_id, payload_hash, outcome_reference, created_at. Unique actor/operation/request_id. Receipt retention is an operational decision, not a school mission policy.
+
+C03 State and status
+Family editable states: not_started, in_progress, needs_changes. Saving the first record changes not_started to in_progress. Removing the last record changes in_progress to not_started. Removing all returned records preserves needs_changes so feedback is not hidden.
+Ready to submit is a derived label only for in_progress with zero submission blockers. needs_changes retains its label and shows Resubmit enabled when validation passes. Draft editing remains permitted after the submission cutoff if the cycle is not archived.
+submit changes an editable assignment to submitted. return changes submitted to needs_changes. approve changes submitted to approved. reopen changes approved to needs_changes and records an administrator reason. No direct family transition to approved. An archived cycle is read-only, including review mutations. Archive requires every existing assignment to be approved, or no assignments. An administrator restores the cycle before reopening an approval. Restore preserves all assignment states and history, changes only archive status, and records an audit event.
+Deadline openness is computed separately. A submitted mission stays submitted after cutoff. Overall graduation eligibility is outside this application.
+
+C04 Mutation and error envelope
+All mutations require an authenticated actor, operation-specific input, request_id, and expected version where the operation updates existing mutable data. Resolve actor and ownership server-side. Return {ok, data, error}, where error has code, safe message, field_errors, and retryable. Do not place student narratives in error telemetry.
+Common errors: UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, VALIDATION_FAILED, VERSION_CONFLICT, INVALID_STATE, DUPLICATE_REQUEST_PAYLOAD, POLICY_NOT_CONFIGURED, RATE_LIMITED, TEMPORARILY_UNAVAILABLE.
+Scope idempotency to actor + operation + request_id. Same key and payload returns the original committed result even after the state changes. Same key and different payload returns DUPLICATE_REQUEST_PAYLOAD. Check current access before returning a previous receipt. Pending writes must not emit success. After an ambiguous timeout, retry with the same key.
+Use a consistent transaction locking order. Serialize commands affecting one assignment. Recheck related settings inside the transaction. Saving, editing, deleting, submitting, classifying, approving, returning, and reopening must not partially commit. Record audit events in the same transaction as the action where feasible. If an external auth/email step is involved, use an explicit pending/failed status and retry rather than pretending the external operation committed atomically.
+
+C05 Versions and snapshots
+content_version increments on every activity add/edit/remove. lifecycle_version increments on state, review classification, and exception changes affecting the assignment. Submission stores the current content version. Review commands require current submission ID and expected lifecycle version. A setting version captures cutoff changes.
+Submission content is append-only. Corrections edit working records, then create a new submission sequence. Approval applies only to current_submission_id. Review classification is an overlay for one submission. Reset custom review classification on each new submission, even if text is unchanged, as a proposed MVP simplification. Known catalog groups remain available from the snapshot. No retroactive catalog edits change snapshots.
+Families see their own working records, submissions, decisions, and feedback. Full staff audit metadata is admin-scoped. Staff review never allows editing a parent's words or attestation.
+
+C06 Counts and repetition
+Count active records within one assignment. Maximum 50 on create, exactly 50 on submit. Edit excludes the record being edited from usage counts. Removal frees one occurrence.
+Normalize titles: Unicode NFKC, lowercase with one consistent locale-independent rule, replace punctuation with spaces, collapse whitespace, trim. Reject an empty result. Preserve original text. Use identical server normalization in all commands, never a browser-only approximation as authority.
+Known catalog variants and unambiguous aliases map to one stable group. Count catalog entries plus custom aliases together. Unmatched custom titles use a provisional normalized-title key for exact repetition checks. Two accepted occurrences per group, third rejected. Similar wording without a known mapping remains unclassified.
+Review grouping combines catalog group identities with instructor-assigned group keys. A reviewer merges equivalent custom groups where needed. Approval checks grouped totals <=2 and zero unresolved custom classifications. Catalog selection does not prove the described action matches the suggestion. Return misleading or unclear records rather than altering statements.
+
+C07 Dates and deadlines
+completed_on is a date, not an event timestamp. Require cycle start <= completed_on <= min(cycle end, school-local today). Logging a past date retains the actual attestation and creation timestamps. Editing the participation, title, source, classification, or date requires renewed attestation.
+effective_cutoff=max(cycle cutoff, unrevoked assignment exception expiry). Evaluate using server time at the authoritative transactional validation point. A request arriving earlier but validated after expiry fails. UI is a guide, not authority. Same-key retries of an already committed submission return its receipt after expiry.
+Administrator explicitly configures timezone and local cutoff date/time. Reject nonexistent local times at daylight-saving transitions. Require an explicit offset choice for ambiguous local times. Preview the absolute instant before saving. Graduation date changes never silently alter cutoff. Show existing cutoff and require explicit confirmation.
+An extension changes submission timing only, not the permitted activity window. Corrections involving new activity dates require those dates to remain inside the activity window. Post-assignment activity-window edits need a separate approved policy change, not an implicit extension.
+
+C08 Input and UI defaults proposed for demo
+Display name: trimmed 1 to 60 characters. Activity title: 3 to 120 characters. Participation: 10 to 500 characters, with a separate explanation field even when a catalog title exists. Reason/feedback: 10 to 1000 characters. These length limits do not prove truthfulness. Treat entries as plain text, escape on display, and reject empty or control-only strings. Limits are proposed implementation defaults in D02.
+Keep selected student, mission, progress and cutoff visible. Loading state, empty state, permission error, offline state, validation errors, retry, and stale-version refresh are required. Use an accessible error summary and field errors. Do not wipe unsaved text on a rejected save. Re-authentication must not automatically attest or submit.
+Cache no authenticated API responses in the service worker. Do not store child narratives in browser persistent storage. Temporary form content lives only in page memory. Browser close and mobile process termination might discard memory, so explain this limit and use navigation protection where supported.
+
+C09 Read contracts
+get_family_dashboard(): own students and assignments, recorded_count, state/display_status, blocking_count, unresolved_custom_count, effective_cutoff, next_action. FR03 owns presentation.
+get_mission_detail(assignment_id): authorized working records, feedback, latest submission metadata, validation summary, permissions. Returns server time and versions.
+get_review_queue(cycle_id,filters,cursor): authorized school records, paginated. Server-enforced school scope.
+get_submission(submission_id): immutable entries plus current review overlay and allowed actions.
+get_school_status(cycle_id,filters,cursor): roster and all required assignments with aggregate mission status. Students without assignments remain visible.
+get_print_record(assignment_id,submission_id optional): protected view model from working draft or selected immutable submission.
+Read routes never imply write permission. All list queries are scoped on the server before pagination or aggregation.
+
+C10 Command ownership
+FR01: invite_account, accept_invitation, save_student_profile.
+FR02: create_cycle, update_cycle, assign_mission, set_catalog_enabled, archive_cycle, restore_cycle. Cutoff calculation delegated to FR10.
+FR04: list_suggestions and selection UI only. Catalog seed/import is foundation/setup.
+FR05: create_activity.
+FR06: update_activity, remove_activity.
+FR07: normalize_activity_title, resolve_activity_group, validate_repetition. These are internal services, not privileged user endpoints.
+FR08: validate_submission internal service plus authorized preflight read operation.
+FR09: submit_mission.
+FR10: resolve_cutoff, set_cycle_cutoff, grant_extension, revoke_extension.
+FR12: classify_entry, merge_review_groups, approve_submission, return_submission, reopen_approval. Owns transactional review mutations.
+FR11: review UI calling FR12 commands. Do not implement another approval path.
+FR13/FR14/FR15: authorized read models, print, and computed notices. FR15 also owns admin-only set_reminder_thresholds using the common mutation envelope. No alternate mission mutations to bypass existing commands.
+
+C11 Completion gate
+Feature completion requires acceptance evidence and authorization checks, including direct backend attempts. UI-only hiding is insufficient. Use unit tests for pure rules, integration tests for transactional commands and permissions, and browser checks for user flows. Run additional regression only for affected shared behavior. Test fixtures stay fictional and outside production seed paths.
+All listed acceptance scenarios are requirements, not evidence of executed tests. Deployment, real onboarding, and privacy-policy approval are outside feature completion.

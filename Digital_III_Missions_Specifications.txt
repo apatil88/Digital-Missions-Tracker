@@ -1,0 +1,1641 @@
+Digital III Missions Tracker
+Complete Specification Driven Development Pack v0.1
+
+
+========================================================================
+FILE 00_START_HERE.txt
+========================================================================
+
+Digital III Missions Tracker
+Specification Driven Development pack v0.1
+Prepared October 17 2026 America New York
+
+[Unverified] Proposed implementation specifications derived from the PRD and workflow discussion. School policies and new design choices require the decisions identified in 03_DECISIONS.txt. No application code has been built or tested by producing this pack.
+
+Purpose
+Build one school application with a coding agent through small, verifiable features. This pack defines a project-specific specification-driven process. No particular SDD framework or command-line toolkit is required.
+
+Source baseline
+Digital III Missions Tracker PRD v0.1 dated October 17 2026, 11 pages. Read from the current saved document on October 17 2026. This pack supplements the PRD and does not change the original file. Where the PRD leaves behavior open, decisions below identify a proposed implementation default or a founder decision.
+
+How to use the pack
+1. Read 03_DECISIONS.txt. Demo defaults authorize fictional-data behavior only. Resolve live-pilot gates before introducing real families.
+2. Add the contents of 01_PROJECT_KNOWLEDGE.txt to the project knowledge or instruction settings of your coding agent.
+3. Supply 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt, 04_FOUNDATION.txt and 05_TEST_FIXTURES.txt for the foundation planning task. Copy their text into chat or provide the files through an available attachment interface.
+4. Ask the coding agent to preserve these documents in the project under /specs. If file import is unavailable, paste the relevant text. Do not assume the agent reads a ZIP archive or every file automatically.
+5. Use Plan mode for the selected foundation or feature. Paste the planning prompt at the end of its specification. Include shared contracts and decision records in the context.
+6. Review the plan for requirement coverage, dependencies, database changes, access rules, tests, and unresolved questions. Approve only the bounded feature scope.
+7. After implementation, use the verification prompt in the specification. Require actual evidence for each acceptance ID. Mark unavailable tests NOT RUN, never PASS.
+8. Record changes in a feature completion report. Move to the next feature only after its blocking scenarios pass. If a prerequisite changes, rerun the affected downstream scenarios.
+
+Suggested build order
+F00 foundation
+FR01 accounts and profiles
+FR02 mission setup and assignment
+FR07 repetition engine
+FR04 suggested and custom activities
+FR05 record and attest
+FR06 edit and remove
+FR10 cutoffs and exceptions
+FR08 submission validation
+FR03 family dashboard
+FR09 submission and snapshots
+FR12 review commands and decision integrity
+FR11 instructor review interface
+FR13 graduation mission status
+FR14 printable record
+FR15 in-app notices
+
+Why the numbering differs from build order
+The PRD numbers identify product features. Dependencies determine implementation order. Repetition checks precede recording. Cutoff rules precede submission. Shared review commands precede the instructor interface. Keep the FR identifiers unchanged for traceability.
+
+Demo release
+Implement the complete Teamwork journey with fictional records. Include submit, return, correction, resubmit, and approval. Include repetition and cutoff rejection examples. Respect uses the same engine and is enabled with approved content before the pilot.
+
+What each feature includes
+User outcomes, role interactions, dependencies, screens, numbered requirements, logical backend contracts, errors, acceptance scenarios, implementation tasks, exclusions, and copy-paste planning and verification prompts.
+
+Spec change procedure
+Before changing a shared rule, identify the affected requirement and decision IDs, document the reason and proposed behavior, and obtain product-owner agreement. Update the shared contract and affected feature specs before implementation. Record a version and change note. Do not silently relax rules to make tests pass.
+
+Required completion report
+Feature and spec version
+Implemented requirement IDs
+Changed components, backend operations, migrations, and access policies
+Acceptance ID | PASS / FAIL / NOT RUN | evidence
+Manual checks and device coverage
+Known gaps and unresolved decisions
+Migration and rollback considerations
+Next permitted feature
+
+Sources for the handoff instructions
+Checked October 17 2026. The docs describe planning before implementation and persistent project-specific instructions. The development workflow and specifications in this pack are project proposals, not an official SDD standard.
+
+========================================================================
+FILE 01_PROJECT_KNOWLEDGE.txt
+========================================================================
+
+[Unverified] Project specification v0.1. Proposed behavior pending the decisions in /specs/03_DECISIONS.txt.
+
+Product
+Digital III Missions Tracker for one martial arts school. Build a mobile-first PWA with a Supabase backend as proposed in the PRD. Inspect the existing project and integrations before choosing libraries or generating migrations. Do not switch backend products without product-owner agreement.
+
+Users
+Parent or guardian manages children. Adult student manages their adult profile. Both use family permissions. Instructor reviews school submissions. School administrator has instructor rights plus invitations, assignment, catalog enablement, cutoff configuration, and exceptions. A person might have family and staff memberships. Children have no login. One managing adult account per family for the pilot.
+
+Scope
+Teamwork is the first complete demonstration. Respect joins before the pilot. One school. Fictional data until live-pilot decisions are resolved. No payments, attendance, videos, child media, chat, leaderboards, native app-store release, AI suggestions, semantic AI matching, public registration, or multi-school management.
+
+Domain rules
+Exactly 50 active attested records per submission. Same or similar activity no more than twice within one assignment. Catalog variants share an activity group. Unmatched custom entries require instructor classification. Selecting a suggestion creates no credit. No bulk completion. No automatic attestation. Proposed adult self-attestation is gated for live use.
+
+States
+Persist not_started, in_progress, submitted, needs_changes, approved. Derive Ready to submit from submission validation only while in_progress. Needs changes stays visible until resubmission, with a separate ready indicator. Deadline openness is separate from mission state. Submitted and approved records are read-only for families. Administrator reopening creates needs_changes and records a reason.
+
+Security and integrity
+Enforce family ownership and staff permissions in the backend and database policies. Do not trust a browser-supplied role, actor, count, timestamp, attestation identity, or approval. Staff review never grants permission to rewrite family statements. Reject review and reopening of the actor's own family records. Use another reviewer.
+Save submission content as immutable versions. Store review classifications separately from snapshot content. Use protected transactional commands, expected versions, and idempotency keys for mutations. Check the latest cutoff and record state inside submit. Require fresh authoritative confirmation before displaying success.
+
+Deadlines
+Administrator supplies a school timezone and exact cutoff. Two calendar days before graduation is a proposal requiring confirmation. A server-received submission at cutoff is permitted, after cutoff is rejected unless a valid extension applies. Open draft editing after cutoff does not permit submission. Late corrections need an administrator extension under the proposed default. Do not infer school timezone from the device.
+
+Experience
+Keep the student visible throughout logging and submission. Inter, primary #D94320, text #202124, background #FAF9F6, cards #FFFFFF, secondary #667085, approved #167347, warning #A66308, error #B42318. Proposed tokens, not verified official brand values. Rounded corners 8 to 12 pixels. Touch targets at least 44 CSS pixels. Support 360 CSS pixel screens. Keyboard access, visible focus, labels, accessible error summaries, and text alongside color.
+
+PWA
+Online-first. Cache the shell and public assets only. No authenticated student data in service-worker caches. No offline saves or queued submissions. Keep unsaved fields in current-page memory during retry and explain potential loss on page close. Clear in-memory records on logout. Installation is optional. No push or email reminder campaigns in this MVP.
+
+Development process
+Read the selected feature and shared contracts before editing. Preserve /specs source documents. Implement one approved scope at a time. Keep logic in shared backend operations instead of duplicating rules across screens. Use acceptance IDs in test names. Test user behavior, unauthorized requests, and relevant concurrency failures. Do not treat a screenshot or mock data as evidence of backend correctness.
+Report requirement coverage, actual test results, NOT RUN cases, migration changes, and gaps. Never describe unexecuted tests as passing. Do not publish or enable real participants as a side effect of completing a feature. Update specifications before changing approved behavior.
+
+Reference documents
+/specs/02_SHARED_CONTRACTS.txt
+/specs/03_DECISIONS.txt
+/specs/04_FOUNDATION.txt
+/specs/05_TEST_FIXTURES.txt
+The selected /specs/FRxx specification
+
+========================================================================
+FILE 02_SHARED_CONTRACTS.txt
+========================================================================
+
+[Unverified] Shared implementation contract v0.1. All names below are proposed logical contracts, not existing APIs. Map them to the inspected project and document the mapping. Preserve behavior if implementation names differ.
+
+C01 Authentication and authority
+Use authentication-provider user identifiers. school_memberships maps account to instructor or administrator rights. family_memberships maps one managing adult to a family for the pilot. students.family_id determines family scope. Staff also need family membership to edit their own family entries. Staff rights alone grant no family-write rights.
+Administrators inherit reviewer rights. Parents and adult students are personas using family permission, not separate authentication systems. Reject all anonymous record reads. Deny access to another family's identifiers without leaking names, existence, counts, or errors containing protected data. Use NOT_FOUND for an unauthorized resource identifier and FORBIDDEN for a disallowed operation on an otherwise visible resource.
+First administrator provisioning uses a trusted server-side setup step outside public registration. No role switcher, public admin signup, client-side role claims, or browser-held privileged keys. Self-service role escalation is forbidden.
+
+C02 Data model minimum
+All primary identifiers are UUIDs. Every school-owned record carries school_id or an unambiguous protected relationship. Use foreign keys, timestamps from the backend, and explicit active flags. Authorization follows relationships rather than user-submitted school identifiers.
+schools: id, display_name, timezone, environment_mode demo/pilot, policy settings, version.
+school_memberships: school_id, user_id, role instructor/admin, active. Unique school/user/role.
+families: id, school_id, active.
+family_memberships: family_id, user_id, owner=true, active. One active managing user per family in MVP.
+students: id, family_id, display_name, age_band_id, kind child/adult, adult_user_id nullable, active, version. Adult profile maps to the managing adult. One own adult profile per family. Several child profiles allowed.
+age_bands: id, school_id, label, catalog_key, active. School-configured labels, no full birth dates.
+invitations: id, school_id, intended_role, invited_email, token_hash or provider reference, expires_at, accepted_by, accepted_at, revoked_at. Do not expose tokens in logs.
+notice_acceptances: user_id, notice_version, accepted_at. Pilot notice content supplied before real use.
+mission_templates: id, school_id, type teamwork/respect, version, approved_instructions, required_count=50, repeat_limit=2, enabled, approved_content flag. Version rather than overwrite instructions used by assignments.
+activity_groups: id, template_type, stable grouping_key. Groups represent the same or similar action under school policy.
+catalog_activities: id, school_id, template_type, activity_group_id, title, age_band_ids, setting, active, approved_content, version.
+catalog_aliases: normalized_title, activity_group_id, template_type. Ambiguous aliases require review instead of automatic matching.
+graduation_cycles: id, school_id, name, activity_start_date, activity_end_date, graduation_date, timezone, cutoff_at, archived_at, version. Dates use the configured school timezone, cutoff_at stores an absolute instant.
+assignments: id, school_id, student_id, cycle_id, template_id, frozen_template_version/instructions/count/limit, state, content_version, lifecycle_version, current_submission_id. Unique student/template/cycle.
+activity_records: id, assignment_id, source catalog/custom, catalog_id nullable, activity_group_id nullable, original_title, normalized_title, participation, completed_on, attestation_type parent/self, attested_by, attested_at, active, revision, created_at, updated_at.
+submissions: id, assignment_id, sequence, submitted_at, submitted_by, source_content_version, frozen_student_display_name, frozen_mission_label, frozen_cycle_label, frozen_policy_metadata. Unique assignment/sequence.
+submission_entries: submission_id, source_record_id, source_revision, ordinal, copied title/participation/date/catalog/group/attestation fields. Immutable to application roles after insert.
+review_classifications: submission_id, source_record_id, review_group_key, reviewer_id, classified_at. Unique submission/entry. Does not modify the submitted statement.
+review_decisions: id, submission_id, outcome approved/returned, reviewer_id, reason, flagged_entry_ids, decided_at. One final review decision per submission. Reopening does not erase an approval.
+deadline_exceptions: id, assignment_id, expires_at, granted_by, granted_at, reason, revoked_at. At most one active exception per assignment. Updating an exception revokes the old row and creates a new row in one transaction.
+audit_events: actor_id, action, entity_id, entity_version, occurred_at, structured change references. Append-only, school-scoped. Full student narratives remain in protected records, not analytics logs.
+mutation_receipts: actor_id, operation_name, request_id, payload_hash, outcome_reference, created_at. Unique actor/operation/request_id. Receipt retention is an operational decision, not a school mission policy.
+
+C03 State and status
+Family editable states: not_started, in_progress, needs_changes. Saving the first record changes not_started to in_progress. Removing the last record changes in_progress to not_started. Removing all returned records preserves needs_changes so feedback is not hidden.
+Ready to submit is a derived label only for in_progress with zero submission blockers. needs_changes retains its label and shows Resubmit enabled when validation passes. Draft editing remains permitted after the submission cutoff if the cycle is not archived.
+submit changes an editable assignment to submitted. return changes submitted to needs_changes. approve changes submitted to approved. reopen changes approved to needs_changes and records an administrator reason. No direct family transition to approved. An archived cycle is read-only, including review mutations. Archive requires every existing assignment to be approved, or no assignments. An administrator restores the cycle before reopening an approval. Restore preserves all assignment states and history, changes only archive status, and records an audit event.
+Deadline openness is computed separately. A submitted mission stays submitted after cutoff. Overall graduation eligibility is outside this application.
+
+C04 Mutation and error envelope
+All mutations require an authenticated actor, operation-specific input, request_id, and expected version where the operation updates existing mutable data. Resolve actor and ownership server-side. Return {ok, data, error}, where error has code, safe message, field_errors, and retryable. Do not place student narratives in error telemetry.
+Common errors: UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, VALIDATION_FAILED, VERSION_CONFLICT, INVALID_STATE, DUPLICATE_REQUEST_PAYLOAD, POLICY_NOT_CONFIGURED, RATE_LIMITED, TEMPORARILY_UNAVAILABLE.
+Scope idempotency to actor + operation + request_id. Same key and payload returns the original committed result even after the state changes. Same key and different payload returns DUPLICATE_REQUEST_PAYLOAD. Check current access before returning a previous receipt. Pending writes must not emit success. After an ambiguous timeout, retry with the same key.
+Use a consistent transaction locking order. Serialize commands affecting one assignment. Recheck related settings inside the transaction. Saving, editing, deleting, submitting, classifying, approving, returning, and reopening must not partially commit. Record audit events in the same transaction as the action where feasible. If an external auth/email step is involved, use an explicit pending/failed status and retry rather than pretending the external operation committed atomically.
+
+C05 Versions and snapshots
+content_version increments on every activity add/edit/remove. lifecycle_version increments on state, review classification, and exception changes affecting the assignment. Submission stores the current content version. Review commands require current submission ID and expected lifecycle version. A setting version captures cutoff changes.
+Submission content is append-only. Corrections edit working records, then create a new submission sequence. Approval applies only to current_submission_id. Review classification is an overlay for one submission. Reset custom review classification on each new submission, even if text is unchanged, as a proposed MVP simplification. Known catalog groups remain available from the snapshot. No retroactive catalog edits change snapshots.
+Families see their own working records, submissions, decisions, and feedback. Full staff audit metadata is admin-scoped. Staff review never allows editing a parent's words or attestation.
+
+C06 Counts and repetition
+Count active records within one assignment. Maximum 50 on create, exactly 50 on submit. Edit excludes the record being edited from usage counts. Removal frees one occurrence.
+Normalize titles: Unicode NFKC, lowercase with one consistent locale-independent rule, replace punctuation with spaces, collapse whitespace, trim. Reject an empty result. Preserve original text. Use identical server normalization in all commands, never a browser-only approximation as authority.
+Known catalog variants and unambiguous aliases map to one stable group. Count catalog entries plus custom aliases together. Unmatched custom titles use a provisional normalized-title key for exact repetition checks. Two accepted occurrences per group, third rejected. Similar wording without a known mapping remains unclassified.
+Review grouping combines catalog group identities with instructor-assigned group keys. A reviewer merges equivalent custom groups where needed. Approval checks grouped totals <=2 and zero unresolved custom classifications. Catalog selection does not prove the described action matches the suggestion. Return misleading or unclear records rather than altering statements.
+
+C07 Dates and deadlines
+completed_on is a date, not an event timestamp. Require cycle start <= completed_on <= min(cycle end, school-local today). Logging a past date retains the actual attestation and creation timestamps. Editing the participation, title, source, classification, or date requires renewed attestation.
+effective_cutoff=max(cycle cutoff, unrevoked assignment exception expiry). Evaluate using server time at the authoritative transactional validation point. A request arriving earlier but validated after expiry fails. UI is a guide, not authority. Same-key retries of an already committed submission return its receipt after expiry.
+Administrator explicitly configures timezone and local cutoff date/time. Reject nonexistent local times at daylight-saving transitions. Require an explicit offset choice for ambiguous local times. Preview the absolute instant before saving. Graduation date changes never silently alter cutoff. Show existing cutoff and require explicit confirmation.
+An extension changes submission timing only, not the permitted activity window. Corrections involving new activity dates require those dates to remain inside the activity window. Post-assignment activity-window edits need a separate approved policy change, not an implicit extension.
+
+C08 Input and UI defaults proposed for demo
+Display name: trimmed 1 to 60 characters. Activity title: 3 to 120 characters. Participation: 10 to 500 characters, with a separate explanation field even when a catalog title exists. Reason/feedback: 10 to 1000 characters. These length limits do not prove truthfulness. Treat entries as plain text, escape on display, and reject empty or control-only strings. Limits are proposed implementation defaults in D02.
+Keep selected student, mission, progress and cutoff visible. Loading state, empty state, permission error, offline state, validation errors, retry, and stale-version refresh are required. Use an accessible error summary and field errors. Do not wipe unsaved text on a rejected save. Re-authentication must not automatically attest or submit.
+Cache no authenticated API responses in the service worker. Do not store child narratives in browser persistent storage. Temporary form content lives only in page memory. Browser close and mobile process termination might discard memory, so explain this limit and use navigation protection where supported.
+
+C09 Read contracts
+get_family_dashboard(): own students and assignments, recorded_count, state/display_status, blocking_count, unresolved_custom_count, effective_cutoff, next_action. FR03 owns presentation.
+get_mission_detail(assignment_id): authorized working records, feedback, latest submission metadata, validation summary, permissions. Returns server time and versions.
+get_review_queue(cycle_id,filters,cursor): authorized school records, paginated. Server-enforced school scope.
+get_submission(submission_id): immutable entries plus current review overlay and allowed actions.
+get_school_status(cycle_id,filters,cursor): roster and all required assignments with aggregate mission status. Students without assignments remain visible.
+get_print_record(assignment_id,submission_id optional): protected view model from working draft or selected immutable submission.
+Read routes never imply write permission. All list queries are scoped on the server before pagination or aggregation.
+
+C10 Command ownership
+FR01: invite_account, accept_invitation, save_student_profile.
+FR02: create_cycle, update_cycle, assign_mission, set_catalog_enabled, archive_cycle, restore_cycle. Cutoff calculation delegated to FR10.
+FR04: list_suggestions and selection UI only. Catalog seed/import is foundation/setup.
+FR05: create_activity.
+FR06: update_activity, remove_activity.
+FR07: normalize_activity_title, resolve_activity_group, validate_repetition. These are internal services, not privileged user endpoints.
+FR08: validate_submission internal service plus authorized preflight read operation.
+FR09: submit_mission.
+FR10: resolve_cutoff, set_cycle_cutoff, grant_extension, revoke_extension.
+FR12: classify_entry, merge_review_groups, approve_submission, return_submission, reopen_approval. Owns transactional review mutations.
+FR11: review UI calling FR12 commands. Do not implement another approval path.
+FR13/FR14/FR15: authorized read models, print, and computed notices. FR15 also owns admin-only set_reminder_thresholds using the common mutation envelope. No alternate mission mutations to bypass existing commands.
+
+C11 Completion gate
+Feature completion requires acceptance evidence and authorization checks, including direct backend attempts. UI-only hiding is insufficient. Use unit tests for pure rules, integration tests for transactional commands and permissions, and browser checks for user flows. Run additional regression only for affected shared behavior. Test fixtures stay fictional and outside production seed paths.
+All listed acceptance scenarios are requirements, not evidence of executed tests. Deployment, real onboarding, and privacy-policy approval are outside feature completion.
+
+========================================================================
+FILE 03_DECISIONS.txt
+========================================================================
+
+[Unverified] Decision register v0.1. No school approval is implied.
+
+Confirmed product direction from your instructions
+One school. One mission-tracking problem. One working application. Build for a founder pitch. The PRD supplies the 15 feature identifiers and the initial scope.
+
+Proposed implementation defaults
+D01 One managing adult per family. Parent and adult student share family access, with separate profiles. First admin provisioned through trusted setup. Pilot rights changes handled by the administrator or a controlled support process, without a full role-management product.
+D02 Input limits in C08, seven-day invitation expiry, school-configured age-band labels, and a fixed English MVP interface. Invitation expiry is an implementation proposal, separate from mission cutoffs.
+D03 needs_changes remains visible until resubmission. An empty returned mission stays needs_changes. Ready to submit is derived only for in_progress.
+D04 New submission requires fresh custom-activity classification. Review overlays do not mutate historical content. This trades some review effort for simpler version handling.
+D05 At most one active extension per assignment. A replacement records both revocation and new grant. Extensions do not widen the activity date window.
+D06 Exact cutoff inclusion uses server time at transaction validation, with equality accepted. Same-key retry after a committed submission returns the earlier receipt.
+D07 Family draft edits remain allowed after cutoff. Archive requires all existing assignments approved, or no assignments. Archived cycles reject edits and review mutations but allow historical reads and printing. Admin restore_cycle records an audit event and preserves assignment states. Restore precedes reopening an archived approval. This is a proposed clarification beyond the original PRD's brief archive requirement.
+D08 An administrator and instructor are both forbidden from reviewing or reopening their own family's submission. Another authorized staff member handles the case.
+D09 Deadline notices are computed on read, use the effective cutoff, and use configurable 7-day and 1-day thresholds. No dismissal persistence or push subscription in the MVP.
+D10 Course content is imported through a controlled seed path. Simple enable/disable controls are included. A full catalog editor and historical record migration are excluded.
+
+Founder decisions required before a live pilot
+P01 Permission to digitize curriculum, use proposed product branding, and provide activity suggestions. Demo uses clearly labeled sample content. Pilot catalog remains disabled without approved content.
+P02 Acceptance of digital submission and printable records. Keep the accepted paper workflow authoritative until confirmed.
+P03 School timezone, exact cutoff time, two-calendar-day interpretation, correction after cutoff policy, and exception authority. Demo uses a clearly fictional configured timezone and date. No production cutoff is inferred.
+P04 Activity-window dates, grouping of similar actions, same-day repetitions, and cross-mission credit. Demo permits two separate occurrences in one group, even on one date, with separate records. Do not copy one occurrence across assignments.
+P05 Adult self-attestation. Demo permits fictional adult examples. Pilot adult logging stays disabled until accepted or an alternate verifier is specified.
+P06 Privacy notice, parental authorization, retention, deletion, backup handling, support owner, hosting owner, and application/curriculum ownership. No legal compliance claim.
+P07 Staff roster and second reviewer for staff families. A single reviewer pilot must exclude that reviewer's own family or nominate another reviewer.
+
+Implementation gates
+Build fictional-data features with the stated demo defaults. Do not invent founder approval dates, retention periods, a school's timezone, or a consent document. For pilot activation, require an operational signoff record naming the responsible person and resolved P01 to P07 decisions. A full compliance administration screen is outside this MVP.
+Policy changes affecting existing assignments require an explicit change plan and migration test. Changing a setting must not rewrite historical submissions. If a real requirement conflicts with this pack, update the decision register and feature version before implementation.
+
+========================================================================
+FILE 04_FOUNDATION.txt
+========================================================================
+
+[Unverified] F00 Shared foundation specification v0.1. Proposed implementation. Required before FR01 to FR15.
+
+Outcome
+A working mobile shell, protected backend foundation, schema contracts, repeatable fictional fixtures, and a verified environment boundary. No feature is complete from appearance alone.
+
+Scope and requirements
+F00-R01 Inspect existing project, framework, authentication integration, database, migrations, and design components. Record what exists. Use the proposed Supabase architecture unless the owner approves a change. Do not invent credentials, APIs, or working integrations.
+F00-R02 Create or map the C02 data model with foreign keys, unique constraints, version columns, and immutable snapshot boundaries. Use migrations with a documented test-data reset approach. Keep production-data deletion outside reset scripts.
+F00-R03 Implement shared auth checks, school and family scoping, error envelope, idempotency receipt storage, transaction/version strategy, and audit support. Default deny until each feature exposes its protected operations. Disable direct client mutation of submissions, reviews, roles, and audit records.
+F00-R04 Add routes /sign-in, /family, /family/students/:studentId/missions/:assignmentId, /staff/reviews, /staff/status, /admin/settings. Define route guards and error pages. Future-feature routes display honest unavailable states, without fake success or populated mock production dashboards.
+F00-R05 Apply the specified brand tokens and responsive structure. Provide reusable labeled fields, errors, status badges, confirmations, loading states and empty states. Keyboard navigation, focus management, 44-pixel targets, and 360-pixel viewport are required.
+F00-R06 Implement online-first PWA shell, manifest, icons, optional installation guidance, and service-worker exclusions for all authenticated data. Clear family data on logout and account switch. No offline mutation queue. Refresh stale app assets without discarding an unsaved form silently.
+F00-R07 Seed fictional identities and content only in a named demo/test environment. Seed valid school configuration without implying school approval. Bootstrap admin through a server-side controlled setup. No hard-coded credentials committed to source or exposed on a public demo page.
+F00-R08 Provide a readable build/test/lint workflow appropriate to the actual project. Add tests for auth isolation and fixture integrity. Verify provider connectivity and report unavailable services as blockers.
+
+Acceptance scenarios
+F00-AC01 Given a new test environment, when migrations and demo seed run twice, then schema is valid and fixture identities do not duplicate.
+F00-AC02 Given anonymous or family A sessions, when accessing protected family B data directly, then no protected record or count returns.
+F00-AC03 Given a family session, when posting role, approval, snapshot edit, or audit delete directly, then the backend rejects the request.
+F00-AC04 Given the app at 360 pixels, when navigating with keyboard and touch, then controls remain reachable, labeled, and free of horizontal overflow.
+F00-AC05 Given a signed-in family, when viewing data then logging out and going offline, then no cached authenticated response or previous family's record is displayed.
+F00-AC06 Given a disconnected provider, when loading the app, then a truthful unavailable state appears and no fabricated saved record appears.
+
+Build tasks
+Inspect project. Record architecture mapping. Add migrations and constraints. Add common authorization and command helpers. Add UI shell. Configure PWA exclusions. Seed fixtures. Run the six acceptance scenarios and report evidence. Do not expose unfinished protected actions.
+
+Planning prompt for a coding agent
+Plan F00 only using 01_PROJECT_KNOWLEDGE.txt, 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt, 04_FOUNDATION.txt and 05_TEST_FIXTURES.txt. Inspect the current project first. List schema mapping, auth policies, migrations, components, dependency availability and tests by acceptance ID. Use fictional data. Flag unresolved implementation blockers, distinguish them from deferred founder decisions, and present a bounded plan before code changes.
+
+Verification prompt for a coding agent
+Verify F00 against every F00-AC identifier. Show executed commands or manual steps and observed results. Test direct backend access, not only hidden controls. Report PASS, FAIL or NOT RUN with evidence. Do not claim later FR features complete. Return a completion report with changed files and remaining blockers.
+
+========================================================================
+FILE 05_TEST_FIXTURES.txt
+========================================================================
+
+[Unverified] Fictional test fixture specification v0.1. These are proposed scenarios, not completed school activities or actual families.
+
+Actors
+FAMILY_A: one managing adult, child A1 in sample kindergarten band, child A2 in another configured band, adult A3 linked to the managing user.
+FAMILY_B: another managing adult and child B1. No relationships to FAMILY_A.
+REVIEWER_1: instructor, with an optional linked FAMILY_C for self-review denial tests.
+REVIEWER_2: instructor without links to FAMILY_A or FAMILY_C.
+ADMIN_1: school administrator, with optional own-family records to test identical conflict rules.
+ANONYMOUS: no authenticated session.
+Provision real test auth identities through the selected provider, with secret values stored outside fixtures. Actor labels are aliases, not working credentials.
+
+Clock and cycles
+Use an injectable server clock in automated tests only. Production requests cannot set time. A public query parameter or header must not override the clock.
+Sample school timezone America/New_York is a test fixture only. Sample graduation 2026-12-19. Activity window 2026-11-01 through 2026-12-17. Cutoff 2026-12-17 at 18:00 school local time. Explicitly resolve the offset using timezone rules. Freeze the test clock before, at, and immediately after cutoff.
+Use additional timezone-library fixtures for nonexistent spring-forward times and duplicated fall-back times. Assert invalid or explicit-offset handling. Device timezone tests use another timezone without changing the stored school setting.
+
+Catalog
+Sample Teamwork and Respect templates. At least 25 distinct eligible activity groups per test mission and age band, so 50 entries are attainable under the repeat limit. A small test catalog is not the 75 to 100 approved suggestions proposed for the pilot.
+TW-DISHES has catalog variants and an alias "unload dishwasher". Unmatched text such as "sorted cups after dinner" remains unresolved until review, unless a deliberate alias fixture is added. Include one ambiguous alias pointing to multiple groups to test review routing.
+Every title and narrative is explicitly fictional sample content. Catalog records are marked demo-approved for tests only. Production content approval is separate.
+
+Assignments
+M0 has zero records.
+M1 has one record.
+M49 has 49 valid records, leaving a permitted second occurrence for the final entry.
+M50 has exactly 50 valid records across 25 groups, two per group.
+M_REPEAT has two records in TW-DISHES and tests a third candidate.
+M_CUSTOM has 50 records including unmatched custom entries and no known repetition failure.
+M_SUBMITTED contains one immutable submission.
+M_RETURNED has a returned first submission and editable working records.
+M_APPROVED has an approved version and matching status.
+M_OVERDUE is editable but its cutoff is closed.
+M_EXTENDED has a valid extension later than base cutoff.
+M_NONE is a roster student with no assignments.
+M_TWO has Teamwork approved and Respect pending.
+
+Fixture integrity
+Use controlled direct fixture construction only in test setup, not an application bulk-completion feature. Freeze clocks for future test dates. Assert record totals, group usage, attestation actor, and valid date windows before testing submission. New test runs isolate receipts and versions. Seed no real children's data. Concurrency cases use two sessions and synchronized request barriers rather than relying on manual timing.
+
+End-to-end release journey
+E2E01 FAMILY_A opens M49, saves the permitted final record, submits, REVIEWER_1 returns a specific entry, FAMILY_A edits and re-attests, resubmits, REVIEWER_2 classifies any custom entries and approves. Confirm unchanged submission 1, new submission 2, family status, staff aggregate, and print status.
+E2E02 Start a save twice and retry after a simulated timeout. Confirm one committed record. Then submit twice with one request ID and confirm one snapshot.
+E2E03 At 49 records launch two different valid creates. Exactly one brings the mission to 50, the other fails with VERSION_CONFLICT or COUNT_LIMIT according to validation order. A fresh retry cannot exceed 50. Launch a third repeated occurrence concurrently with a second and preserve group limits.
+E2E04 Two reviewers attempt conflicting final decisions on one version. Exactly one succeeds, the other sees VERSION_CONFLICT or INVALID_STATE with fresh status.
+E2E05 Return a submission after cutoff. Draft edit works, resubmit fails, admin grants an extension, resubmit succeeds before extension expiry. Changed completion dates still obey the activity window.
+E2E06 Open print and dashboards as FAMILY_B using FAMILY_A identifiers, including history and error links. Deny all cross-family access without leaking student details.
+
+No tests in this document have been executed against an application. The coding agent must implement the tests and provide evidence during the build.
+
+========================================================================
+FILE FR01_account_invitation_and_family_profiles.txt
+========================================================================
+
+[Unverified] FR01 Account invitation and family profiles
+Specification version 0.1
+Status Proposed for fictional-data implementation
+Source PRD FR01 and workflow discussion
+Priority Required MVP feature
+Build position 1 after F00
+
+1 Outcome
+An invited adult signs in with the correct permissions and maintains only their linked student profiles.
+
+2 Context required for the coding agent
+Read 01_PROJECT_KNOWLEDGE.txt, 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt and 05_TEST_FIXTURES.txt with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+Dependencies: F00. Implemented prerequisites must have acceptance evidence. If a prerequisite is absent, report the exact missing dependency. Do not silently fake backend behavior.
+
+3 Users and permissions
+Parent: accept family invitation, accept pilot notice, create and edit child profiles.
+Adult student: same account flow, add an adult profile linked to their own account.
+Instructor: accept staff invitation and enter staff workspace.
+Administrator: invite family adults or instructors, resend or revoke pending invitations. No public admin invitation path.
+
+4 User workflow and screens
+Administrator opens /admin/settings/invitations, selects family or instructor, enters email, and issues invitation. Recipient follows the invitation, authenticates with the configured email method, accepts the versioned notice, and reaches the correct workspace. Family users open /family/profiles to add a display name, configured age band, and child/adult type. Save returns the created profile.
+
+5 Functional requirements
+FR01-R01 Use provider-managed email authentication and recovery. Select the exact sign-in method during planning based on the inspected integration. Verified identity must match the invitation email. Do not create active membership before acceptance.
+
+FR01-R02 An invitation expires after the proposed seven days, is single-use, and supports revocation. Resending replaces the prior token. Membership and invitation acceptance commit without duplicate families on retry.
+
+FR01-R03 Apply C08 profile limits and reject adult profiles linked to another user. One managing account per family. A staff member with a family membership retains both scopes without impersonation.
+
+FR01-R04 Require notice acceptance before real profile creation. Demo notice is labeled sample. Recovery responses do not disclose whether an email has an account.
+
+FR01-R05 Only the owning family edits profile fields. Profile age-band changes affect future suggestions, not historical submissions. Staff enrollment uses FR02 and does not grant profile-edit rights.
+
+FR01-R06 Handle invalid, used, revoked and expired links, email mismatch, authentication failure, pending email delivery, and provider unavailability explicitly. Sign-out clears current family state.
+
+6 Data and logical operation contracts
+invite_account(email, intended_role, request_id) -> invitation_id, delivery_status, expires_at. Admin only, role family/instructor.
+accept_invitation(token, notice_version, request_id) -> memberships, family_id optional. Authenticated verified recipient only. Validate token through a protected backend operation.
+save_student_profile(student_id optional, display_name, age_band_id, kind, expected_version optional, request_id) -> student, version. Family owner only.
+Tables: invitations, memberships, families, students, notice_acceptances. Tokens and credentials never enter analytics.
+Logical names are proposed. Map to actual inspected backend operations and preserve behavior. All reads and writes inherit C01 and C04. All UI states inherit C08.
+
+7 Errors and recovery
+INVITATION_EXPIRED, INVITATION_REVOKED, INVITATION_USED, EMAIL_MISMATCH, NOTICE_REQUIRED, PROFILE_LIMIT, plus C04 errors. Preserve non-secret input and show a safe next step.
+
+8 Acceptance scenarios
+FR01-AC01 Given a valid family invitation and matching verified identity, when acceptance completes twice with one request ID, then one family membership exists and the family dashboard opens.
+
+FR01-AC02 Given an expired, revoked or wrong-email invitation, when acceptance is attempted, then no membership is added and a safe error appears.
+
+FR01-AC03 Given FAMILY_A, when reading or editing a FAMILY_B profile directly, then the response reveals no protected profile data.
+
+FR01-AC04 Given an ordinary family user, when posting an instructor/admin role or another adult_user_id, then the backend rejects escalation.
+
+FR01-AC05 Given a valid staff invitation, when the recipient signs in, then staff pages open and no unrelated family editing rights are granted.
+
+FR01-AC06 Given an accepted notice and valid child fields, when saving then refreshing, then the same profile persists. An empty name or unconfigured age band is rejected.
+These scenarios are specified, not executed. Test actual behavior and backend authorization. Record PASS, FAIL or NOT RUN with evidence for every identifier.
+
+9 Implementation task sequence
+Map auth provider flow. Implement invitation lifecycle and membership transaction. Add protected profile commands. Build invitation and profile screens. Add recovery/logout states. Test provider failures and isolation.
+Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.txt.
+
+10 Exclusions
+Child logins, public signup, multiple guardians, shared custody transfer, social sign-in, full staff role editor, and automatic admin self-enrollment.
+
+11 Decisions and policy gates
+D01, D02, P05, P06. Admin bootstrap belongs to F00. Live notice content is a pilot gate.
+Demo defaults do not imply founder approval. No real participants or publishing as a side effect of feature completion.
+
+12 Copy paste planning prompt
+Plan FR01 only for Digital III Missions Tracker. Read this full specification and the shared project documents. Inspect the existing code and database before proposing changes. Identify the current implementation of every dependency, the components and data operations to change, migrations and permission policies, the task sequence, and tests for every FR01-AC identifier. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan for review before code changes. Do not broaden scope.
+
+13 Copy paste build instruction
+Implement the reviewed FR01 plan and this specification. Keep requirement and acceptance IDs in the implementation checklist and test names. Use the shared protected commands and real persistence, with fictional test records. Do not replace failed backend behavior with UI-only validation or mocked success. Complete the scoped feature and return an evidence-based report. If a shared contract needs to change, describe the proposed specification change before applying conflicting behavior.
+
+14 Copy paste verification prompt
+Verify FR01 against every requirement and acceptance ID in this specification. Inspect the implemented code, run relevant tests, and exercise the user flow in the available browser. Include direct unauthorized backend attempts and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with actual evidence. Describe changed files and migrations, unresolved decisions, and remaining defects. Do not claim unexecuted tests passed. Update the feature completion record without modifying acceptance criteria to fit the implementation.
+
+========================================================================
+FILE FR02_mission_configuration_and_assignment.txt
+========================================================================
+
+[Unverified] FR02 Mission configuration and assignment
+Specification version 0.1
+Status Proposed for fictional-data implementation
+Source PRD FR02 and workflow discussion
+Priority Required MVP feature
+Build position 2 after F00
+
+1 Outcome
+An administrator defines a cycle and assigns one versioned mission to each selected student.
+
+2 Context required for the coding agent
+Read 01_PROJECT_KNOWLEDGE.txt, 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt and 05_TEST_FIXTURES.txt with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+Dependencies: F00, FR01. Implemented prerequisites must have acceptance evidence. If a prerequisite is absent, report the exact missing dependency. Do not silently fake backend behavior.
+
+3 Users and permissions
+Parent: view assigned missions, no self-assignment.
+Adult student: view own assignment, no self-assignment.
+Instructor: read school assignments.
+Administrator: configure cycle, assign mission, enable approved catalog, archive eligible cycles.
+
+4 User workflow and screens
+Open /admin/settings/cycles, create a cycle, enter dates and explicit timezone/cutoff, and review the summary. Open roster, select students and a mission type, then assign. Show per-student success or failure. Families see assignments in their workspace. For the early build use explicitly seeded cutoffs until FR10 provides the final configuration interface.
+
+5 Functional requirements
+FR02-R01 Require cycle name, activity start/end, graduation date, school timezone and resolved cutoff. Validate start <= end and end <= graduation. No inferred production timezone or cutoff time.
+
+FR02-R02 Assign exactly one student/template/cycle combination. Copy template version, instructions, count 50 and repeat limit 2 into the assignment. Required means every assigned mission counts toward mission completion.
+
+FR02-R03 Retry or duplicate selection returns the existing assignment. Bulk assignment produces per-student results with no duplicate mission rows. Restrict selection to the same school.
+
+FR02-R04 Family users do not alter required count, repeat limit, mission type, or cutoff. No de-assignment or deletion of activity history in MVP. Correct a mistaken assignment through a separately approved support process.
+
+FR02-R05 Allow draft cycle edits before assignment. After assignment, cutoff changes use FR10 and activity-window or timezone changes require an explicit approved change plan. Graduation updates show existing cutoff and require confirmation.
+
+FR02-R06 Archive only under C03 rules, with an administrator Restore cycle action before any later reopening. Restore changes archive status without resetting missions. New cycle assignments start at zero. Catalog enablement does not modify submitted content. Pilot catalog enablement requires approved content status.
+
+6 Data and logical operation contracts
+create_cycle(name, dates, timezone, explicit_cutoff, request_id) -> cycle_id, version.
+update_cycle(cycle_id, permitted_fields, expected_version, request_id) -> cycle, version. Cutoff semantics delegated to FR10.
+assign_mission(student_id, template_id, cycle_id, request_id) -> assignment_id, created boolean.
+set_catalog_enabled(template_id, enabled, expected_version, request_id) -> enabled.
+archive_cycle(cycle_id, expected_version, request_id) -> archive result.
+restore_cycle(cycle_id, reason, expected_version, request_id) -> restored cycle and version. Admin only, audited, no mission state changes.
+Admin-only mutations. Reads scoped to staff or owning family. No content editor beyond these controls.
+Logical names are proposed. Map to actual inspected backend operations and preserve behavior. All reads and writes inherit C01 and C04. All UI states inherit C08.
+
+7 Errors and recovery
+INVALID_DATE_RANGE, POLICY_NOT_CONFIGURED, CONTENT_NOT_APPROVED, CYCLE_ARCHIVED, CYCLE_HAS_UNFINISHED_WORK, plus C04 errors. Partial bulk success names only authorized students.
+
+8 Acceptance scenarios
+FR02-AC01 Given valid cycle and active student, when assigning Teamwork twice, then one assignment exists with frozen template rules.
+
+FR02-AC02 Given missing cutoff time or timezone, when creating a live cycle, then validation blocks creation.
+
+FR02-AC03 Given a parent or instructor without admin rights, when calling assign_mission directly, then the mutation is rejected.
+
+FR02-AC04 Given an existing submission, when a later catalog or template version is created, then the submitted instructions and entries stay unchanged.
+
+FR02-AC05 Given an approved prior-cycle mission, when a new cycle is assigned, then the new assignment has zero records and prior history remains accessible.
+
+FR02-AC06 Given any assignment not approved, including a submitted mission awaiting review, when an administrator archives the cycle, then the archive fails and affected assignments are identified.
+
+FR02-AC07 Given an archived approved cycle, when an administrator restores with a reason, then archive status clears while approved states and historical snapshots remain unchanged.
+These scenarios are specified, not executed. Test actual behavior and backend authorization. Record PASS, FAIL or NOT RUN with evidence for every identifier.
+
+9 Implementation task sequence
+Map configuration schema. Add template version freezing and unique assignment constraint. Implement cycle/assignment commands. Build cycle and roster controls. Add duplicate, partial-batch, and unauthorized tests.
+Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.txt.
+
+10 Exclusions
+Curriculum authoring, third mission invention, automatic belt eligibility, bulk activity completion, and historical reassignment migrations.
+
+11 Decisions and policy gates
+P01, P03, P04, D07, D10. FR10 completes cutoff and exception interfaces. Seeded explicit cutoffs are demo-only until then.
+Demo defaults do not imply founder approval. No real participants or publishing as a side effect of feature completion.
+
+12 Copy paste planning prompt
+Plan FR02 only for Digital III Missions Tracker. Read this full specification and the shared project documents. Inspect the existing code and database before proposing changes. Identify the current implementation of every dependency, the components and data operations to change, migrations and permission policies, the task sequence, and tests for every FR02-AC identifier. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan for review before code changes. Do not broaden scope.
+
+13 Copy paste build instruction
+Implement the reviewed FR02 plan and this specification. Keep requirement and acceptance IDs in the implementation checklist and test names. Use the shared protected commands and real persistence, with fictional test records. Do not replace failed backend behavior with UI-only validation or mocked success. Complete the scoped feature and return an evidence-based report. If a shared contract needs to change, describe the proposed specification change before applying conflicting behavior.
+
+14 Copy paste verification prompt
+Verify FR02 against every requirement and acceptance ID in this specification. Inspect the implemented code, run relevant tests, and exercise the user flow in the available browser. Include direct unauthorized backend attempts and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with actual evidence. Describe changed files and migrations, unresolved decisions, and remaining defects. Do not claim unexecuted tests passed. Update the feature completion record without modifying acceptance criteria to fit the implementation.
+
+========================================================================
+FILE FR07_repetition_validation_engine.txt
+========================================================================
+
+[Unverified] FR07 Repetition validation engine
+Specification version 0.1
+Status Proposed for fictional-data implementation
+Source PRD FR07 and workflow discussion
+Priority Required MVP feature
+Build position 3 after F00
+
+1 Outcome
+One shared rule engine identifies known third occurrences and supplies reviewable custom-entry classifications.
+
+2 Context required for the coding agent
+Read 01_PROJECT_KNOWLEDGE.txt, 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt and 05_TEST_FIXTURES.txt with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+Dependencies: F00, FR02. Implemented prerequisites must have acceptance evidence. If a prerequisite is absent, report the exact missing dependency. Do not silently fake backend behavior.
+
+3 Users and permissions
+Parent: see usage and blocking feedback through FR04 to FR06.
+Adult student: identical counting rules for their own assignment.
+Instructor: see unresolved custom groups and final grouped counts in FR11.
+Administrator: approve catalog group mappings through controlled content setup, not arbitrary count overrides.
+
+4 User workflow and screens
+On catalog read or record mutation, normalize custom text and resolve a known group when unambiguous. Count active entries in the assignment, excluding the edited record if present. Return usage and any matching entries. For unknown wording, use a provisional exact-title key and mark classification pending. During review, evaluate snapshot entries plus the review overlay to detect semantic grouping conflicts.
+
+5 Functional requirements
+FR07-R01 Implement C06 normalization as one backend function with deterministic tests. Preserve original text. Do not accept browser-provided normalized text as authoritative.
+
+FR07-R02 Resolve catalog variants and unambiguous aliases to a common group. Unknown or ambiguous aliases use provisional normalized-title grouping and pending classification.
+
+FR07-R03 Allow at most two active occurrences of a known or provisional exact-title group. Restrict counts to one assignment, never across siblings or cycles. A third matching occurrence blocks create/edit and submission.
+
+FR07-R04 Return matching record IDs only after ownership authorization. Do not reveal another student's entries through validation errors.
+
+FR07-R05 Expose pure review evaluation over snapshot plus classification overlay. Each unresolved custom entry blocks approval. Merge equivalent review groups before counting final occurrences.
+
+FR07-R06 Normalization does not establish semantic uniqueness. No model-generated similarity verdict. Instructor classification writes belong to FR12. Preserve review findings without rewriting attested text.
+
+6 Data and logical operation contracts
+normalize_activity_title(title) -> normalized_title.
+resolve_activity_group(template_type, source, catalog_id/title) -> known_group_id optional, provisional_key optional, classification_required.
+validate_repetition(assignment_id, candidate, excluding_record_id optional) -> allowed, usage, matching_record_ids, classification_required.
+evaluate_review_groups(submission_entries, classifications) -> unresolved_entry_ids, over_limit_groups, grouped_counts.
+Internal services require authorized calling commands or scoped reads. No open endpoint listing arbitrary group membership.
+Logical names are proposed. Map to actual inspected backend operations and preserve behavior. All reads and writes inherit C01 and C04. All UI states inherit C08.
+
+7 Errors and recovery
+REPEAT_LIMIT includes authorized matching records and remaining allowance. EMPTY_NORMALIZED_TITLE, AMBIGUOUS_ALIAS as classification flag, plus standard validation errors. Unknown similarity is not a hard save rejection.
+
+8 Acceptance scenarios
+FR07-AC01 Given titles differing by case, punctuation or repeated spaces, when normalized, then equivalent fixture titles share a provisional key.
+
+FR07-AC02 Given two catalog variants or known custom aliases in one group, when adding a third, then validation rejects the addition.
+
+FR07-AC03 Given two occurrences for child A, when child B logs the same group in another assignment, then B starts with independent usage.
+
+FR07-AC04 Given unknown custom wording without an exact third match, when validated, then recording is allowed and classification_required=true.
+
+FR07-AC05 Given custom entries classified into a catalog group already used twice, when review groups are evaluated, then approval receives an over-limit blocker.
+
+FR07-AC06 Given an edited record remaining in the same group, when evaluated with excluding_record_id, then its previous occurrence is excluded exactly once.
+
+FR07-AC07 Given an unauthorized assignment identifier, when validation is requested, then no matching titles or record IDs leak.
+These scenarios are specified, not executed. Test actual behavior and backend authorization. Record PASS, FAIL or NOT RUN with evidence for every identifier.
+
+9 Implementation task sequence
+Implement normalization, alias lookup, scoped usage counting and review evaluator. Add fixture-based unit tests. Integrate read-only usage service. Keep mutation locking in callers and test those races with FR05.
+Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.txt.
+
+10 Exclusions
+Semantic AI, fuzzy automatic approval, school-wide repetition totals, and arbitrary administrator repeat-limit override.
+
+11 Decisions and policy gates
+P04 grouping policy and D04 review reset. Test fixture synonyms illustrate policy, not verified curriculum definitions.
+Demo defaults do not imply founder approval. No real participants or publishing as a side effect of feature completion.
+
+12 Copy paste planning prompt
+Plan FR07 only for Digital III Missions Tracker. Read this full specification and the shared project documents. Inspect the existing code and database before proposing changes. Identify the current implementation of every dependency, the components and data operations to change, migrations and permission policies, the task sequence, and tests for every FR07-AC identifier. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan for review before code changes. Do not broaden scope.
+
+13 Copy paste build instruction
+Implement the reviewed FR07 plan and this specification. Keep requirement and acceptance IDs in the implementation checklist and test names. Use the shared protected commands and real persistence, with fictional test records. Do not replace failed backend behavior with UI-only validation or mocked success. Complete the scoped feature and return an evidence-based report. If a shared contract needs to change, describe the proposed specification change before applying conflicting behavior.
+
+14 Copy paste verification prompt
+Verify FR07 against every requirement and acceptance ID in this specification. Inspect the implemented code, run relevant tests, and exercise the user flow in the available browser. Include direct unauthorized backend attempts and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with actual evidence. Describe changed files and migrations, unresolved decisions, and remaining defects. Do not claim unexecuted tests passed. Update the feature completion record without modifying acceptance criteria to fit the implementation.
+
+========================================================================
+FILE FR04_suggested_activities_and_custom_entry.txt
+========================================================================
+
+[Unverified] FR04 Suggested activities and custom entry
+Specification version 0.1
+Status Proposed for fictional-data implementation
+Source PRD FR04 and workflow discussion
+Priority Required MVP feature
+Build position 4 after F00
+
+1 Outcome
+A family finds a suitable activity and opens a completion form without receiving credit for selection.
+
+2 Context required for the coding agent
+Read 01_PROJECT_KNOWLEDGE.txt, 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt and 05_TEST_FIXTURES.txt with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+Dependencies: FR02, FR07. Implemented prerequisites must have acceptance evidence. If a prerequisite is absent, report the exact missing dependency. Do not silently fake backend behavior.
+
+3 Users and permissions
+Parent: browse child-appropriate suggestions or enter a custom title.
+Adult student: browse adult suggestions or enter own custom title.
+Instructor: reviews recorded selections later through FR11.
+Administrator: enables approved catalog through FR02, with content imported through controlled setup.
+
+4 User workflow and screens
+From mission detail select Add activity. Open /family/students/:studentId/missions/:assignmentId/activities/new. Browse mission and age-filtered suggestions, optionally filter setting or search. Select one to open the completion form with the title. Alternatively select Custom activity and supply a title. Only FR05 Save records completed participation.
+
+5 Functional requirements
+FR04-R01 Filter suggestions by assignment mission and selected student age band. Show only enabled, authorized catalog content. Demo sample labeling remains visible.
+
+FR04-R02 Show usage 0 of 2, 1 of 2 or 2 of 2 from FR07 group counts, including known aliases. Hide exhausted groups by default. A Show used activities option displays them with selection disabled.
+
+FR04-R03 Catalog variants share grouping and usage. Choosing a different wording for an exhausted group does not create another allowance.
+
+FR04-R04 Custom entry remains available when suggestions are disabled or filters return no results. Provide a neutral empty state and a clear custom-entry action.
+
+FR04-R05 Selection opens the form and creates no activity record, attestation, planned-task record or progress change. Do not pre-check attestation or fill a completed participation narrative.
+
+FR04-R06 If catalog availability changes before save, FR05 revalidates the selected item. Preserve typed participation text on rejection and offer another suggestion or explicit custom entry.
+
+6 Data and logical operation contracts
+list_suggestions(assignment_id, setting optional, search optional, include_exhausted, cursor) -> catalog items, group usage, selectable flag, sample-content flag.
+Backend scopes mission, age band and ownership. Client-selected student_id cannot substitute for assignment ownership.
+Form handoff: source, catalog_id optional, title. No persistence until create_activity in FR05. No new table for an uncompleted selection.
+Logical names are proposed. Map to actual inspected backend operations and preserve behavior. All reads and writes inherit C01 and C04. All UI states inherit C08.
+
+7 Errors and recovery
+CATALOG_DISABLED, CATALOG_ITEM_UNAVAILABLE, REPEAT_LIMIT, plus C04 read errors. Empty search is not an error. Keep Custom activity reachable.
+
+8 Acceptance scenarios
+FR04-AC01 Given a child Teamwork assignment, when browsing, then unrelated Respect and adult-only suggestions are excluded.
+
+FR04-AC02 Given two recorded catalog variants from one group, when listing suggestions, then all variants show exhausted usage and cannot be selected for a third record.
+
+FR04-AC03 Given a suggestion, when selecting and leaving the form without saving, then recorded count and database records remain unchanged.
+
+FR04-AC04 Given catalog disabled, when opening Add activity, then Custom activity remains usable.
+
+FR04-AC05 Given a custom title, when entering the completion form, then participation and attestation are still required.
+
+FR04-AC06 Given a catalog item disabled after selection, when saving through FR05, then server validation rejects the stale item and preserves unsent text for correction.
+These scenarios are specified, not executed. Test actual behavior and backend authorization. Record PASS, FAIL or NOT RUN with evidence for every identifier.
+
+9 Implementation task sequence
+Implement scoped catalog query using repetition service. Build filters, usage indicators and custom option. Connect form handoff to FR05 contract. Add sample labels, exhausted-state and selection-no-credit tests.
+Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.txt.
+
+10 Exclusions
+AI generation, saved activity plans, favorites, content authoring interface, and credit for browsing.
+
+11 Decisions and policy gates
+P01, P04, D10. Before FR05 exists, the form destination is visibly unfinished and never reports a saved activity.
+Demo defaults do not imply founder approval. No real participants or publishing as a side effect of feature completion.
+
+12 Copy paste planning prompt
+Plan FR04 only for Digital III Missions Tracker. Read this full specification and the shared project documents. Inspect the existing code and database before proposing changes. Identify the current implementation of every dependency, the components and data operations to change, migrations and permission policies, the task sequence, and tests for every FR04-AC identifier. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan for review before code changes. Do not broaden scope.
+
+13 Copy paste build instruction
+Implement the reviewed FR04 plan and this specification. Keep requirement and acceptance IDs in the implementation checklist and test names. Use the shared protected commands and real persistence, with fictional test records. Do not replace failed backend behavior with UI-only validation or mocked success. Complete the scoped feature and return an evidence-based report. If a shared contract needs to change, describe the proposed specification change before applying conflicting behavior.
+
+14 Copy paste verification prompt
+Verify FR04 against every requirement and acceptance ID in this specification. Inspect the implemented code, run relevant tests, and exercise the user flow in the available browser. Include direct unauthorized backend attempts and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with actual evidence. Describe changed files and migrations, unresolved decisions, and remaining defects. Do not claim unexecuted tests passed. Update the feature completion record without modifying acceptance criteria to fit the implementation.
+
+========================================================================
+FILE FR05_record_participation_and_attest.txt
+========================================================================
+
+[Unverified] FR05 Record participation and attest
+Specification version 0.1
+Status Proposed for fictional-data implementation
+Source PRD FR05 and workflow discussion
+Priority Required MVP feature
+Build position 5 after F00
+
+1 Outcome
+A family records one completed activity with an explicit current attestation and receives durable save confirmation.
+
+2 Context required for the coding agent
+Read 01_PROJECT_KNOWLEDGE.txt, 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt and 05_TEST_FIXTURES.txt with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+Dependencies: FR01, FR02, FR04, FR07. Implemented prerequisites must have acceptance evidence. If a prerequisite is absent, report the exact missing dependency. Do not silently fake backend behavior.
+
+3 Users and permissions
+Parent: enter child participation and parent attestation.
+Adult student: enter own participation and self-attestation when policy permits.
+Instructor: read saved records, never attest on behalf of a family.
+Administrator: same restriction as instructor unless acting within their own family membership.
+
+4 User workflow and screens
+Open the completion form from a suggestion or custom entry. Keep student and mission visible. Enter a participation description and completion date. Check the unchecked attestation control. Select Save. Disable duplicate taps while pending, then show the saved record and authoritative count. On failure, retain typed fields and show the relevant correction.
+
+5 Functional requirements
+FR05-R01 Require source catalog/custom, valid title, separate participation description, completed_on date and explicit attestation=true. Apply C08 limits and C07 date rules.
+
+FR05-R02 For a child use parent attestation. For an adult require the linked adult account and approved pilot policy or demo mode. Derive actor and attestation time from the backend.
+
+FR05-R03 Save only in an editable state and unarchived cycle. Permit draft logging after submission cutoff within the activity window. Reject additions after 50 active records.
+
+FR05-R04 Resolve the catalog or custom group and run FR07 within the write transaction. A client-supplied group ID is not trusted. Unmatched custom entries save with pending review classification.
+
+FR05-R05 Use request_id and expected content_version. A retry of a committed save returns the same record. Distinct concurrent creates must preserve count and group limits.
+
+FR05-R06 Do not show Saved or increment displayed progress before confirmed persistence. Store revision and audit reference. Selecting, checking, or abandoning the form alone creates no record.
+
+6 Data and logical operation contracts
+create_activity(assignment_id, source, catalog_id optional, title optional, participation, completed_on, attest=true, expected_content_version, request_id) -> record_id, revision, recorded_count, content_version, lifecycle_version, unresolved_custom flag.
+Catalog title/group resolved server-side. Custom original_title retained. Actor, attestation_type and timestamps derived from session and student type. Tables activity_records, assignment versions, audit_events, mutation_receipts.
+Logical names are proposed. Map to actual inspected backend operations and preserve behavior. All reads and writes inherit C01 and C04. All UI states inherit C08.
+
+7 Errors and recovery
+ATTESTATION_REQUIRED, DATE_OUTSIDE_WINDOW, FUTURE_DATE, COUNT_LIMIT, REPEAT_LIMIT, ADULT_POLICY_UNCONFIRMED, CATALOG_ITEM_UNAVAILABLE, plus C04 errors. Uncertain timeout uses same request ID on retry.
+
+8 Acceptance scenarios
+FR05-AC01 Given M49 and a valid final activity, when saving with attestation, then one persistent record appears and count becomes 50 after refresh.
+
+FR05-AC02 Given missing attestation or participation, when saving through UI or direct backend, then no record or count increment occurs.
+
+FR05-AC03 Given a future date or date outside the cycle window, when saving, then DATE_OUTSIDE_WINDOW or FUTURE_DATE returns with no mutation.
+
+FR05-AC04 Given the same request and payload retried after a timeout, when the first write already committed, then the same record returns without duplication.
+
+FR05-AC05 Given M49 and two concurrent distinct valid creates, when both execute, then only one commits and total remains 50.
+
+FR05-AC06 Given an ordinary instructor or another family, when writing an activity for FAMILY_A, then the backend rejects the operation.
+
+FR05-AC07 Given an editable overdue assignment, when a valid in-window activity is logged, then draft save succeeds while submission remains governed by FR10.
+These scenarios are specified, not executed. Test actual behavior and backend authorization. Record PASS, FAIL or NOT RUN with evidence for every identifier.
+
+9 Implementation task sequence
+Implement create transaction and idempotency. Integrate dates and repetition. Build accessible form and pending/retry states. Add durable-save, direct-request, race and privacy tests.
+Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.txt.
+
+10 Exclusions
+Bulk completion, instructor-entered parent attestations, photo proof, offline save queues, and automatic approval.
+
+11 Decisions and policy gates
+D02, D06, P04, P05. The date window and truthfulness remain distinct. Length validation is not proof of participation.
+Demo defaults do not imply founder approval. No real participants or publishing as a side effect of feature completion.
+
+12 Copy paste planning prompt
+Plan FR05 only for Digital III Missions Tracker. Read this full specification and the shared project documents. Inspect the existing code and database before proposing changes. Identify the current implementation of every dependency, the components and data operations to change, migrations and permission policies, the task sequence, and tests for every FR05-AC identifier. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan for review before code changes. Do not broaden scope.
+
+13 Copy paste build instruction
+Implement the reviewed FR05 plan and this specification. Keep requirement and acceptance IDs in the implementation checklist and test names. Use the shared protected commands and real persistence, with fictional test records. Do not replace failed backend behavior with UI-only validation or mocked success. Complete the scoped feature and return an evidence-based report. If a shared contract needs to change, describe the proposed specification change before applying conflicting behavior.
+
+14 Copy paste verification prompt
+Verify FR05 against every requirement and acceptance ID in this specification. Inspect the implemented code, run relevant tests, and exercise the user flow in the available browser. Include direct unauthorized backend attempts and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with actual evidence. Describe changed files and migrations, unresolved decisions, and remaining defects. Do not claim unexecuted tests passed. Update the feature completion record without modifying acceptance criteria to fit the implementation.
+
+========================================================================
+FILE FR06_edit_and_remove_recorded_activities.txt
+========================================================================
+
+[Unverified] FR06 Edit and remove recorded activities
+Specification version 0.1
+Status Proposed for fictional-data implementation
+Source PRD FR06 and workflow discussion
+Priority Required MVP feature
+Build position 6 after F00
+
+1 Outcome
+A family corrects editable working records without rewriting a submitted version or retaining an outdated attestation.
+
+2 Context required for the coding agent
+Read 01_PROJECT_KNOWLEDGE.txt, 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt and 05_TEST_FIXTURES.txt with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+Dependencies: FR05, FR07. Implemented prerequisites must have acceptance evidence. If a prerequisite is absent, report the exact missing dependency. Do not silently fake backend behavior.
+
+3 Users and permissions
+Parent: edit or remove child records while the mission is editable.
+Adult student: edit or remove own records with renewed self-attestation.
+Instructor: request corrections through FR12, never rewrite family statements.
+Administrator: reopen an approved mission through FR12 before family correction.
+
+4 User workflow and screens
+Open mission detail, select a record, choose Edit or Remove. Edit shows existing fields and an unchecked renewed attestation. Save validates the revised record. Remove opens a confirmation naming the student and activity. Confirm removal, then refresh count and available repetition allowance. In read-only states replace edit controls with the submitted status and feedback history.
+
+5 Functional requirements
+FR06-R01 Authorize against the working record assignment. Only not_started, in_progress or needs_changes in an unarchived cycle permits family edits. Submitted snapshots and approved statements remain immutable.
+
+FR06-R02 Require expected record revision and assignment content version. Reject stale changes rather than overwriting another session. Preserve the attempted text for user comparison.
+
+FR06-R03 Any title, source, participation, date or classification-relevant change clears previous attestation and requires a fresh explicit confirmation in the same save. Server computes the new grouping.
+
+FR06-R04 Repetition validation excludes the existing record before counting its replacement. A record remaining in its existing two-use group is permitted. Moving into a group already used twice fails.
+
+FR06-R05 Remove uses a soft-deactivated working record and audit event. Recalculate count. Removing the last in-progress record sets not_started, while removing the last returned record preserves needs_changes.
+
+FR06-R06 Each corrected submission later receives fresh custom classification under D04. Old snapshots and review decisions remain unchanged. Removal confirmation is explicit, with no automatic resubmission.
+
+6 Data and logical operation contracts
+update_activity(record_id, revised_fields, attest=true, expected_revision, expected_content_version, request_id) -> record, versions, recorded_count, validation summary.
+remove_activity(record_id, confirmed=true, expected_revision, expected_content_version, request_id) -> active=false, recorded_count, versions.
+Do not expose update/delete on submission_entries. Keep the original record ID across revisions and store change references.
+Logical names are proposed. Map to actual inspected backend operations and preserve behavior. All reads and writes inherit C01 and C04. All UI states inherit C08.
+
+7 Errors and recovery
+ATTESTATION_REQUIRED, REPEAT_LIMIT, DATE_OUTSIDE_WINDOW, INVALID_STATE, VERSION_CONFLICT, plus C04 errors. A repeated committed removal with the same key returns its original result.
+
+8 Acceptance scenarios
+FR06-AC01 Given an editable record, when participation is changed without renewed attestation, then save fails and previous content remains unchanged.
+
+FR06-AC02 Given two entries in one group, when editing one without changing group, then the edit is accepted without counting itself twice.
+
+FR06-AC03 Given a target group already used twice, when moving another record into the group, then the edit fails with REPEAT_LIMIT.
+
+FR06-AC04 Given a submitted mission, when editing or removing by direct backend request, then the operation fails and the snapshot remains byte-equivalent in content.
+
+FR06-AC05 Given one remaining record in in_progress versus needs_changes, when removing each, then resulting states are not_started and needs_changes respectively.
+
+FR06-AC06 Given two sessions with the same revision, when the first edit commits and the second saves, then the second receives VERSION_CONFLICT without overwriting the first.
+These scenarios are specified, not executed. Test actual behavior and backend authorization. Record PASS, FAIL or NOT RUN with evidence for every identifier.
+
+9 Implementation task sequence
+Add protected edit/remove transactions. Reuse FR05 form and FR07 checks. Add confirmation and re-attestation behavior. Preserve history. Test optimistic-lock conflicts, grouping changes, and locked states.
+Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.txt.
+
+10 Exclusions
+Undo history editor, permanent deletion interface, staff edits to family narratives, and silent snapshot mutation.
+
+11 Decisions and policy gates
+D03, D04, D07. Data-subject deletion is a separate approved operational process under P06.
+Demo defaults do not imply founder approval. No real participants or publishing as a side effect of feature completion.
+
+12 Copy paste planning prompt
+Plan FR06 only for Digital III Missions Tracker. Read this full specification and the shared project documents. Inspect the existing code and database before proposing changes. Identify the current implementation of every dependency, the components and data operations to change, migrations and permission policies, the task sequence, and tests for every FR06-AC identifier. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan for review before code changes. Do not broaden scope.
+
+13 Copy paste build instruction
+Implement the reviewed FR06 plan and this specification. Keep requirement and acceptance IDs in the implementation checklist and test names. Use the shared protected commands and real persistence, with fictional test records. Do not replace failed backend behavior with UI-only validation or mocked success. Complete the scoped feature and return an evidence-based report. If a shared contract needs to change, describe the proposed specification change before applying conflicting behavior.
+
+14 Copy paste verification prompt
+Verify FR06 against every requirement and acceptance ID in this specification. Inspect the implemented code, run relevant tests, and exercise the user flow in the available browser. Include direct unauthorized backend attempts and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with actual evidence. Describe changed files and migrations, unresolved decisions, and remaining defects. Do not claim unexecuted tests passed. Update the feature completion record without modifying acceptance criteria to fit the implementation.
+
+========================================================================
+FILE FR10_submission_cutoffs_and_administrator_exceptions.txt
+========================================================================
+
+[Unverified] FR10 Submission cutoffs and administrator exceptions
+Specification version 0.1
+Status Proposed for fictional-data implementation
+Source PRD FR10 and workflow discussion
+Priority Required MVP feature
+Build position 7 after F00
+
+1 Outcome
+Every user sees the same explicit cutoff, while exceptions remain assignment-specific and attributable.
+
+2 Context required for the coding agent
+Read 01_PROJECT_KNOWLEDGE.txt, 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt and 05_TEST_FIXTURES.txt with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+Dependencies: FR01, FR02. Implemented prerequisites must have acceptance evidence. If a prerequisite is absent, report the exact missing dependency. Do not silently fake backend behavior.
+
+3 Users and permissions
+Parent: see cutoff, closed state and any extension, retain permitted draft edits.
+Adult student: identical timing behavior for own assignment.
+Instructor: view deadlines and continue review after cutoff, no extension rights.
+Administrator: configure cutoff and grant, replace or revoke assignment exceptions.
+
+4 User workflow and screens
+Administrator opens a cycle cutoff form, selects explicit timezone/local date/time, reviews the resolved instant and confirms. On a late assignment, administrator opens Exceptions, enters revised expiry and reason, and grants. Family detail refreshes effective cutoff. A revised graduation date displays the existing cutoff for explicit review rather than moving the deadline automatically.
+
+5 Functional requirements
+FR10-R01 Propose a due date two school-local calendar days before graduation but require an explicit time and confirmation. No production default time. Handle invalid and ambiguous timezone-local instants under C07.
+
+FR10-R02 Compute openness from authoritative server time and effective cutoff. Equality passes, later fails. Use the same resolver in dashboard, preflight, submit and notices.
+
+FR10-R03 Only administrators grant exceptions. Require assignment ID, expiry later than base cutoff, valid reason and expected lifecycle version. Revoking or replacing records prior values and actor.
+
+FR10-R04 A new exception must be later than server now. At most one remains active. Concurrent replacements must not create multiple active rows. Exception expiry affects submission only, not completed_on eligibility.
+
+FR10-R05 After cutoff, editable drafts remain editable within their activity window. Submitted work stays reviewable. Resubmission after return requires an open base cutoff or valid extension.
+
+FR10-R06 Settings changes record actor, old/new cutoff and reason. Refresh stale readiness and notices. No in-app request-extension workflow or automatic exception grant.
+
+6 Data and logical operation contracts
+resolve_cutoff(cycle, active_exception, server_now) -> base_cutoff, effective_cutoff, open, source, display_timezone.
+set_cycle_cutoff(cycle_id, timezone/local_date/time/offset_choice, reason, expected_settings_version, request_id) -> cutoff_at, settings_version. Post-assignment timezone changes remain policy-gated.
+grant_extension(assignment_id, expires_at, reason, expected_lifecycle_version, request_id) -> exception, effective_cutoff, lifecycle_version.
+revoke_extension(exception_id, reason, expected_lifecycle_version, request_id) -> revoked_at, effective_cutoff, lifecycle_version.
+Logical names are proposed. Map to actual inspected backend operations and preserve behavior. All reads and writes inherit C01 and C04. All UI states inherit C08.
+
+7 Errors and recovery
+POLICY_NOT_CONFIGURED, INVALID_LOCAL_TIME, AMBIGUOUS_LOCAL_TIME, INVALID_EXTENSION, CUTOFF_PASSED, VERSION_CONFLICT, FORBIDDEN. Show the timezone explicitly in date errors.
+
+8 Acceptance scenarios
+FR10-AC01 Given a configured cutoff, when server time is before, equal to and after the instant, then openness is true, true and false respectively.
+
+FR10-AC02 Given another device timezone or incorrect device clock, when evaluating submission, then stored school policy and server time determine the outcome.
+
+FR10-AC03 Given an invalid spring-forward local time, when saving cutoff, then validation rejects. Given an ambiguous local time, then an explicit offset choice is required.
+
+FR10-AC04 Given an overdue returned mission, when family edits a valid existing record, then save works but resubmit fails until a valid extension exists.
+
+FR10-AC05 Given an ordinary instructor or family session, when granting an extension directly, then authorization rejects the command.
+
+FR10-AC06 Given a valid extension, when revoked or expired, then new submission is blocked while an already submitted version remains reviewable.
+
+FR10-AC07 Given a post-window activity date, when the submission deadline alone is extended, then the invalid activity date remains rejected.
+These scenarios are specified, not executed. Test actual behavior and backend authorization. Record PASS, FAIL or NOT RUN with evidence for every identifier.
+
+9 Implementation task sequence
+Implement one timezone and effective-cutoff service. Add admin cutoff/exception controls. Integrate FR02 configuration. Add audit/version handling. Run boundary, DST, privilege and concurrency tests.
+Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.txt.
+
+10 Exclusions
+Automatic grace periods, silent timezone inference, extension requests, activity-window extension, and rejection of previously submitted missions merely due to time passing.
+
+11 Decisions and policy gates
+P03, P04, D05, D06. Demo uses an explicit fictional cutoff. Founder policy remains a live-pilot gate.
+Demo defaults do not imply founder approval. No real participants or publishing as a side effect of feature completion.
+
+12 Copy paste planning prompt
+Plan FR10 only for Digital III Missions Tracker. Read this full specification and the shared project documents. Inspect the existing code and database before proposing changes. Identify the current implementation of every dependency, the components and data operations to change, migrations and permission policies, the task sequence, and tests for every FR10-AC identifier. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan for review before code changes. Do not broaden scope.
+
+13 Copy paste build instruction
+Implement the reviewed FR10 plan and this specification. Keep requirement and acceptance IDs in the implementation checklist and test names. Use the shared protected commands and real persistence, with fictional test records. Do not replace failed backend behavior with UI-only validation or mocked success. Complete the scoped feature and return an evidence-based report. If a shared contract needs to change, describe the proposed specification change before applying conflicting behavior.
+
+14 Copy paste verification prompt
+Verify FR10 against every requirement and acceptance ID in this specification. Inspect the implemented code, run relevant tests, and exercise the user flow in the available browser. Include direct unauthorized backend attempts and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with actual evidence. Describe changed files and migrations, unresolved decisions, and remaining defects. Do not claim unexecuted tests passed. Update the feature completion record without modifying acceptance criteria to fit the implementation.
+
+========================================================================
+FILE FR08_submission_readiness_validation.txt
+========================================================================
+
+[Unverified] FR08 Submission readiness validation
+Specification version 0.1
+Status Proposed for fictional-data implementation
+Source PRD FR08 and workflow discussion
+Priority Required MVP feature
+Build position 8 after F00
+
+1 Outcome
+A family receives an exact list of submission blockers while review-only items remain clearly distinguished.
+
+2 Context required for the coding agent
+Read 01_PROJECT_KNOWLEDGE.txt, 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt and 05_TEST_FIXTURES.txt with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+Dependencies: FR02, FR05, FR06, FR07, FR10. Implemented prerequisites must have acceptance evidence. If a prerequisite is absent, report the exact missing dependency. Do not silently fake backend behavior.
+
+3 Users and permissions
+Parent: run preflight and correct identified records.
+Adult student: same preflight for own assignment.
+Instructor: uses equivalent structural checks during approval, without applying the current submission cutoff to already submitted missions.
+Administrator: same reviewer behavior, with exceptions managed through FR10.
+
+4 User workflow and screens
+From mission detail open Review submission. Read a protected preflight result against current working records. Display 50 numbered entries, blocking issues, review-only flags, cutoff, and action availability. Selecting a blocker opens the associated editable record. Submit remains disabled until preflight has zero blockers, but FR09 still rechecks at commit.
+
+5 Functional requirements
+FR08-R01 Require exactly 50 active records, valid required fields, dates inside the frozen activity window, current attestations, and known repetition compliance.
+
+FR08-R02 Require family ownership, an editable state, an unarchived cycle, and an open effective cutoff for submission. Return permission failures before detailed record diagnostics.
+
+FR08-R03 Separate blocking issues from instructor_review items. Unclassified custom entries do not block submission, but their count and approval dependency must be visible.
+
+FR08-R04 Return authorized entry identifiers and field-level reasons. Use stable rule codes so UI, tests and backend submission share the same interpretation.
+
+FR08-R05 Preflight is read-only and does not freeze records, move state, reserve a place before cutoff, or create a submission. Its version metadata supports a later conflict check.
+
+FR08-R06 Reuse content validation on immutable snapshots during approval. Approval after cutoff remains permitted. Snapshot completion dates are judged against submission-time validity and the frozen window, not a later unrelated setting.
+
+6 Data and logical operation contracts
+validate_submission(assignment_id) -> ready, blockers[{code,record_id optional,field optional,message}], review_items[], recorded_count, content_version, lifecycle_version, settings_version, effective_cutoff, validated_at.
+Internal validate_content(records,frozen_rules,reference_date) is reusable for snapshots. FR09 executes authoritative validation inside submit transaction. This read-only endpoint does not grant later submission rights.
+Logical names are proposed. Map to actual inspected backend operations and preserve behavior. All reads and writes inherit C01 and C04. All UI states inherit C08.
+
+7 Errors and recovery
+COUNT_REQUIRED, INCOMPLETE_ENTRY, ATTESTATION_REQUIRED, DATE_OUTSIDE_WINDOW, REPEAT_LIMIT, CUTOFF_PASSED, INVALID_STATE, plus C04 errors. Review flag CUSTOM_CLASSIFICATION_REQUIRED is not a submission blocker.
+
+8 Acceptance scenarios
+FR08-AC01 Given M49, when preflight runs, then ready=false and COUNT_REQUIRED reports one missing activity.
+
+FR08-AC02 Given M50 with valid records and open cutoff, when preflight runs, then ready=true without changing state or creating a submission.
+
+FR08-AC03 Given M_CUSTOM with 50 structurally valid records, when preflight runs, then ready=true and review_items lists the unresolved custom entries.
+
+FR08-AC04 Given a corrupted fixture with missing attestation or known third occurrence, when preflight runs, then specific entry-linked blockers appear.
+
+FR08-AC05 Given preflight ready before cutoff, when time passes beyond cutoff, then refreshed preflight returns CUTOFF_PASSED. Earlier readiness grants no exemption.
+
+FR08-AC06 Given another family or an already submitted assignment, when preflight for submission is requested, then access or state checks reject the operation.
+
+FR08-AC07 Given an immutable submitted snapshot and a later cutoff, when approval content validation runs, then lateness alone does not block approval.
+These scenarios are specified, not executed. Test actual behavior and backend authorization. Record PASS, FAIL or NOT RUN with evidence for every identifier.
+
+9 Implementation task sequence
+Implement shared content validator and scoped preflight. Add review screen and issue links. Distinguish blockers from review flags. Add boundary, permission and no-side-effect tests.
+Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.txt.
+
+10 Exclusions
+Submission persistence, automated approval, inferred truthfulness, and guaranteeing admission before a deadline.
+
+11 Decisions and policy gates
+D03, D06, P03. This feature reports readiness only. FR09 owns submission commits.
+Demo defaults do not imply founder approval. No real participants or publishing as a side effect of feature completion.
+
+12 Copy paste planning prompt
+Plan FR08 only for Digital III Missions Tracker. Read this full specification and the shared project documents. Inspect the existing code and database before proposing changes. Identify the current implementation of every dependency, the components and data operations to change, migrations and permission policies, the task sequence, and tests for every FR08-AC identifier. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan for review before code changes. Do not broaden scope.
+
+13 Copy paste build instruction
+Implement the reviewed FR08 plan and this specification. Keep requirement and acceptance IDs in the implementation checklist and test names. Use the shared protected commands and real persistence, with fictional test records. Do not replace failed backend behavior with UI-only validation or mocked success. Complete the scoped feature and return an evidence-based report. If a shared contract needs to change, describe the proposed specification change before applying conflicting behavior.
+
+14 Copy paste verification prompt
+Verify FR08 against every requirement and acceptance ID in this specification. Inspect the implemented code, run relevant tests, and exercise the user flow in the available browser. Include direct unauthorized backend attempts and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with actual evidence. Describe changed files and migrations, unresolved decisions, and remaining defects. Do not claim unexecuted tests passed. Update the feature completion record without modifying acceptance criteria to fit the implementation.
+
+========================================================================
+FILE FR03_family_mission_dashboard.txt
+========================================================================
+
+[Unverified] FR03 Family mission dashboard
+Specification version 0.1
+Status Proposed for fictional-data implementation
+Source PRD FR03 and workflow discussion
+Priority Required MVP feature
+Build position 9 after F00
+
+1 Outcome
+A family sees the correct student, recorded progress, deadline and next action without confusing attestation with approval.
+
+2 Context required for the coding agent
+Read 01_PROJECT_KNOWLEDGE.txt, 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt and 05_TEST_FIXTURES.txt with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+Dependencies: FR01, FR02, FR08, FR10. Implemented prerequisites must have acceptance evidence. If a prerequisite is absent, report the exact missing dependency. Do not silently fake backend behavior.
+
+3 Users and permissions
+Parent: select a child and open assigned missions.
+Adult student: select own adult profile in the same family selector.
+Instructor: school status belongs to FR13, family editing requires own family membership.
+Administrator: same scope separation as instructor.
+
+4 User workflow and screens
+Open /family. Load authorized profiles, select a profile, then load mission cards. Each card shows mission name, recorded count out of 50, state, cutoff, issue count and next action. Open a card for mission detail. Switching students cancels or ignores old requests so results from the previous student do not overwrite the selected view.
+
+5 Functional requirements
+FR03-R01 Display only assigned missions belonging to the selected profile. Show distinct states for no profiles, no assignments, no records, loading, unavailable and access denied.
+
+FR03-R02 Compute counts from active records. Label progress Recorded activities. Parent-attested and self-attested are distinct from instructor Approved.
+
+FR03-R03 Use C03 states and FR08 validation. In progress with 50 records and no blockers shows Ready to submit. Needs changes remains visible with Resubmit when eligible.
+
+FR03-R04 Display explicit school-local cutoff and timezone, plus open/closed status from FR10. A deadline closing does not remove submitted or approved status.
+
+FR03-R05 Next actions: Add activity below 50 in editable state, Review submission when ready, View feedback when returned, View submission when submitted, View approval when approved. An expired cutoff explains blocked submission while retaining permitted edits.
+
+FR03-R06 Refresh after a successful mutation, on return to the app, and when the cutoff boundary is reached. Use authoritative reads, loading indicators and retry rather than fabricated counts or stale success.
+
+6 Data and logical operation contracts
+get_family_dashboard() -> students[], assignments[], recorded_count, display_status, effective_cutoff, blocking_count, unresolved_custom_count, next_action.
+get_mission_detail(assignment_id) -> records, feedback, permissions, validation and versions.
+No dashboard-specific mutation. All actions delegate to the owning feature command. Selected student stays in page state and route context, not a source of authorization.
+Logical names are proposed. Map to actual inspected backend operations and preserve behavior. All reads and writes inherit C01 and C04. All UI states inherit C08.
+
+7 Errors and recovery
+UNAUTHENTICATED prompts sign-in, NOT_FOUND hides unauthorized identifiers, TEMPORARILY_UNAVAILABLE shows retry. Old-profile responses are ignored after selection changes.
+
+8 Acceptance scenarios
+FR03-AC01 Given FAMILY_A with two children and an adult profile, when switching profiles, then cards, counts and next actions all match the selected profile.
+
+FR03-AC02 Given slow responses for two profile selections, when the older response arrives last, then the latest selected profile remains displayed.
+
+FR03-AC03 Given M0, M49, M50, M_RETURNED and M_APPROVED, when opening each, then count, status and action match C03 and FR08.
+
+FR03-AC04 Given a submitted mission after cutoff, when refreshing, then status remains Submitted and editing stays disabled.
+
+FR03-AC05 Given FAMILY_B using a FAMILY_A mission URL, when loading detail, then no protected record, count or name appears.
+
+FR03-AC06 Given an unavailable backend, when opening the dashboard, then no zero-count success substitute appears and retry is available.
+These scenarios are specified, not executed. Test actual behavior and backend authorization. Record PASS, FAIL or NOT RUN with evidence for every identifier.
+
+9 Implementation task sequence
+Build scoped read model. Add selector and mission cards. Implement status/action mapping. Add empty/error/loading states. Test selection races and cutoff refresh. Verify mobile and keyboard behavior.
+Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.txt.
+
+10 Exclusions
+School roster, leaderboards, badges, overall graduation eligibility, and offline student dashboards.
+
+11 Decisions and policy gates
+D03, D09. Dashboard readiness is derived, never a separately writable status.
+Demo defaults do not imply founder approval. No real participants or publishing as a side effect of feature completion.
+
+12 Copy paste planning prompt
+Plan FR03 only for Digital III Missions Tracker. Read this full specification and the shared project documents. Inspect the existing code and database before proposing changes. Identify the current implementation of every dependency, the components and data operations to change, migrations and permission policies, the task sequence, and tests for every FR03-AC identifier. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan for review before code changes. Do not broaden scope.
+
+13 Copy paste build instruction
+Implement the reviewed FR03 plan and this specification. Keep requirement and acceptance IDs in the implementation checklist and test names. Use the shared protected commands and real persistence, with fictional test records. Do not replace failed backend behavior with UI-only validation or mocked success. Complete the scoped feature and return an evidence-based report. If a shared contract needs to change, describe the proposed specification change before applying conflicting behavior.
+
+14 Copy paste verification prompt
+Verify FR03 against every requirement and acceptance ID in this specification. Inspect the implemented code, run relevant tests, and exercise the user flow in the available browser. Include direct unauthorized backend attempts and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with actual evidence. Describe changed files and migrations, unresolved decisions, and remaining defects. Do not claim unexecuted tests passed. Update the feature completion record without modifying acceptance criteria to fit the implementation.
+
+========================================================================
+FILE FR09_mission_submission_and_immutable_versions.txt
+========================================================================
+
+[Unverified] FR09 Mission submission and immutable versions
+Specification version 0.1
+Status Proposed for fictional-data implementation
+Source PRD FR09 and workflow discussion
+Priority Required MVP feature
+Build position 10 after F00
+
+1 Outcome
+A valid mission becomes one immutable submitted version with a receipt and a clear staff handoff.
+
+2 Context required for the coding agent
+Read 01_PROJECT_KNOWLEDGE.txt, 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt and 05_TEST_FIXTURES.txt with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+Dependencies: FR08. Implemented prerequisites must have acceptance evidence. If a prerequisite is absent, report the exact missing dependency. Do not silently fake backend behavior.
+
+3 Users and permissions
+Parent: submit a child mission or resubmit corrections.
+Adult student: submit own mission.
+Instructor: receives submitted version in queue, no family submission rights from staff role.
+Administrator: reviews operational results, no submission impersonation.
+
+4 User workflow and screens
+Family opens the FR08 review screen, reviews entries and review-only flags, then selects Submit mission or Resubmit. Command validates fresh state and cutoff within a transaction, copies working records into a new snapshot, records receipt and changes state. UI displays submission sequence and timestamp. Family detail becomes read-only and staff queue gains the submission.
+
+5 Functional requirements
+FR09-R01 Accept only current owned editable assignments. Require expected content and lifecycle versions. Re-run FR08 with current settings and server time under the assignment transaction.
+
+FR09-R02 Create exactly one submission header and 50 ordered immutable entries. Freeze instructions, count/limit, relevant catalog text, student display name, mission label, cycle label, timezone, effective cutoff and submit-time date context.
+
+FR09-R03 Change state to submitted and current_submission_id to the new version in the same transaction. Increment sequence without gaps from failed transactions. Never partially snapshot entries.
+
+FR09-R04 Idempotent retries return the original committed receipt after current access checks, including retries after cutoff. A new key after successful submission receives INVALID_STATE rather than a duplicate snapshot.
+
+FR09-R05 Resubmission from needs_changes creates a new sequence. Preserve all older submission text and decisions. Custom review overlays start empty for the new version under D04.
+
+FR09-R06 Show success only after commit. On uncertain timeout retain the request ID and retrieve or retry the same operation. Do not unlock editing while submission outcome remains unknown.
+
+6 Data and logical operation contracts
+submit_mission(assignment_id, expected_content_version, expected_lifecycle_version, request_id) -> submission_id, sequence, submitted_at, state=submitted, content_version, lifecycle_version.
+Tables: submissions, submission_entries, assignments, audit_events, mutation_receipts. No family-controlled submitted_at, approved status, receipt actor or record count. Snapshot insert privileges belong only to the protected transaction.
+Logical names are proposed. Map to actual inspected backend operations and preserve behavior. All reads and writes inherit C01 and C04. All UI states inherit C08.
+
+7 Errors and recovery
+CUTOFF_PASSED, COUNT_REQUIRED, REPEAT_LIMIT, INCOMPLETE_ENTRY, VERSION_CONFLICT, INVALID_STATE, plus C04 errors. Transaction failure leaves editable state and no partial submission.
+
+8 Acceptance scenarios
+FR09-AC01 Given M50 and open cutoff, when submit succeeds, then one header, 50 entries, a receipt and submitted state persist after refresh.
+
+FR09-AC02 Given two same-key submission requests, when both execute, then both resolve to one committed submission ID.
+
+FR09-AC03 Given a committed submission whose response was lost, when retried with the same key after cutoff, then its earlier receipt returns without a second submission.
+
+FR09-AC04 Given preflight at version N and an intervening activity edit, when submission uses version N, then VERSION_CONFLICT returns and no snapshot commits.
+
+FR09-AC05 Given server validation immediately after cutoff, when a new submission is attempted, then CUTOFF_PASSED returns regardless of device time.
+
+FR09-AC06 Given returned submission 1 and corrected working records, when resubmitted, then submission 2 reflects changes and submission 1 remains unchanged.
+
+FR09-AC07 Given a simulated failure during entry copying, when the transaction aborts, then neither a partial snapshot nor submitted state remains.
+These scenarios are specified, not executed. Test actual behavior and backend authorization. Record PASS, FAIL or NOT RUN with evidence for every identifier.
+
+9 Implementation task sequence
+Build transactional snapshot and receipt command. Add state lock and version checks. Connect FR08 button and receipt page. Test concurrent retries, failed transactions, cutoff boundary and historical preservation.
+Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.txt.
+
+10 Exclusions
+Instructor approval, email receipts, partial mission submission, offline queueing, and editing submitted snapshots.
+
+11 Decisions and policy gates
+D04, D06, P02, P03. Digital receipt is application acknowledgment, not proof of school acceptance.
+Demo defaults do not imply founder approval. No real participants or publishing as a side effect of feature completion.
+
+12 Copy paste planning prompt
+Plan FR09 only for Digital III Missions Tracker. Read this full specification and the shared project documents. Inspect the existing code and database before proposing changes. Identify the current implementation of every dependency, the components and data operations to change, migrations and permission policies, the task sequence, and tests for every FR09-AC identifier. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan for review before code changes. Do not broaden scope.
+
+13 Copy paste build instruction
+Implement the reviewed FR09 plan and this specification. Keep requirement and acceptance IDs in the implementation checklist and test names. Use the shared protected commands and real persistence, with fictional test records. Do not replace failed backend behavior with UI-only validation or mocked success. Complete the scoped feature and return an evidence-based report. If a shared contract needs to change, describe the proposed specification change before applying conflicting behavior.
+
+14 Copy paste verification prompt
+Verify FR09 against every requirement and acceptance ID in this specification. Inspect the implemented code, run relevant tests, and exercise the user flow in the available browser. Include direct unauthorized backend attempts and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with actual evidence. Describe changed files and migrations, unresolved decisions, and remaining defects. Do not claim unexecuted tests passed. Update the feature completion record without modifying acceptance criteria to fit the implementation.
+
+========================================================================
+FILE FR12_review_decisions_history_and_reopening.txt
+========================================================================
+
+[Unverified] FR12 Review decisions history and reopening
+Specification version 0.1
+Status Proposed for fictional-data implementation
+Source PRD FR12 and workflow discussion
+Priority Required MVP feature
+Build position 11 after F00
+
+1 Outcome
+Review decisions remain attributable, version-specific and protected against concurrent or unauthorized changes.
+
+2 Context required for the coding agent
+Read 01_PROJECT_KNOWLEDGE.txt, 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt and 05_TEST_FIXTURES.txt with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+Dependencies: FR07, FR08, FR09. Implemented prerequisites must have acceptance evidence. If a prerequisite is absent, report the exact missing dependency. Do not silently fake backend behavior.
+
+3 Users and permissions
+Parent: view own submission outcomes and feedback, no review mutation rights.
+Adult student: same rights for own mission.
+Instructor: classify, merge review groups, approve or return another family's current submission.
+Administrator: instructor rights plus reopening an approved mission with a reason. Own-family restriction applies.
+
+4 User workflow and screens
+Review UI sends a classification or decision command with the current submission ID and lifecycle version. Backend authenticates reviewer, checks self-review and state, applies the operation transactionally, records history, and returns new version. Reopening starts from an approved assignment in the admin view, requires a reason, changes current state to needs_changes and preserves the earlier approval.
+
+5 Functional requirements
+FR12-R01 Only authorized school reviewers act on current submitted versions. Reject old submission IDs, already-decided versions, self-family reviews, inactive memberships and stale lifecycle versions.
+
+FR12-R02 Classification overlay contains one current classification per custom entry in the submission. Submission-local review groups permit grouping equivalent custom entries. Merging groups updates the overlay transactionally and increments lifecycle version.
+
+FR12-R03 Classification revealing a third occurrence is saved as a review finding, not suppressed. Approval then fails until a corrected new submission meets the limit. Do not change snapshot text or count to force approval.
+
+FR12-R04 approve_submission requires 50 structurally valid snapshot records, current attestations captured at submission, zero unresolved custom entries, and no reviewed group above two. Current cutoff alone does not block review.
+
+FR12-R05 return_submission requires a meaningful reason and optional valid affected-entry IDs. Set needs_changes and append a decision. One final decision per submission. Concurrent approve/return attempts permit only one final winner.
+
+FR12-R06 reopen_approval is admin-only, not for own family. Reject an archived cycle until FR02 restore_cycle completes. Append a reopen event, keep earlier approval, set needs_changes, and remove current approved aggregate status. A new approval requires resubmission and a new review decision.
+
+FR12-R07 All operations use C04 receipts and versions. Families read only their own outcome/feedback history. Operational audit access is admin-scoped. No writable public audit or review table.
+
+6 Data and logical operation contracts
+classify_entry(submission_id, source_record_id, target_group_key, expected_lifecycle_version, request_id) -> overlay, review_checks, lifecycle_version.
+merge_review_groups(submission_id, source_group_keys, target_group_key, expected_lifecycle_version, request_id) -> overlay, review_checks, lifecycle_version.
+approve_submission(submission_id, expected_lifecycle_version, request_id) -> decision_id, approved state, lifecycle_version.
+return_submission(submission_id, reason, flagged_entry_ids, expected_lifecycle_version, request_id) -> decision_id, needs_changes, lifecycle_version.
+reopen_approval(assignment_id, approved_submission_id, reason, expected_lifecycle_version, request_id) -> reopen_event_id, needs_changes, lifecycle_version.
+Logical names are proposed. Map to actual inspected backend operations and preserve behavior. All reads and writes inherit C01 and C04. All UI states inherit C08.
+
+7 Errors and recovery
+SELF_REVIEW_FORBIDDEN, REVIEW_INCOMPLETE, REPEAT_LIMIT, INVALID_FEEDBACK_ENTRY, REASON_REQUIRED, CYCLE_ARCHIVED, VERSION_CONFLICT, INVALID_STATE, plus C04 errors.
+
+8 Acceptance scenarios
+FR12-AC01 Given a valid current submission with all custom groups classified, when an unrelated reviewer approves, then one decision and approved state commit together.
+
+FR12-AC02 Given unresolved custom entries or a reviewed group with three entries, when approval is attempted directly, then backend rejects without changing state.
+
+FR12-AC03 Given two simultaneous approve/return commands on one version, when both run, then exactly one final decision commits.
+
+FR12-AC04 Given a reviewer from the same family, including an administrator, when classifying, approving, returning or reopening, then SELF_REVIEW_FORBIDDEN is returned.
+
+FR12-AC05 Given a current submitted mission past cutoff, when valid review completes, then approval succeeds without requiring an extension.
+
+FR12-AC06 Given an approved mission, when an unrelated administrator reopens with a reason, then state becomes needs_changes, the historical approval persists, and family edit access resumes.
+
+FR12-AC07 Given a return payload referencing another submission's entry, when submitted, then INVALID_FEEDBACK_ENTRY rejects the payload without leaking the other entry.
+
+FR12-AC08 Given a resubmitted version, when viewing history, then prior decisions stay tied to their earlier sequence and all new custom entries await classification.
+These scenarios are specified, not executed. Test actual behavior and backend authorization. Record PASS, FAIL or NOT RUN with evidence for every identifier.
+
+9 Implementation task sequence
+Implement classification overlay and shared review transactions. Add unique final-decision constraint and self-review checks. Add audit/history reads and reopen action. Test concurrent decisions, old versions, grouping conflicts and historical immutability.
+Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.txt.
+
+10 Exclusions
+Decision deletion, force approval, reviewer impersonation, changing family attestations, and approvals without a submitted version.
+
+11 Decisions and policy gates
+D04, D08, P07. No separate rejected state. Use returned/needs_changes for corrective review.
+Demo defaults do not imply founder approval. No real participants or publishing as a side effect of feature completion.
+
+12 Copy paste planning prompt
+Plan FR12 only for Digital III Missions Tracker. Read this full specification and the shared project documents. Inspect the existing code and database before proposing changes. Identify the current implementation of every dependency, the components and data operations to change, migrations and permission policies, the task sequence, and tests for every FR12-AC identifier. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan for review before code changes. Do not broaden scope.
+
+13 Copy paste build instruction
+Implement the reviewed FR12 plan and this specification. Keep requirement and acceptance IDs in the implementation checklist and test names. Use the shared protected commands and real persistence, with fictional test records. Do not replace failed backend behavior with UI-only validation or mocked success. Complete the scoped feature and return an evidence-based report. If a shared contract needs to change, describe the proposed specification change before applying conflicting behavior.
+
+14 Copy paste verification prompt
+Verify FR12 against every requirement and acceptance ID in this specification. Inspect the implemented code, run relevant tests, and exercise the user flow in the available browser. Include direct unauthorized backend attempts and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with actual evidence. Describe changed files and migrations, unresolved decisions, and remaining defects. Do not claim unexecuted tests passed. Update the feature completion record without modifying acceptance criteria to fit the implementation.
+
+========================================================================
+FILE FR11_instructor_review_workspace.txt
+========================================================================
+
+[Unverified] FR11 Instructor review workspace
+Specification version 0.1
+Status Proposed for fictional-data implementation
+Source PRD FR11 and workflow discussion
+Priority Required MVP feature
+Build position 12 after F00
+
+1 Outcome
+An instructor inspects a specific submission, resolves custom grouping and gives the family an actionable decision.
+
+2 Context required for the coding agent
+Read 01_PROJECT_KNOWLEDGE.txt, 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt and 05_TEST_FIXTURES.txt with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+Dependencies: FR09, FR12. Implemented prerequisites must have acceptance evidence. If a prerequisite is absent, report the exact missing dependency. Do not silently fake backend behavior.
+
+3 Users and permissions
+Parent: read returned feedback and correct own working records through FR06.
+Adult student: same response for own mission.
+Instructor: navigate queue, inspect entries, classify custom activities, approve or return.
+Administrator: same review interface and rules, plus separate operational actions.
+
+4 User workflow and screens
+Open /staff/reviews, choose cycle and filters, then open a submission. Show student, mission, submission sequence, receipt time and 50 numbered entries. Present unresolved items first with access to the full list. Classify custom entries and inspect grouped totals. Select Approve or Return for changes. Return form requires a reason and optional affected-entry selection. Family sees feedback and permitted correction actions.
+
+5 Functional requirements
+FR11-R01 Queue lists current submissions with server-side school scope, stable pagination and filters for mission state, cycle and flagged status. Names are visible only to authorized staff.
+
+FR11-R02 Review detail always names the submission version being reviewed. Do not substitute editable working records for submitted content. Older versions are view-only history.
+
+FR11-R03 Expose unresolved custom classification with choices to use an existing catalog group, reuse a review group, or create a submission-local review group. Grouping is not narrative editing.
+
+FR11-R04 Show record count, missing classifications and over-limit groups. Enable Approve only when checks pass, while FR12 rechecks server-side. Return remains available before classification is complete.
+
+FR11-R05 Return feedback must identify the problem and correction requested. Optional entry IDs must belong to the displayed submission. Do not require a parent to invent a new activity they have not performed.
+
+FR11-R06 Use FR12 for all review writes. Handle stale version or already-decided submissions by showing current result. Staff reviewing their own family sees a conflict and no review mutation controls.
+
+6 Data and logical operation contracts
+get_review_queue(cycle_id, filters, cursor) -> items, counts, next_cursor.
+get_submission(submission_id) -> immutable entries, review overlay, grouped checks, decisions, permissions, lifecycle_version.
+Mutations delegate to classify_entry, merge_review_groups, approve_submission and return_submission owned by FR12. No second review endpoint or direct status update.
+Logical names are proposed. Map to actual inspected backend operations and preserve behavior. All reads and writes inherit C01 and C04. All UI states inherit C08.
+
+7 Errors and recovery
+SELF_REVIEW_FORBIDDEN, REVIEW_INCOMPLETE, REPEAT_LIMIT, VERSION_CONFLICT, INVALID_STATE, plus C04 errors. Show classified-count progress without claiming approval.
+
+8 Acceptance scenarios
+FR11-AC01 Given submitted missions from one school, when filtering by cycle and status, then queue items and counts reflect only the authorized filtered set.
+
+FR11-AC02 Given M_CUSTOM, when opening detail, then unresolved entries appear with classification controls and all 50 entries remain inspectable.
+
+FR11-AC03 Given unresolved classification, when viewing the decision controls, then Approve is disabled while Return remains available with a required reason.
+
+FR11-AC04 Given a returned mission, when FAMILY_A opens feedback, then affected entries are linked to editable working records and the earlier snapshot remains read-only.
+
+FR11-AC05 Given REVIEWER_1 linked to FAMILY_C, when opening FAMILY_C submission, then review actions are unavailable and direct FR12 calls also fail.
+
+FR11-AC06 Given another reviewer already decided the submission, when stale UI sends a decision, then the latest result appears without overwriting the earlier decision.
+These scenarios are specified, not executed. Test actual behavior and backend authorization. Record PASS, FAIL or NOT RUN with evidence for every identifier.
+
+9 Implementation task sequence
+Build paginated queue and snapshot detail. Add classification/grouping controls. Add approval and return forms. Connect shared commands and conflicts. Test complete reviewer-to-family correction handoff.
+Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.txt.
+
+10 Exclusions
+Bulk approval, scoring, child interviews inside the app, editing parent statements, and overriding repeat limits.
+
+11 Decisions and policy gates
+P04, P07, D04, D08. Return feedback is an in-app record, not a messaging product.
+Demo defaults do not imply founder approval. No real participants or publishing as a side effect of feature completion.
+
+12 Copy paste planning prompt
+Plan FR11 only for Digital III Missions Tracker. Read this full specification and the shared project documents. Inspect the existing code and database before proposing changes. Identify the current implementation of every dependency, the components and data operations to change, migrations and permission policies, the task sequence, and tests for every FR11-AC identifier. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan for review before code changes. Do not broaden scope.
+
+13 Copy paste build instruction
+Implement the reviewed FR11 plan and this specification. Keep requirement and acceptance IDs in the implementation checklist and test names. Use the shared protected commands and real persistence, with fictional test records. Do not replace failed backend behavior with UI-only validation or mocked success. Complete the scoped feature and return an evidence-based report. If a shared contract needs to change, describe the proposed specification change before applying conflicting behavior.
+
+14 Copy paste verification prompt
+Verify FR11 against every requirement and acceptance ID in this specification. Inspect the implemented code, run relevant tests, and exercise the user flow in the available browser. Include direct unauthorized backend attempts and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with actual evidence. Describe changed files and migrations, unresolved decisions, and remaining defects. Do not claim unexecuted tests passed. Update the feature completion record without modifying acceptance criteria to fit the implementation.
+
+========================================================================
+FILE FR13_graduation_mission_status_dashboard.txt
+========================================================================
+
+[Unverified] FR13 Graduation mission status dashboard
+Specification version 0.1
+Status Proposed for fictional-data implementation
+Source PRD FR13 and workflow discussion
+Priority Required MVP feature
+Build position 13 after F00
+
+1 Outcome
+Staff identify students whose assigned mission requirements are approved, pending or missing for one cycle.
+
+2 Context required for the coding agent
+Read 01_PROJECT_KNOWLEDGE.txt, 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt and 05_TEST_FIXTURES.txt with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+Dependencies: FR02, FR03, FR12. Implemented prerequisites must have acceptance evidence. If a prerequisite is absent, report the exact missing dependency. Do not silently fake backend behavior.
+
+3 Users and permissions
+Parent: view only own family mission status through FR03.
+Adult student: view only own profile status through FR03.
+Instructor: view school roster and drill into authorized missions.
+Administrator: same dashboard plus navigation to assignment and exception controls.
+
+4 User workflow and screens
+Open /staff/status, select cycle, and view roster rows with per-mission state and aggregate mission status. Filter by incomplete, awaiting review, returned, approved or not assigned. Select a student or mission for detail. Administrator opens assignment or exception controls from authorized actions, while instructor sees read/review actions only.
+
+5 Functional requirements
+FR13-R01 Query active enrolled students in the school, including those with no assignments. Scope before aggregation and pagination. Display the chosen cycle prominently.
+
+FR13-R02 Aggregate Mission requirements approved only when at least one required assignment exists and every required assignment for the cycle is currently approved.
+
+FR13-R03 Zero assignments displays Not assigned, never Complete. One approved and one pending assignment remains incomplete. Include each mission separately so the reason is visible.
+
+FR13-R04 Reopened approval immediately changes the authoritative aggregate after refresh. Do not infer completion from 50 records, attestation, readiness or submission alone.
+
+FR13-R05 Provide counts derived from the same filtered dataset as rows. Preserve selected cycle/filter when returning from review. Refresh on successful relevant decisions and foreground navigation.
+
+FR13-R06 Use Mission requirements approved wording. No belt eligibility conclusion. Avoid public roster, rankings, or family access to school aggregates.
+
+6 Data and logical operation contracts
+get_school_status(cycle_id, filters, cursor) -> roster items with student_id/display_name, assignments[{mission,state,count,cutoff}], aggregate_status, filtered_counts, next_cursor.
+Reuse protected assignment and review state. No separate manually editable completion flag. Parent family read uses existing FR03 data, never this staff endpoint.
+Logical names are proposed. Map to actual inspected backend operations and preserve behavior. All reads and writes inherit C01 and C04. All UI states inherit C08.
+
+7 Errors and recovery
+NOT_FOUND or FORBIDDEN for unauthorized cycle/role. EMPTY_ROSTER and NO_MATCHES are separate normal display states. Unavailable backend does not show all students complete.
+
+8 Acceptance scenarios
+FR13-AC01 Given M_TWO with Teamwork approved and Respect pending, when aggregated, then student status is incomplete with both mission states shown.
+
+FR13-AC02 Given all assigned required missions approved, when aggregated, then Mission requirements approved appears.
+
+FR13-AC03 Given M_NONE, when loading the roster, then Not assigned appears and the student is excluded from the approved total.
+
+FR13-AC04 Given an approved mission reopened through FR12, when refreshing, then approved total decreases and the student returns to incomplete.
+
+FR13-AC05 Given a family user calling the staff aggregate endpoint directly, when requesting a cycle, then no roster or counts return.
+
+FR13-AC06 Given filters and multiple pages, when navigating results, then filtered totals and rows remain school-scoped and consistent.
+These scenarios are specified, not executed. Test actual behavior and backend authorization. Record PASS, FAIL or NOT RUN with evidence for every identifier.
+
+9 Implementation task sequence
+Build scoped aggregate query and pagination. Add cycle selector, filters and rows. Connect protected drilldowns. Test no-assignment, mixed-status, reopen and unauthorized cases.
+Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.txt.
+
+10 Exclusions
+Overall graduation eligibility, belt promotions, attendance checks, network reporting, and public student comparison.
+
+11 Decisions and policy gates
+P02. Mission approval remains separate from the school's wider graduation decision.
+Demo defaults do not imply founder approval. No real participants or publishing as a side effect of feature completion.
+
+12 Copy paste planning prompt
+Plan FR13 only for Digital III Missions Tracker. Read this full specification and the shared project documents. Inspect the existing code and database before proposing changes. Identify the current implementation of every dependency, the components and data operations to change, migrations and permission policies, the task sequence, and tests for every FR13-AC identifier. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan for review before code changes. Do not broaden scope.
+
+13 Copy paste build instruction
+Implement the reviewed FR13 plan and this specification. Keep requirement and acceptance IDs in the implementation checklist and test names. Use the shared protected commands and real persistence, with fictional test records. Do not replace failed backend behavior with UI-only validation or mocked success. Complete the scoped feature and return an evidence-based report. If a shared contract needs to change, describe the proposed specification change before applying conflicting behavior.
+
+14 Copy paste verification prompt
+Verify FR13 against every requirement and acceptance ID in this specification. Inspect the implemented code, run relevant tests, and exercise the user flow in the available browser. Include direct unauthorized backend attempts and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with actual evidence. Describe changed files and migrations, unresolved decisions, and remaining defects. Do not claim unexecuted tests passed. Update the feature completion record without modifying acceptance criteria to fit the implementation.
+
+========================================================================
+FILE FR14_printable_mission_record.txt
+========================================================================
+
+[Unverified] FR14 Printable mission record
+Specification version 0.1
+Status Proposed for fictional-data implementation
+Source PRD FR14 and workflow discussion
+Priority Required MVP feature
+Build position 14 after F00
+
+1 Outcome
+An authorized user prints a readable current draft or selected submission without mixing versions or families.
+
+2 Context required for the coding agent
+Read 01_PROJECT_KNOWLEDGE.txt, 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt and 05_TEST_FIXTURES.txt with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+Dependencies: FR03, FR09, FR12. Implemented prerequisites must have acceptance evidence. If a prerequisite is absent, report the exact missing dependency. Do not silently fake backend behavior.
+
+3 Users and permissions
+Parent: print own child mission.
+Adult student: print own adult mission.
+Instructor: print authorized school submissions.
+Administrator: same authorized print rights, subject to school scope.
+
+4 User workflow and screens
+Open a mission or submission and select Print record. Choose Current draft when editable or a specific submission sequence from history. Open /missions/:assignmentId/print with an authorized version selection. Preview the document, then invoke browser print. Show student, mission, cycle, entries, dates, attestation label and status, with page headers repeated where needed.
+
+5 Functional requirements
+FR14-R01 Authorize both assignment and requested submission on the backend. A submission ID must belong to the assignment. No public share link or anonymous print endpoint.
+
+FR14-R02 Current draft uses working active records and displays Draft or Needs changes. A submitted version uses immutable snapshot fields, not a mixture of current student labels or edited activity content.
+
+FR14-R03 Include recorded count, numbered entries, completion dates, attestation type, submission sequence/time when applicable, and decision status. If historical approval was reopened, show both historical decision and current assignment status.
+
+FR14-R04 Incomplete drafts print their actual count and do not invent blank completed activities. No signed proof or official acceptance claim. Print format approval remains a founder decision.
+
+FR14-R05 Use print CSS to remove navigation, buttons and unrelated student data. Wrap long text, avoid clipped rows, repeat table headers, and maintain legible monochrome output on Letter and A4.
+
+FR14-R06 Printing creates no mission mutation or approval. Browser save-to-PDF follows the browser print workflow. No server-generated downloadable PDF storage is required for this feature.
+
+6 Data and logical operation contracts
+get_print_record(assignment_id, submission_id optional) -> authorized immutable-or-draft view model, status_labels, entries, version_metadata.
+Authenticated print route consumes this model. Escaped plain text only. Do not embed other family records in hidden DOM or preloaded print payloads. No persistent service-worker print caching.
+Logical names are proposed. Map to actual inspected backend operations and preserve behavior. All reads and writes inherit C01 and C04. All UI states inherit C08.
+
+7 Errors and recovery
+NOT_FOUND for unauthorized or mismatched version, TEMPORARILY_UNAVAILABLE for data load, clear print-not-ready state before the model arrives. Never print a stale previous student while loading.
+
+8 Acceptance scenarios
+FR14-AC01 Given a 49-record draft, when printed, then exactly 49 entries and Draft status appear without an approval claim.
+
+FR14-AC02 Given submission 1 followed by corrected submission 2, when printing version 1, then original snapshot text appears unchanged.
+
+FR14-AC03 Given another family's identifiers, when loading the print URL directly, then no print data or student name appears.
+
+FR14-AC04 Given an approved version later reopened, when printing history, then historical approval and current Needs changes status are both explicit.
+
+FR14-AC05 Given maximum-length allowed entry text, when previewing Letter and A4, then text wraps without clipping, missing entries or overlapping controls.
+
+FR14-AC06 Given printing or cancelling print, when returning to the application, then mission state, count and review decision remain unchanged.
+These scenarios are specified, not executed. Test actual behavior and backend authorization. Record PASS, FAIL or NOT RUN with evidence for every identifier.
+
+9 Implementation task sequence
+Build protected print model. Add draft/version selector and print route. Apply print stylesheet. Verify complete 50-entry output and long text on Letter/A4. Test ownership and historical versions.
+Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.txt.
+
+10 Exclusions
+Official school form certification, cryptographic signatures, public sharing, document upload storage, and automated email delivery.
+
+11 Decisions and policy gates
+P02. Printed output supports review of the workflow but does not replace accepted paper requirements without school approval.
+Demo defaults do not imply founder approval. No real participants or publishing as a side effect of feature completion.
+
+12 Copy paste planning prompt
+Plan FR14 only for Digital III Missions Tracker. Read this full specification and the shared project documents. Inspect the existing code and database before proposing changes. Identify the current implementation of every dependency, the components and data operations to change, migrations and permission policies, the task sequence, and tests for every FR14-AC identifier. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan for review before code changes. Do not broaden scope.
+
+13 Copy paste build instruction
+Implement the reviewed FR14 plan and this specification. Keep requirement and acceptance IDs in the implementation checklist and test names. Use the shared protected commands and real persistence, with fictional test records. Do not replace failed backend behavior with UI-only validation or mocked success. Complete the scoped feature and return an evidence-based report. If a shared contract needs to change, describe the proposed specification change before applying conflicting behavior.
+
+14 Copy paste verification prompt
+Verify FR14 against every requirement and acceptance ID in this specification. Inspect the implemented code, run relevant tests, and exercise the user flow in the available browser. Include direct unauthorized backend attempts and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with actual evidence. Describe changed files and migrations, unresolved decisions, and remaining defects. Do not claim unexecuted tests passed. Update the feature completion record without modifying acceptance criteria to fit the implementation.
+
+========================================================================
+FILE FR15_in_app_deadline_and_feedback_notices.txt
+========================================================================
+
+[Unverified] FR15 In app deadline and feedback notices
+Specification version 0.1
+Status Proposed for fictional-data implementation
+Source PRD FR15 and workflow discussion
+Priority Required MVP feature
+Build position 15 after F00
+
+1 Outcome
+Families opening the app see the highest-priority next action for their assigned mission.
+
+2 Context required for the coding agent
+Read 01_PROJECT_KNOWLEDGE.txt, 02_SHARED_CONTRACTS.txt, 03_DECISIONS.txt and 05_TEST_FIXTURES.txt with this specification. This file is not a substitute for the shared authorization, date, version and state rules.
+Dependencies: FR03, FR10, FR12. Implemented prerequisites must have acceptance evidence. If a prerequisite is absent, report the exact missing dependency. Do not silently fake backend behavior.
+
+3 Users and permissions
+Parent: view notices for own children and open the correct mission.
+Adult student: view own notices.
+Instructor: creates feedback by returning a submission, not by sending a separate message.
+Administrator: configures proposed reminder thresholds and manages extensions affecting notice timing.
+
+4 User workflow and screens
+On family dashboard load and foreground refresh, compute notices from current state, effective cutoff and unread-or-current feedback context. Select a notice to open the associated mission or affected-entry feedback. Show one primary action per assignment, with deadline detail retained underneath. Recompute after submission, return, approval, extension or expiry.
+
+5 Functional requirements
+FR15-R01 Use read-time computed notices, not a scheduled messaging service. No email, push, SMS or background delivery requirement. Closed applications receive no promised alert.
+
+FR15-R02 Default thresholds are seven days and one day expressed as elapsed durations of 7*24 and 24 hours before effective cutoff. These are proposed implementation defaults. Exact cutoff display remains in school-local time.
+
+FR15-R03 Priority: Needs changes feedback first, closed-submission notice next for editable missions, one-day notice, then seven-day notice. Do not show duplicate one-day and seven-day banners for the same assignment.
+
+FR15-R04 Suppress deadline-to-submit reminders for submitted and approved states. Needs changes shows correction action, plus extension-required status when closed. A returned mission is not silently treated as a successful submitted state.
+
+FR15-R05 Notices use the effective exception cutoff and refresh after changes. Clicking a notice always preserves the student/mission context. No full activity narratives in operational notice telemetry.
+
+FR15-R06 Provide accessible status text and action links. No persistent dismissal, read receipts or notification inbox in MVP. Refresh or sign-in recomputes current relevance rather than reusing stale cached notices.
+
+6 Data and logical operation contracts
+get_family_notices() -> assignment_id, student display context, notice_type, message, target_route, effective_cutoff, generated_at, primary_action.
+set_reminder_thresholds(seven_day_hours, urgent_hours, expected_settings_version, request_id) -> settings. Admin only, positive integer hours, urgent <= early. This is FR15-owned school-setting command using C04.
+Persist thresholds only. Compute notices from authoritative assignments and feedback. No notification table required in MVP.
+Logical names are proposed. Map to actual inspected backend operations and preserve behavior. All reads and writes inherit C01 and C04. All UI states inherit C08.
+
+7 Errors and recovery
+Invalid threshold settings return VALIDATION_FAILED. Unauthorized settings mutation returns FORBIDDEN. Failed reads show unavailable status without claiming no upcoming deadlines.
+
+8 Acceptance scenarios
+FR15-AC01 Given an editable mission within seven-day threshold but outside one-day threshold, when opening dashboard, then one early deadline notice appears.
+
+FR15-AC02 Given an editable mission within one-day threshold, when computing notices, then the urgent notice replaces the early notice.
+
+FR15-AC03 Given a submitted or approved mission, when cutoff approaches or passes, then no submit-now reminder appears.
+
+FR15-AC04 Given a returned mission after cutoff, when opening notices, then feedback is primary and extension-required guidance appears.
+
+FR15-AC05 Given an administrator extension, when refreshing, then notice timing uses the extended cutoff and stale overdue text disappears if the window reopened.
+
+FR15-AC06 Given FAMILY_B, when reading notices, then no FAMILY_A identifiers or counts appear.
+
+FR15-AC07 Given an ordinary instructor changing thresholds, when the command executes, then access is denied. Given admin invalid threshold order, then validation rejects.
+These scenarios are specified, not executed. Test actual behavior and backend authorization. Record PASS, FAIL or NOT RUN with evidence for every identifier.
+
+9 Implementation task sequence
+Implement pure notice-priority calculation and scoped read model. Add admin threshold controls. Connect dashboard and feedback links. Test time boundaries, suppression, extensions and access.
+Map each task to requirement IDs before implementation. Add focused unit/integration/browser checks matching the scenario. Run affected shared-rule regression. Finish with the completion report defined in 00_START_HERE.txt.
+
+10 Exclusions
+Push subscriptions, email campaigns, notification inbox, reminders to a closed app, and persistent dismissal state.
+
+11 Decisions and policy gates
+D09, P03. Feedback and deadline notices are distinct from proof of activity completion.
+Demo defaults do not imply founder approval. No real participants or publishing as a side effect of feature completion.
+
+12 Copy paste planning prompt
+Plan FR15 only for Digital III Missions Tracker. Read this full specification and the shared project documents. Inspect the existing code and database before proposing changes. Identify the current implementation of every dependency, the components and data operations to change, migrations and permission policies, the task sequence, and tests for every FR15-AC identifier. Preserve shared contracts, current features and source specifications. Separate implementation blockers from founder decisions deferred for the fictional demo. Present the bounded plan for review before code changes. Do not broaden scope.
+
+13 Copy paste build instruction
+Implement the reviewed FR15 plan and this specification. Keep requirement and acceptance IDs in the implementation checklist and test names. Use the shared protected commands and real persistence, with fictional test records. Do not replace failed backend behavior with UI-only validation or mocked success. Complete the scoped feature and return an evidence-based report. If a shared contract needs to change, describe the proposed specification change before applying conflicting behavior.
+
+14 Copy paste verification prompt
+Verify FR15 against every requirement and acceptance ID in this specification. Inspect the implemented code, run relevant tests, and exercise the user flow in the available browser. Include direct unauthorized backend attempts and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with actual evidence. Describe changed files and migrations, unresolved decisions, and remaining defects. Do not claim unexecuted tests passed. Update the feature completion record without modifying acceptance criteria to fit the implementation.
+
+========================================================================
+FILE 06_TRACEABILITY_AND_RELEASE.txt
+========================================================================
+
+[Unverified] Requirement traceability and delivery sequence v0.1
+
+All features trace to the same FR number in PRD v0.1. Shared contract clauses apply across features. This is a specification inventory, not a completion report.
+
+Order | Feature | Dependencies | Requirement IDs | Acceptance IDs
+1 | FR01 Account invitation and family profiles | F00 | FR01-R01 to FR01-R06 | FR01-AC01 to FR01-AC06
+2 | FR02 Mission configuration and assignment | F00,FR01 | FR02-R01 to FR02-R06 | FR02-AC01 to FR02-AC07
+3 | FR07 Repetition validation engine | F00,FR02 | FR07-R01 to FR07-R06 | FR07-AC01 to FR07-AC07
+4 | FR04 Suggested activities and custom entry | FR02,FR07 | FR04-R01 to FR04-R06 | FR04-AC01 to FR04-AC06
+5 | FR05 Record participation and attest | FR01,FR02,FR04,FR07 | FR05-R01 to FR05-R06 | FR05-AC01 to FR05-AC07
+6 | FR06 Edit and remove recorded activities | FR05,FR07 | FR06-R01 to FR06-R06 | FR06-AC01 to FR06-AC06
+7 | FR10 Submission cutoffs and administrator exceptions | FR01,FR02 | FR10-R01 to FR10-R06 | FR10-AC01 to FR10-AC07
+8 | FR08 Submission readiness validation | FR02,FR05,FR06,FR07,FR10 | FR08-R01 to FR08-R06 | FR08-AC01 to FR08-AC07
+9 | FR03 Family mission dashboard | FR01,FR02,FR08,FR10 | FR03-R01 to FR03-R06 | FR03-AC01 to FR03-AC06
+10 | FR09 Mission submission and immutable versions | FR08 | FR09-R01 to FR09-R06 | FR09-AC01 to FR09-AC07
+11 | FR12 Review decisions history and reopening | FR07,FR08,FR09 | FR12-R01 to FR12-R07 | FR12-AC01 to FR12-AC08
+12 | FR11 Instructor review workspace | FR09,FR12 | FR11-R01 to FR11-R06 | FR11-AC01 to FR11-AC06
+13 | FR13 Graduation mission status dashboard | FR02,FR03,FR12 | FR13-R01 to FR13-R06 | FR13-AC01 to FR13-AC06
+14 | FR14 Printable mission record | FR03,FR09,FR12 | FR14-R01 to FR14-R06 | FR14-AC01 to FR14-AC06
+15 | FR15 In app deadline and feedback notices | FR03,FR10,FR12 | FR15-R01 to FR15-R06 | FR15-AC01 to FR15-AC07
+
+Shared release checks
+F00-AC01 to F00-AC06 cover infrastructure, access and mobile shell.
+E2E01 to E2E06 in 05_TEST_FIXTURES.txt cover integration across features.
+All P01 to P07 live-pilot decisions require explicit operational resolution before real-family access.
+Candidate functional release: all required FR scenarios pass, E2E scenarios pass, no unresolved critical defect, and historical snapshots/permissions remain intact.
+Proposed pilot performance: useful dashboard within 3 seconds and ordinary save within 2 seconds at p95 on agreed phones/network. Report measurement conditions and sample count. Do not treat these targets as measured results.
+Operational pilot gate: named support and data owner, backup/restore exercise using fictional data, approved privacy/retention/deletion arrangements, and founder acceptance of the workflow.
+Keep paper submissions authoritative unless P02 explicitly changes this policy.

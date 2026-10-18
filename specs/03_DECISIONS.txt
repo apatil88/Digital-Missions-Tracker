@@ -1,0 +1,30 @@
+[Unverified] Decision register v0.2. No school approval is implied. v0.2 replaces the earlier build platform with a terminal coding agent and adds D11.
+
+Confirmed product direction from your instructions
+One school. One mission-tracking problem. One working application. Build with a terminal coding agent, Claude Code or Codex, for a founder pitch. The PRD supplies the 15 feature identifiers and the initial scope.
+
+Proposed implementation defaults
+D01 One managing adult per family. Parent and adult student share family access, with separate profiles. First admin provisioned through trusted setup. Pilot rights changes handled by the administrator or a controlled support process, without a full role-management product.
+D02 Input limits in C08, seven-day invitation expiry, school-configured age-band labels, and a fixed English MVP interface. Invitation expiry is an implementation proposal, separate from mission cutoffs.
+D03 needs_changes remains visible until resubmission. An empty returned mission stays needs_changes. Ready to submit is derived only for in_progress.
+D04 New submission requires fresh custom-activity classification. Review overlays do not mutate historical content. This trades some review effort for simpler version handling.
+D05 At most one active extension per assignment. A replacement records both revocation and new grant. Extensions do not widen the activity date window.
+D06 Exact cutoff inclusion uses server time at transaction validation, with equality accepted. Same-key retry after a committed submission returns the earlier receipt.
+D07 Family draft edits remain allowed after cutoff. Archive requires all existing assignments approved, or no assignments. Archived cycles reject edits and review mutations but allow historical reads and printing. Admin restore_cycle records an audit event and preserves assignment states. Restore precedes reopening an archived approval. This is a proposed clarification beyond the original PRD's brief archive requirement.
+D08 An administrator and instructor are both forbidden from reviewing or reopening their own family's submission. Another authorized staff member handles the case.
+D09 Deadline notices are computed on read, use the effective cutoff, and use configurable 7-day and 1-day thresholds. No dismissal persistence or push subscription in the MVP.
+D10 Course content is imported through a controlled seed path. Simple enable/disable controls are included. A full catalog editor and historical record migration are excluded.
+D11 Build stack and environments, replacing the earlier platform-managed project. React, TypeScript and Vite. Tailwind CSS with shadcn/ui. React Router and TanStack Query. Supabase Postgres, Auth and row-level security, keeping the PRD backend. Transactional commands as Postgres functions. Edge Functions only for privileged provider calls. vite-plugin-pwa. Vitest, pgTAP through the Supabase CLI, and Playwright. Development and all automated tests run against a local Supabase stack. A hosted demo uses a separate Supabase project holding fictional data and a static host chosen by the owner. Deployment is outside feature completion. The F00 plan may propose substitutes with reasons, and the owner approves them before code.
+
+Founder decisions required before a live pilot
+P01 Permission to digitize curriculum, use proposed product branding, and provide activity suggestions. Demo uses clearly labeled sample content. Pilot catalog remains disabled without approved content.
+P02 Acceptance of digital submission and printable records. Keep the accepted paper workflow authoritative until confirmed.
+P03 School timezone, exact cutoff time, two-calendar-day interpretation, correction after cutoff policy, and exception authority. Demo uses a clearly fictional configured timezone and date. No production cutoff is inferred.
+P04 Activity-window dates, grouping of similar actions, same-day repetitions, and cross-mission credit. Demo permits two separate occurrences in one group, even on one date, with separate records. Do not copy one occurrence across assignments.
+P05 Adult self-attestation. Demo permits fictional adult examples. Pilot adult logging stays disabled until accepted or an alternate verifier is specified.
+P06 Privacy notice, parental authorization, retention, deletion, backup handling, support owner, hosting owner, and application/curriculum ownership. No legal compliance claim.
+P07 Staff roster and second reviewer for staff families. A single reviewer pilot must exclude that reviewer's own family or nominate another reviewer.
+
+Implementation gates
+Build fictional-data features with the stated demo defaults. Do not invent founder approval dates, retention periods, a school's timezone, or a consent document. For pilot activation, require an operational signoff record naming the responsible person and resolved P01 to P07 decisions. A full compliance administration screen is outside this MVP.
+Policy changes affecting existing assignments require an explicit change plan and migration test. Changing a setting must not rewrite historical submissions. If a real requirement conflicts with this pack, update the decision register and feature version before implementation.
