@@ -72,13 +72,13 @@ export function AdminRoster() {
     for (const id of selected) {
       const student = students.find((s) => s.id === id)
       const name = student?.display_name ?? 'Unknown student'
-      const res = await command<{ assignment_id: string; created: boolean }>('assign_mission', {
+      const res = await command<{ assignment_id: string; created: boolean; message?: string }>('assign_mission', {
         p_student_id: id,
         p_template_id: templateId,
         p_cycle_id: cycleId,
         p_request_id: keys.current.for(`${id}|${templateId}|${cycleId}`),
       })
-      if (res.ok) results.push({ studentId: id, name, ok: true, text: res.data.created ? 'Assigned' : 'Already assigned. No duplicate was created' })
+      if (res.ok) results.push({ studentId: id, name, ok: true, text: res.data.created ? 'Assigned' : (res.data.message ?? 'An assignment already exists for this student in this cycle. No duplicate was created.') })
       else results.push({ studentId: id, name, ok: false, text: res.error.message })
     }
     setBusy(false)

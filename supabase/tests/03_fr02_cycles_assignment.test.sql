@@ -2,7 +2,7 @@
 -- Builds its own fictional data inside the transaction; everything rolls back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(159);
+select plan(164);
 
 -- ------------------------------------------------------------------ fixture
 insert into auth.users (id, email, email_confirmed_at) values
@@ -493,7 +493,33 @@ select is(public.assign_mission('a5200000-0000-4000-8000-0000000000a1', '7e20000
   'CYCLE_ARCHIVED', 'FR02-R06 an archived cycle accepts no new assignment');
 select is(public.update_cycle((select (r->'data'->>'cycle_id')::uuid from r_cycle), 2, gen_random_uuid(), 'Edit archived')->'error'->>'code',
   'CYCLE_ARCHIVED', 'FR02-R06 an archived cycle accepts no edit');
+select is(public.assign_mission('a5200000-0000-4000-8000-0000000000a1', '7e200000-0000-4000-8000-000000000001',
+    (select (r->'data'->>'cycle_id')::uuid from r_cycle), gen_random_uuid())->'data'->>'assignment_id',
+  (select r->'data'->>'assignment_id' from r_a1), 'D-FR02-3 repeating an assignment in an archived cycle returns the existing assignment');
+select is(public.assign_mission('a5200000-0000-4000-8000-0000000000a1', '7e200000-0000-4000-8000-000000000001',
+    (select (r->'data'->>'cycle_id')::uuid from r_cycle), gen_random_uuid())->'data'->>'message',
+  'An assignment already exists for this student in this cycle. No duplicate was created.',
+  'D-FR02-3 the administrator is told that the assignment already exists');
+select is(public.assign_mission('b5200000-0000-4000-8000-0000000000b1', '7e200000-0000-4000-8000-000000000001',
+    (select (r->'data'->>'cycle_id')::uuid from r_cycle), gen_random_uuid())->'error'->>'code',
+  'CYCLE_ARCHIVED', 'D-FR02-3 a student without an assignment still cannot be added to an archived cycle');
 reset role;
+
+-- D-FR02-3: a template disabled after assignment still returns the existing assignment.
+update public.mission_templates set enabled = false where id = '7e200000-0000-4000-8000-000000000001';
+select set_config('request.jwt.claims', '{"sub":"ad200000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+set local role authenticated;
+select is(public.assign_mission('a5200000-0000-4000-8000-0000000000a2', '7e200000-0000-4000-8000-000000000001',
+    (select (r->'data'->>'cycle_id')::uuid from r_draft), gen_random_uuid())->'data'->>'created',
+  'false', 'D-FR02-3 repeating an assignment after the mission was disabled returns the existing assignment');
+reset role;
+select set_config('request.jwt.claims', '{"sub":"ad200000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+set local role authenticated;
+select is(public.assign_mission('a5200000-0000-4000-8000-0000000000a2', '7e200000-0000-4000-8000-000000000001',
+    (select (r->'data'->>'cycle_id')::uuid from r_draft), gen_random_uuid())->'error'->>'code',
+  'NOT_FOUND', 'D-FR02-3 another school administrator still learns nothing about the existing assignment');
+reset role;
+update public.mission_templates set enabled = true where id = '7e200000-0000-4000-8000-000000000001';
 
 -- ------------------------------------------------- restore_cycle (AC07)
 select set_config('request.jwt.claims', '{"sub":"fa200000-0000-4000-8000-00000000000a","role":"authenticated"}', true);

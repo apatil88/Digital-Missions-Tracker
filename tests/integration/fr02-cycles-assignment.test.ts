@@ -157,6 +157,21 @@ describe('FR02-AC01 duplicates and concurrency', () => {
     }
   })
 
+  it('D-FR02-3 repeating an assignment after the cycle is archived returns the existing one and says so', async () => {
+    const cycle = await newCycle()
+    const first = await assign(admin, fid('student-a1'), cycle.id)
+    await serviceClient().from('assignments').update({ state: 'approved' }).eq('id', first.data!.assignment_id as string)
+    const archived = await rpc(admin, 'archive_cycle', { p_cycle_id: cycle.id, p_expected_version: cycle.version, p_request_id: randomUUID() })
+    expect(archived.ok).toBe(true)
+    const again = await assign(admin, fid('student-a1'), cycle.id)
+    expect(again.ok).toBe(true)
+    expect(again.data).toMatchObject({ assignment_id: first.data!.assignment_id, created: false, message: 'An assignment already exists for this student in this cycle. No duplicate was created.' })
+    // A student with no assignment is still refused in the archived cycle.
+    expect((await assign(admin, fid('student-b1'), cycle.id)).error?.code).toBe('CYCLE_ARCHIVED')
+    // And a parent still cannot learn anything or assign.
+    expect((await assign(familyB, fid('student-a1'), cycle.id)).error?.code).toBe('FORBIDDEN')
+  })
+
   it('FR02-R03 the same request id returns the first result, a changed payload is refused', async () => {
     const cycle = await newCycle()
     const key = randomUUID()

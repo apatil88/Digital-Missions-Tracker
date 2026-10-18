@@ -100,7 +100,7 @@ test.describe('FR02 administrator controls', () => {
     // The same selection again: no duplicate, per-student confirmation.
     await page.getByLabel('Sample Child A1', { exact: false }).check()
     await page.getByRole('button', { name: 'Assign mission', exact: true }).click()
-    await expect(page.getByRole('region', { name: 'Results' })).toContainText('Sample Child A1: Already assigned. No duplicate was created')
+    await expect(page.getByRole('region', { name: 'Results' })).toContainText('Sample Child A1: An assignment already exists for this student in this cycle. No duplicate was created.')
     await page.goto('/admin/settings/cycles')
     await expect(cycleCard(page, cycle)).toContainText('3 assigned missions')
 
