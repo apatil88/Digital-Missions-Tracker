@@ -14,7 +14,7 @@ import {
   type SuggestionFilters,
   type SuggestionPage,
 } from '@/lib/suggestions'
-import { ActivityFormShell } from './ActivityFormShell'
+import { ActivityForm } from './ActivityForm'
 import { NotFound } from './pages'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -80,7 +80,16 @@ export function AddActivity() {
       <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-bold">Add an activity</h1>
         {header}
-        <ActivityFormShell chosen={chosen} participation={participation} onParticipationChange={setParticipation} onChange={() => setChosen(null)} />
+        <ActivityForm
+          assignmentId={assignmentId}
+          backTo={backTo}
+          chosen={chosen}
+          participation={participation}
+          onParticipationChange={setParticipation}
+          onChange={() => setChosen(null)}
+          onSaved={() => setParticipation('')}
+          onAddAnother={() => setChosen(null)}
+        />
       </div>
     )
   }
@@ -95,7 +104,7 @@ export function AddActivity() {
       <h1 className="text-2xl font-bold">Add an activity</h1>
       {header}
       <p className="text-sm text-muted">Choosing an activity does not record it or give any credit. You will describe what the student did next.</p>
-      {participation.trim().length > 0 && <Notice>Your description is kept while you choose a different activity. It is not saved until saving is available.</Notice>}
+      {participation.trim().length > 0 && <Notice>Your description is kept while you choose a different activity. It is not saved until you save the activity.</Notice>}
       {!first.recording_open && <Notice tone="warning">This mission is not open for new activities, so nothing can be chosen. You can still look at the suggestions.</Notice>}
 
       <section aria-labelledby="custom-heading" className="flex flex-col gap-2">
