@@ -7,6 +7,8 @@ import { useUnsavedChangesGuard } from '@/lib/useUnsavedChangesGuard'
 import { Button, EmptyState, ErrorSummary, Field, LoadingState, Notice, UnavailableFeature, type FormError } from '@/components/ui'
 import { formatInstant, missionName } from '@/lib/cycles'
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 function homeFor(isStaff: boolean, hasFamily: boolean) {
   return isStaff && !hasFamily ? '/staff/reviews' : '/family'
 }
@@ -141,17 +143,82 @@ export function Family() {
   )
 }
 
+type MissionDetailData = {
+  state: string
+  required: number
+  student_id: string
+  student: { display_name: string } | null
+  template: { type: string } | null
+  cycle: { name: string; cutoff_at: string | null; timezone: string } | null
+  records: { id: string; original_title: string; participation: string; completed_on: string }[]
+}
+
+/** FR05 shows the saved working records, read from the database. FR03 and FR06 extend this page. */
 export function MissionDetail() {
   const { studentId, assignmentId } = useParams()
+  const valid = Boolean(assignmentId && UUID.test(assignmentId) && studentId && UUID.test(studentId))
+  const detail = useQuery({
+    queryKey: ['mission-detail', assignmentId],
+    enabled: valid,
+    retry: false,
+    queryFn: async (): Promise<MissionDetailData | null> => {
+      const { data, error } = await supabase
+        .from('assignments')
+        .select('state, student_id, frozen_required_count, student:students(display_name), template:mission_templates(type), cycle:graduation_cycles(name, cutoff_at, timezone)')
+        .eq('id', assignmentId!)
+        .maybeSingle()
+      if (error) throw error
+      if (!data) return null
+      const recs = await supabase
+        .from('activity_records')
+        .select('id, original_title, participation, completed_on')
+        .eq('assignment_id', assignmentId!)
+        .eq('active', true)
+        .order('created_at', { ascending: true })
+      if (recs.error) throw recs.error
+      return { ...(data as unknown as Omit<MissionDetailData, 'records' | 'required'> & { frozen_required_count: number }), required: data.frozen_required_count, records: recs.data }
+    },
+  })
+  if (!valid) return <NotFound />
+  if (detail.isPending) return <LoadingState label="Loading the mission" />
+  if (detail.isError) return <Notice tone="warning">We could not load this mission. Nothing is shown because it could not be verified. Reload to retry.</Notice>
+  if (!detail.data || detail.data.student_id !== studentId) return <NotFound />
+  const d = detail.data
+  const open = d.state === 'not_started' || d.state === 'in_progress' || d.state === 'needs_changes'
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold">Mission</h1>
-      <Link to={`/family/students/${studentId}/missions/${assignmentId}/activities/new`} className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
-        Add an activity
-      </Link>
-      <UnavailableFeature feature="Mission recording" id="FR05" />
-      <p className="text-sm text-muted">Reference: {assignmentId?.slice(0, 8)}…</p>
-      <Link to="/family" className="min-h-11 font-semibold text-primary-strong underline">
+      <div className="rounded-card border border-line bg-card p-4">
+        <p className="break-words text-lg font-semibold">{d.student?.display_name}</p>
+        <p className="text-sm">{d.template ? missionName(d.template.type) : 'Mission'} mission, {d.cycle?.name}</p>
+        {d.cycle && (
+          <p className="text-sm text-muted">
+            Cutoff {formatInstant(d.cycle.cutoff_at, d.cycle.timezone)} ({d.cycle.timezone})
+          </p>
+        )}
+        <p className="mt-1 font-semibold">{d.records.length} of {d.required} activities saved</p>
+      </div>
+      {open ? (
+        <Link to={`/family/students/${studentId}/missions/${assignmentId}/activities/new`} className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
+          Add an activity
+        </Link>
+      ) : (
+        <Notice>This mission is submitted or approved, so activities cannot be added.</Notice>
+      )}
+      {d.records.length === 0 ? (
+        <EmptyState title="No activities saved yet">Add an activity to start this mission.</EmptyState>
+      ) : (
+        <ul aria-label="Saved activities" className="flex flex-col gap-2">
+          {d.records.map((r) => (
+            <li key={r.id} className="rounded-card border border-line bg-card p-4">
+              <p className="break-words font-semibold">{r.original_title}</p>
+              <p className="text-sm text-muted">Completed {r.completed_on}</p>
+              <p className="mt-1 whitespace-pre-wrap break-words text-sm">{r.participation}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Link to="/family" className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
         Back to your family
       </Link>
     </div>

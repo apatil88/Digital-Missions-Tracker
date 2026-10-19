@@ -91,7 +91,7 @@ test.describe('FR04 suggested activities and custom entry', () => {
     await expect(page.getByRole('heading', { name: 'Add this activity' })).toBeVisible()
     await expect(page.getByText(pick.title)).toBeVisible()
     await expect(page.getByText('From the suggestion list')).toBeVisible()
-    await expect(page.getByText(/Saving activities arrives with the next feature/)).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Add this activity' })).toBeVisible()
     await expectNoHorizontalOverflow(page)
     await expectTouchTargets(page)
     expect(await ctx.recordCount()).toBe(before)
@@ -102,7 +102,7 @@ test.describe('FR04 suggested activities and custom entry', () => {
     expect(await ctx.recordCount()).toBe(before)
   })
 
-  test('FR04-AC05 the form needs a participation description and the attestation, and never reports a save', async ({ page }) => {
+  test('FR04-AC05 the form needs a participation description and the attestation before it will save', async ({ page }) => {
     await open(page)
     await page.getByRole('button', { name: 'Custom activity' }).click()
     await page.getByLabel('Activity title').fill('Carried the teacher bag')
@@ -113,11 +113,8 @@ test.describe('FR04 suggested activities and custom entry', () => {
     await page.getByRole('button', { name: 'Save activity' }).click()
     await expect(page.getByRole('alert')).toContainText('Describe how the student took part')
     await expect(page.getByRole('alert')).toContainText('Confirm the statement')
-    await page.getByLabel(/How did the student take part/).fill('Sample text: the student carried it to the car.')
-    await page.getByLabel(/I confirm this is true/).check()
-    await page.getByRole('button', { name: 'Save activity' }).click()
-    await expect(page.getByText('Nothing was saved. Saving activities is not available yet.')).toBeVisible()
-    await expect(page.getByText(/saved successfully|activity saved/i)).toHaveCount(0)
+    // Saving itself is FR05 (e2e/fr05.spec.ts); here the point is that failed validation writes nothing.
+    await expect(page.getByText(/Activity saved/)).toHaveCount(0)
     expect(await ctx.recordCount()).toBe(2)
   })
 
