@@ -2,7 +2,7 @@
 
 Mobile-first PWA for one martial arts school: families log and attest Teamwork and Respect mission activities, instructors review. React + TypeScript + Vite, Tailwind, shadcn/ui-style components, Supabase (Postgres, Auth, RLS). All data in this repository is fictional.
 
-Status: **F00 foundation and FR01 (account invitations and family profiles).** FR02 to FR15 are not built. Specifications live in `specs/`; start at `specs/00_START_HERE.md`.
+Status: **F00 foundation, FR01 (account invitations and family profiles), FR02 (cycles, mission configuration and assignment) and FR07 (repetition validation engine, database only, no screens).** FR04 to FR06, FR08 to FR15 are not built; FR03 is not built either. Features are built in the order set out in the specs. Specifications live in `specs/`; start at `specs/00_START_HERE.md`.
 
 ## Prerequisites
 
@@ -34,6 +34,10 @@ Sign in with a fixture account (password is `FIXTURE_PASSWORD` in your `.env.loc
 
 Stop the stack with `npm run db:stop`.
 
+### Missions locally (FR02)
+
+As `admin-1@example.test`, open **Settings** to create graduation cycles (with a school timezone and exact cutoff), enable approved missions, and assign them to students. A student holds one mission per type per cycle; assigning again returns the existing assignment.
+
 ### Invitations locally (FR01)
 
 Accounts are created by invitation only. As `admin-1@example.test`, open **Settings > Invitations**, enter an email and send. Local emails are never delivered: open Mailpit at http://127.0.0.1:54324, follow the link in the message, set a password, accept the (sample) notice, and you land in the family or staff workspace. The privileged email call is the `send-invitation` Edge Function (`supabase/functions/send-invitation`); the local stack serves it automatically.
@@ -44,7 +48,7 @@ Accounts are created by invitation only. As `admin-1@example.test`, open **Setti
 | --- | --- |
 | `npm run dev` / `build` / `preview` | Vite dev server, production build, serve the build |
 | `npm run lint` / `typecheck` | ESLint, TypeScript |
-| `npm run test` | Vitest: component tests, API isolation tests, build/secret scan (needs the local stack and `.env.local`) |
+| `npm run test` | Vitest: API integration tests (FR01, FR02, FR07), API isolation tests, build/secret scan (needs the local stack and `.env.local`) |
 | `npm run test:db` | pgTAP database and RLS tests (`supabase test db`) |
 | `npm run test:e2e` | Playwright against a production build at 360px |
 | `npm run db:reset` | Local stack only: migrations, seed and fixtures. Refuses non-local targets |
@@ -68,4 +72,5 @@ Accounts are created by invitation only. As `admin-1@example.test`, open **Setti
 
 - Online-first PWA: the service worker caches the app shell only. Supabase API, auth and storage requests are network-only. There are no offline saves.
 - `server_now()` is the single clock for commands. Only privileged test setup can freeze it.
+- FR07 has no UI: the repetition rules run in database functions, and `check_repetition` is an owner-only read that FR04 to FR06 will call. The repeat limit comes only from the assignment's frozen limit.
 - Hosting a demo is a separate, owner-approved step after the release checks.
