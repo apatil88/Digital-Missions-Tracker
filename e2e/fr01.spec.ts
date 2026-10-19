@@ -349,3 +349,30 @@ test.describe('D-FR01-1 error summaries keep 44 px targets', () => {
     await expectTouchTargets(page)
   })
 })
+
+test.describe('D-FR01-9 the display name field matches the 60 character rule', () => {
+  test('FR01-AC06 the field stops at 60 characters instead of accepting 200', async ({ page }) => {
+    const family = await newFamilyOwner('maxlen')
+    await signInAs(page, family.email)
+    await page.goto('/family/profiles')
+    await page.getByRole('button', { name: 'Add a profile' }).click()
+    const name = page.getByLabel('Display name')
+    await expect(name).toHaveAttribute('maxlength', '60')
+    await name.fill('x'.repeat(70))
+    await expect(name).toHaveValue('x'.repeat(60))
+  })
+})
+
+test.describe('D-FR01-5 a failed email shows as not sent', () => {
+  test('FR01-R02 an undeliverable address is listed as Sent 0 of 3 with Resend available', async ({ page }) => {
+    const email = 'bad..' + uniqueEmail('ui-undeliverable')
+    await signInAs(page, FIXTURE_EMAILS.admin1)
+    await page.goto('/admin/settings/invitations')
+    await page.getByLabel('Email address').fill(email)
+    await page.getByRole('button', { name: 'Send invitation', exact: true }).click()
+    const row = page.getByRole('listitem').filter({ hasText: email })
+    await expect(row.getByText('Sent 0 of 3')).toBeVisible()
+    await expect(row.getByText(/Email failed/)).toBeVisible()
+    await expect(row.getByRole('button', { name: `Resend invitation to ${email}` })).toBeEnabled()
+  })
+})

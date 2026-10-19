@@ -2,7 +2,7 @@
 -- Builds its own fictional data inside the transaction; everything rolls back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(80);
+select plan(103);
 
 -- ------------------------------------------------------------------ fixture
 insert into auth.users (id, email, email_confirmed_at) values
@@ -301,6 +301,94 @@ select is((select count(*)::int from public.family_memberships where user_id = '
 reset role;
 select throws_ok($$insert into public.family_memberships (family_id, user_id) values ('fa100000-0000-4000-8000-0000000000a1', 'fb000000-0000-4000-8000-00000000000b')$$,
   '23505', null, 'FR01-R03 the database allows one managed family per account');
+
+-- ------------------------------------------- defect fixes D-FR01-2 and D-FR01-5
+select set_config('request.jwt.claims', '{"sub":"fb000000-0000-4000-8000-00000000000b","role":"authenticated"}', true);
+set local role authenticated;
+select is(public.save_student_profile(chr(8203), 'b4000000-0000-4000-8000-000000000001', 'child', gen_random_uuid())->'error'->'field_errors' ? 'display_name',
+  true, 'D-FR01-2 a name of one zero-width space is rejected');
+select is(public.save_student_profile(chr(8238) || chr(8238), 'b4000000-0000-4000-8000-000000000001', 'child', gen_random_uuid())->'error'->'field_errors' ? 'display_name',
+  true, 'D-FR01-2 a name of only bidi overrides is rejected');
+select is(public.save_student_profile(chr(12288) || chr(12288), 'b4000000-0000-4000-8000-000000000001', 'child', gen_random_uuid())->'error'->'field_errors' ? 'display_name',
+  true, 'D-FR01-2 a name of only ideographic spaces is rejected');
+select is(public.save_student_profile(chr(65279), 'b4000000-0000-4000-8000-000000000001', 'child', gen_random_uuid())->'error'->'field_errors' ? 'display_name',
+  true, 'D-FR01-2 a name of only a byte order mark is rejected');
+select is(public.save_student_profile(chr(10240), 'b4000000-0000-4000-8000-000000000001', 'child', gen_random_uuid())->'error'->'field_errors' ? 'display_name',
+  true, 'D-FR01-2 a name of only a blank braille pattern is rejected');
+select is(public.save_student_profile(' ' || chr(8203) || chr(8205) || chr(160) || ' ', 'b4000000-0000-4000-8000-000000000001', 'child', gen_random_uuid())->'error'->>'code',
+  'VALIDATION_FAILED', 'D-FR01-2 a mix of spaces and invisible characters is rejected');
+select is(public.save_student_profile('Mia' || chr(8238) || 'Rose', 'b4000000-0000-4000-8000-000000000001', 'child', gen_random_uuid())->'error'->'field_errors' ? 'display_name',
+  true, 'D-FR01-2 a bidi override inside a visible name is rejected');
+select is(public.save_student_profile('Mia' || chr(8205) || 'Rose', 'b4000000-0000-4000-8000-000000000001', 'child', gen_random_uuid())->>'ok',
+  'true', 'D-FR01-2 a name with a joiner between visible letters is still accepted');
+select is(public.save_student_profile('Zo' || chr(235), 'b4000000-0000-4000-8000-000000000001', 'child', gen_random_uuid())->>'ok',
+  'true', 'D-FR01-2 an accented name is still accepted');
+reset role;
+
+select set_config('request.jwt.claims', '{"sub":"ad000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+set local role authenticated;
+create temp table r_deliv as
+  select public.invite_account('delivery@fr01.example.test', 'family', gen_random_uuid(),
+    encode(sha256(convert_to('d-tok-1', 'UTF8')), 'hex')) as r;
+grant select on r_deliv to public;
+select is((select send_count from public.invitations where id = (select (r->'data'->>'invitation_id')::uuid from r_deliv)), 1,
+  'D-FR01-5 the first send is reserved when the invitation is created');
+reset role;
+select is(public.record_invitation_delivery((select (r->'data'->>'invitation_id')::uuid from r_deliv),
+    encode(sha256(convert_to('d-tok-1', 'UTF8')), 'hex'), false), true,
+  'D-FR01-5 a failed delivery report is applied');
+select is((select send_count || ':' || delivery_status from public.invitations where id = (select (r->'data'->>'invitation_id')::uuid from r_deliv)),
+  '0:failed', 'D-FR01-5 a failed delivery gives the reserved send back');
+select is(public.record_invitation_delivery((select (r->'data'->>'invitation_id')::uuid from r_deliv),
+    encode(sha256(convert_to('d-tok-1', 'UTF8')), 'hex'), false), false,
+  'D-FR01-5 repeating the failure report changes nothing');
+select is((select send_count from public.invitations where id = (select (r->'data'->>'invitation_id')::uuid from r_deliv)), 0,
+  'D-FR01-5 the send is not refunded twice');
+
+select set_config('request.jwt.claims', '{"sub":"ad000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+set local role authenticated;
+select is(public.resend_invitation((select (r->'data'->>'invitation_id')::uuid from r_deliv),
+    encode(sha256(convert_to('d-tok-2', 'UTF8')), 'hex'), gen_random_uuid())->>'ok', 'true', 'D-FR01-5 an administrator can resend after a failed delivery');
+reset role;
+select is(public.record_invitation_delivery((select (r->'data'->>'invitation_id')::uuid from r_deliv),
+    encode(sha256(convert_to('d-tok-1', 'UTF8')), 'hex'), true), false,
+  'D-FR01-5 a report for an earlier token is ignored');
+select is(public.record_invitation_delivery((select (r->'data'->>'invitation_id')::uuid from r_deliv),
+    encode(sha256(convert_to('d-tok-2', 'UTF8')), 'hex'), true), true, 'D-FR01-5 a successful delivery report is applied');
+select is((select send_count || ':' || delivery_status from public.invitations where id = (select (r->'data'->>'invitation_id')::uuid from r_deliv)),
+  '1:sent', 'D-FR01-5 a delivered email keeps its send');
+
+-- Two more delivered sends reach the cap, a failed one in between does not count.
+select set_config('request.jwt.claims', '{"sub":"ad000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+set local role authenticated;
+select public.resend_invitation((select (r->'data'->>'invitation_id')::uuid from r_deliv), encode(sha256(convert_to('d-tok-3', 'UTF8')), 'hex'), gen_random_uuid());
+reset role;
+select public.record_invitation_delivery((select (r->'data'->>'invitation_id')::uuid from r_deliv), encode(sha256(convert_to('d-tok-3', 'UTF8')), 'hex'), false);
+select set_config('request.jwt.claims', '{"sub":"ad000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+set local role authenticated;
+select public.resend_invitation((select (r->'data'->>'invitation_id')::uuid from r_deliv), encode(sha256(convert_to('d-tok-4', 'UTF8')), 'hex'), gen_random_uuid());
+reset role;
+select public.record_invitation_delivery((select (r->'data'->>'invitation_id')::uuid from r_deliv), encode(sha256(convert_to('d-tok-4', 'UTF8')), 'hex'), true);
+select set_config('request.jwt.claims', '{"sub":"ad000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+set local role authenticated;
+select public.resend_invitation((select (r->'data'->>'invitation_id')::uuid from r_deliv), encode(sha256(convert_to('d-tok-5', 'UTF8')), 'hex'), gen_random_uuid());
+reset role;
+select public.record_invitation_delivery((select (r->'data'->>'invitation_id')::uuid from r_deliv), encode(sha256(convert_to('d-tok-5', 'UTF8')), 'hex'), true);
+select is((select send_count from public.invitations where id = (select (r->'data'->>'invitation_id')::uuid from r_deliv)), 3,
+  'D-FR01-5 three delivered emails count three sends, the failed one did not count');
+select set_config('request.jwt.claims', '{"sub":"ad000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+set local role authenticated;
+select is(public.resend_invitation((select (r->'data'->>'invitation_id')::uuid from r_deliv),
+    encode(sha256(convert_to('d-tok-6', 'UTF8')), 'hex'), gen_random_uuid())->'error'->>'code', 'INVALID_STATE',
+  'D-FR01-5 the cap of 3 delivered sends still holds');
+reset role;
+
+select is(has_function_privilege('anon', 'public.record_invitation_delivery(uuid,text,boolean)', 'execute'), false,
+  'D-FR01-5 anonymous callers cannot report a delivery');
+select is(has_function_privilege('authenticated', 'public.record_invitation_delivery(uuid,text,boolean)', 'execute'), false,
+  'D-FR01-5 signed-in users cannot report a delivery');
+select is(has_function_privilege('service_role', 'public.record_invitation_delivery(uuid,text,boolean)', 'execute'), true,
+  'D-FR01-5 the Edge Function service role can report a delivery');
 
 select * from finish();
 rollback;

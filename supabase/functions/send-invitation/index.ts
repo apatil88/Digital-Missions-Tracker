@@ -81,12 +81,12 @@ Deno.serve(async (req) => {
   const envelope = rpc.data as { ok: boolean; data: Record<string, string | boolean> | null }
   if (!envelope.ok || !envelope.data) return json(envelope)
 
-  const { token_is_current: tokenIsCurrent, token_hash: _legacy, ...publicData } = envelope.data
+  const { token_is_current: tokenIsCurrent, ...publicData } = envelope.data
   // A retry with the same request ID returns the first result; it carries no token_is_current flag, so no new email.
   if (tokenIsCurrent !== true) return json({ ...envelope, data: publicData })
 
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } })
-  const { data: invitation } = await admin.from('invitations').select('invited_email').eq('id', publicData.invitation_id).single()
+  const { data: invitation } = await admin.from('invitations').select('invited_email').eq('id', publicData.invitation_id as string).single()
   let delivered = false
   if (invitation) {
     const redirectTo = `${origin}/invite?token=${token}`
@@ -103,10 +103,13 @@ Deno.serve(async (req) => {
     }
   }
   const deliveryStatus = delivered ? 'sent' : 'failed'
-  await admin
-    .from('invitations')
-    .update({ delivery_status: deliveryStatus, delivery_updated_at: new Date().toISOString() })
-    .eq('id', publicData.invitation_id)
+  // D-FR01-5: the database records the outcome. A failed delivery gives back the send the command reserved.
+  const recorded = await admin.rpc('record_invitation_delivery', {
+    p_invitation_id: publicData.invitation_id,
+    p_token_hash: tokenHash,
+    p_delivered: delivered,
+  })
+  if (recorded.error) return json(fail('TEMPORARILY_UNAVAILABLE', 'The service is unavailable. Try again.', true), 503)
 
   return json({ ...envelope, data: { ...publicData, delivery_status: deliveryStatus } })
 })

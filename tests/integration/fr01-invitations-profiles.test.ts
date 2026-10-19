@@ -459,6 +459,41 @@ describe('FR01 owner limits', () => {
     expect(row.data?.send_count).toBe(3)
   })
 
+  it('D-FR01-2 names with no visible character are rejected, names with a joiner between letters are not', async () => {
+    const f = await newFamilyOwner('invisible')
+    const band = await firstAgeBandId()
+    const ch = String.fromCharCode
+    for (const name of [ch(0x200b), ch(0x202e, 0x202e), ch(0x3000, 0x3000), ch(0xfeff), ch(0x2800), ' ' + ch(0x200b, 0x200d, 0xa0) + ' ', 'Mia' + ch(0x202e) + 'Rose']) {
+      const res = await saveProfile(f.sb, { name, band })
+      expect(res.data.ok, JSON.stringify([...name].map((c) => c.charCodeAt(0)))).toBe(false)
+      expect(res.data.error.field_errors.display_name).toBeTruthy()
+    }
+    expect((await f.sb.from('students').select('id')).data).toHaveLength(0)
+    expect((await saveProfile(f.sb, { name: 'Mia' + ch(0x200d) + 'Rose', band })).data.ok).toBe(true)
+    expect((await saveProfile(f.sb, { name: 'Zo' + ch(0xeb), band })).data.ok).toBe(true)
+  })
+
+  it('D-FR01-5 an email the provider rejects does not use up a send, and only the service role can report a delivery', async () => {
+    const admin = await signIn(FIXTURE_EMAILS.admin1)
+    // Accepted by the database address check, refused by the mail provider.
+    const email = 'bad..' + uniqueEmail('undeliverable')
+    const sent = await inviteViaFunction(admin, email, 'family')
+    expect(sent.data.ok).toBe(true)
+    expect(sent.data.data.delivery_status).toBe('failed')
+    const id = sent.data.data.invitation_id as string
+    const row = await admin.from('invitations').select('send_count, delivery_status').eq('id', id).single()
+    expect(row.data).toEqual({ send_count: 0, delivery_status: 'failed' })
+    // Direct reports: anonymous and signed-in callers are refused, and a refused call changes nothing.
+    const args = { p_invitation_id: id, p_token_hash: '0'.repeat(64), p_delivered: true }
+    expect((await anonClient().rpc('record_invitation_delivery', args)).error).not.toBeNull()
+    expect((await admin.rpc('record_invitation_delivery', args)).error).not.toBeNull()
+    expect((await admin.from('invitations').select('send_count, delivery_status').eq('id', id).single()).data).toEqual({ send_count: 0, delivery_status: 'failed' })
+    // A delivered email keeps its send.
+    const ok = await inviteViaFunction(admin, uniqueEmail('deliverable'), 'family')
+    const kept = await admin.from('invitations').select('send_count, delivery_status').eq('id', ok.data.data.invitation_id).single()
+    expect(kept.data).toEqual({ send_count: 1, delivery_status: 'sent' })
+  })
+
   it('D-FR01-3 the provider refuses a password shorter than 8 characters', async () => {
     const sb = await signIn(FIXTURE_EMAILS.admin1)
     const short = await sb.auth.updateUser({ password: 'Ab1!x' })
