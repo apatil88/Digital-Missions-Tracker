@@ -5,12 +5,14 @@ import { Button, CheckboxField, ErrorSummary, Field, LoadingState, Notice, type 
 import { createRequestKey } from '@/lib/api'
 import {
   createActivity,
+  updateActivity,
   PARTICIPATION_MAX,
   PARTICIPATION_MIN,
   readAssignmentWindow,
   readRecordedCount,
   schoolToday,
   type CreatedActivity,
+  type UpdatedActivity,
 } from '@/lib/activities'
 import type { ChosenActivity } from '@/lib/suggestions'
 
@@ -27,6 +29,7 @@ export function ActivityForm({
   onChange,
   onSaved,
   onAddAnother,
+  edit,
 }: {
   assignmentId: string
   backTo: string
@@ -36,29 +39,31 @@ export function ActivityForm({
   onChange: () => void
   onSaved: () => void
   onAddAnother: () => void
+  /** FR06: set when an existing record is being corrected instead of a new one saved. */
+  edit?: { recordId: string; revision: number; completedOn: string; refreshRecord: () => void }
 }) {
   const queryClient = useQueryClient()
   const win = useQuery({ queryKey: ['assignment-window', assignmentId], queryFn: () => readAssignmentWindow(assignmentId), retry: false, staleTime: 0 })
   const requestKey = useRef(createRequestKey())
-  const [completedOn, setCompletedOn] = useState<string | null>(null)
+  const [completedOn, setCompletedOn] = useState<string | null>(edit?.completedOn ?? null)
   const [attested, setAttested] = useState(false)
   const [errors, setErrors] = useState<FormError[]>([])
   const [notice, setNotice] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const [saved, setSaved] = useState<{ result: CreatedActivity; confirmedCount: number | null } | null>(null)
+  const [saved, setSaved] = useState<{ result: CreatedActivity | UpdatedActivity; confirmedCount: number | null } | null>(null)
 
   if (saved) {
     const count = saved.confirmedCount ?? saved.result.recorded_count
     return (
       <div className="flex flex-col gap-4" role="status">
-        <h2 className="text-xl font-semibold">Activity saved</h2>
+        <h2 className="text-xl font-semibold">{edit ? 'Activity updated' : 'Activity saved'}</h2>
         <Notice>
-          <span className="break-words">“{chosen.title}” is saved. This mission now has {count} of {win.data?.required ?? 50} activities.</span>
+          <span className="break-words">“{chosen.title}” {edit ? 'is updated.' : 'is saved.'} This mission now has {count} of {win.data?.required ?? 50} activities.</span>
           {saved.confirmedCount === null && ' (The count could not be re-checked just now. Reload to confirm it.)'}
         </Notice>
         {saved.result.unresolved_custom && <Notice>An instructor will place this custom activity in a group when the mission is reviewed.</Notice>}
         <div className="flex flex-wrap gap-2">
-          <Button onClick={onAddAnother}>Add another activity</Button>
+          {!edit && <Button onClick={onAddAnother}>Add another activity</Button>}
           <Link to={backTo} className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
             Back to the mission
           </Link>
@@ -93,11 +98,13 @@ export function ActivityForm({
     setNotice(null)
     if (found.length) return
 
-    const input = { assignmentId, chosen, participation: text, completedOn: date, expectedContentVersion: w.content_version }
+    const input = { assignmentId, chosen, participation: text, completedOn: date, expectedContentVersion: w.content_version, editRecord: edit?.recordId ?? null, expectedRevision: edit?.revision ?? null }
     // The same input keeps one request key, so a retry after a timeout returns the first result.
     const key = requestKey.current.for(JSON.stringify(input))
     setBusy(true)
-    const res = await createActivity(input, key)
+    const res = edit
+      ? await updateActivity({ recordId: edit.recordId, chosen, participation: text, completedOn: date, expectedRevision: edit.revision, expectedContentVersion: w.content_version }, key)
+      : await createActivity({ assignmentId, chosen, participation: text, completedOn: date, expectedContentVersion: w.content_version }, key)
     if (res.ok) {
       let confirmed: number | null
       try {
@@ -112,6 +119,7 @@ export function ActivityForm({
       void queryClient.invalidateQueries({ queryKey: ['suggestions'] })
       void queryClient.invalidateQueries({ queryKey: ['assignment-window', assignmentId] })
       void queryClient.invalidateQueries({ queryKey: ['mission-detail', assignmentId] })
+      if (edit) void queryClient.invalidateQueries({ queryKey: ['activity-record', edit.recordId] })
       return
     }
     setBusy(false)
@@ -123,7 +131,10 @@ export function ActivityForm({
     if (code === 'DATE_OUTSIDE_WINDOW' || code === 'FUTURE_DATE') {
       if (!fe.completed_on) next.push({ fieldId: 'completed-on', message })
     }
-    if (code === 'VERSION_CONFLICT') void win.refetch()
+    if (code === 'VERSION_CONFLICT') {
+      void win.refetch()
+      edit?.refreshRecord()
+    }
     // The list the person chose from is out of date: reload it so the rejected item is not offered again.
     if (code === 'REPEAT_LIMIT' || code === 'CATALOG_ITEM_UNAVAILABLE' || code === 'CATALOG_DISABLED' || code === 'VERSION_CONFLICT') {
       void queryClient.invalidateQueries({ queryKey: ['suggestions'] })
@@ -142,7 +153,7 @@ export function ActivityForm({
   const msg = (id: string) => errors.find((x) => x.fieldId === id)?.message
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4" aria-busy={busy}>
-      <h2 className="text-xl font-semibold">Add this activity</h2>
+      <h2 className="text-xl font-semibold">{edit ? 'Edit this activity' : 'Add this activity'}</h2>
       <div className="rounded-card border border-line bg-card p-4">
         <p className="text-sm text-muted">{chosen.source === 'catalog' ? 'From the suggestion list' : 'Custom activity'}</p>
         <p className="break-words font-semibold">{chosen.title}</p>
@@ -197,7 +208,7 @@ export function ActivityForm({
         label="I confirm this is true, and that the student did it (required)."
       />
       <Button type="submit" disabled={busy}>
-        {busy ? 'Saving…' : 'Save activity'}
+        {busy ? 'Saving…' : edit ? 'Save changes' : 'Save activity'}
       </Button>
       <p className="text-sm text-muted">Your text is kept only on this page. Closing the page before saving loses it. Nothing counts until the page tells you the activity was recorded.</p>
     </form>

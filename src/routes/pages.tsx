@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { useUnsavedChangesGuard } from '@/lib/useUnsavedChangesGuard'
 import { Button, EmptyState, ErrorSummary, Field, LoadingState, Notice, UnavailableFeature, type FormError } from '@/components/ui'
 import { formatInstant, missionName } from '@/lib/cycles'
+import { RemoveActivity } from './RemoveActivity'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -146,17 +147,19 @@ export function Family() {
 type MissionDetailData = {
   state: string
   required: number
+  content_version: number
   student_id: string
   student: { display_name: string } | null
   template: { type: string } | null
   cycle: { name: string; cutoff_at: string | null; timezone: string } | null
-  records: { id: string; original_title: string; participation: string; completed_on: string }[]
+  records: { id: string; original_title: string; participation: string; completed_on: string; revision: number }[]
 }
 
 /** FR05 shows the saved working records, read from the database. FR03 and FR06 extend this page. */
 export function MissionDetail() {
   const { studentId, assignmentId } = useParams()
   const valid = Boolean(assignmentId && UUID.test(assignmentId) && studentId && UUID.test(studentId))
+  const [removedMessage, setRemovedMessage] = useState<string | null>(null)
   const detail = useQuery({
     queryKey: ['mission-detail', assignmentId],
     enabled: valid,
@@ -164,14 +167,14 @@ export function MissionDetail() {
     queryFn: async (): Promise<MissionDetailData | null> => {
       const { data, error } = await supabase
         .from('assignments')
-        .select('state, student_id, frozen_required_count, student:students(display_name), template:mission_templates(type), cycle:graduation_cycles(name, cutoff_at, timezone)')
+        .select('state, student_id, content_version, frozen_required_count, student:students(display_name), template:mission_templates(type), cycle:graduation_cycles(name, cutoff_at, timezone)')
         .eq('id', assignmentId!)
         .maybeSingle()
       if (error) throw error
       if (!data) return null
       const recs = await supabase
         .from('activity_records')
-        .select('id, original_title, participation, completed_on')
+        .select('id, original_title, participation, completed_on, revision')
         .eq('assignment_id', assignmentId!)
         .eq('active', true)
         .order('created_at', { ascending: true })
@@ -203,7 +206,12 @@ export function MissionDetail() {
           Add an activity
         </Link>
       ) : (
-        <Notice>This mission is submitted or approved, so activities cannot be added.</Notice>
+        <Notice>This mission is submitted or approved, so activities cannot be added, changed or removed.</Notice>
+      )}
+      {removedMessage && (
+        <div role="status">
+          <Notice>{removedMessage}</Notice>
+        </div>
       )}
       {d.records.length === 0 ? (
         <EmptyState title="No activities saved yet">Add an activity to start this mission.</EmptyState>
@@ -214,6 +222,26 @@ export function MissionDetail() {
               <p className="break-words font-semibold">{r.original_title}</p>
               <p className="text-sm text-muted">Completed {r.completed_on}</p>
               <p className="mt-1 whitespace-pre-wrap break-words text-sm">{r.participation}</p>
+              {open && (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <Link
+                    to={`/family/students/${studentId}/missions/${assignmentId}/activities/${r.id}/edit`}
+                    aria-label={`Edit ${r.original_title}`}
+                    className="inline-flex min-h-11 items-center rounded-control border border-line px-4 font-semibold text-primary-strong"
+                  >
+                    Edit
+                  </Link>
+                  <RemoveActivity
+                    assignmentId={assignmentId!}
+                    recordId={r.id}
+                    title={r.original_title}
+                    studentName={d.student?.display_name ?? 'the student'}
+                    revision={r.revision}
+                    contentVersion={d.content_version}
+                    onRemoved={setRemovedMessage}
+                  />
+                </div>
+              )}
             </li>
           ))}
         </ul>
