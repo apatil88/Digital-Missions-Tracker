@@ -135,4 +135,26 @@ describe('FR07 repetition check over the API', () => {
     expect(anon.error).not.toBeNull()
     expect(anon.data).toBeNull()
   })
+
+  it('D-FR07-1 / D-FR07-5 a marks-only title is empty, and titles outside 3 to 120 characters are rejected', async () => {
+    const s = await setup()
+    expect((await s.check(s.owner, s.a1, { p_source: 'custom', p_title: '́́' })).error?.code).toBe('EMPTY_NORMALIZED_TITLE')
+    expect((await s.check(s.owner, s.a1, { p_source: 'custom', p_title: 'x'.repeat(121) })).error?.code).toBe('VALIDATION_FAILED')
+    expect((await s.check(s.owner, s.a1, { p_source: 'custom', p_title: 'ab' })).error?.code).toBe('VALIDATION_FAILED')
+    expect((await s.check(s.owner, s.a1, { p_source: 'custom', p_title: 'x'.repeat(120) })).ok).toBe(true)
+  })
+
+  it('D-FR07-3 the database sets the title key and group, and an alias added later counts earlier records', async () => {
+    const s = await setup()
+    const first = await s.record(s.a1, 'Bowed to the instructor', s.catA.id, s.group)
+    // A custom record saved before the alias existed is stored without a group.
+    const early = await s.record(s.a1, 'Waved at sensei', null, null)
+    const stored = await ok(s.sb.from('activity_records').select('activity_group_id, normalized_title').eq('id', early.id).single())
+    expect(stored.activity_group_id).toBeNull()
+    expect(stored.normalized_title).toBe('waved at sensei')
+    await ok(s.sb.from('catalog_aliases').insert({ school_id: (await ok(s.sb.from('assignments').select('school_id').eq('id', s.a1).single())).school_id, template_type: 'respect', normalized_title: 'waved at sensei', activity_group_id: s.group }))
+    const res = await s.check(s.owner, s.a1, { p_source: 'catalog', p_catalog_id: s.catB.id })
+    expect(res.error?.code).toBe('REPEAT_LIMIT')
+    expect([...res.error!.details!.matching_record_ids].sort()).toEqual([first.id, early.id].sort())
+  })
 })
