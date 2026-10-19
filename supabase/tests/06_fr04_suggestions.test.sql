@@ -2,7 +2,7 @@
 -- Builds its own fictional school inside the transaction; everything rolls back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(62);
+select plan(65);
 
 -- ------------------------------------------------------------------ fixture
 insert into auth.users (id, email, email_confirmed_at) values
@@ -155,6 +155,20 @@ select is((select count(*)::int from jsonb_array_elements(public.list_suggestion
     jsonb_build_object('source', 'catalog', 'catalog_id', i ->> 'catalog_id')) v
   where (i ->> 'selectable')::boolean <> (v ->> 'ok')::boolean), 0,
   'FR04-R03 an item is selectable exactly when the FR07 check would allow it');
+
+-- D-FR04-1: a record saved before its alias existed counts once the alias exists, the same way the FR07 check counts it.
+reset role;
+insert into public.activity_records (assignment_id, source, catalog_id, activity_group_id, original_title, normalized_title, participation, completed_on, attestation_type, attested_by, attested_at) values
+  ('a7400000-0000-4000-8000-0000000000a1', 'custom', null, null, 'Planted flowers', 'planted flowers', 'Sample participation text.', '2026-11-13', 'parent', 'fa400000-0000-4000-8000-00000000000a', '2026-11-13 17:00:00+00');
+select is((select i ->> 'used' from jsonb_array_elements(public.list_suggestions('a7400000-0000-4000-8000-0000000000a1', p_include_exhausted => true) -> 'data' -> 'items') i where i ->> 'title' = 'Watered the garden'),
+  '0', 'D-FR04-1 a custom record with no matching alias does not count toward the garden group');
+insert into public.catalog_aliases (school_id, normalized_title, activity_group_id, template_type) values
+  ('54400000-0000-4000-8000-000000000001', 'planted flowers', '94400000-0000-4000-8000-000000000003', 'teamwork');
+select is((select i ->> 'used' from jsonb_array_elements(public.list_suggestions('a7400000-0000-4000-8000-0000000000a1', p_include_exhausted => true) -> 'data' -> 'items') i where i ->> 'title' = 'Watered the garden'),
+  '1', 'D-FR04-1 once the alias exists the earlier record counts toward its group');
+select is((select i ->> 'used' from jsonb_array_elements(public.list_suggestions('a7400000-0000-4000-8000-0000000000a1', p_include_exhausted => true) -> 'data' -> 'items') i where i ->> 'title' = 'Watered the garden')::int,
+  (private.validate_repetition('a7400000-0000-4000-8000-0000000000a1', '{"source":"catalog","catalog_id":"ca400000-0000-4000-8000-000000000004"}'::jsonb) -> 'data' ->> 'usage')::int,
+  'D-FR04-1 the browse count equals what the FR07 check counts for the same item');
 
 -- ----------------------------------------- AC03 browsing writes nothing
 create temp table fr04_before as select

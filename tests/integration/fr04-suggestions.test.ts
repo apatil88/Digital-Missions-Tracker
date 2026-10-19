@@ -95,6 +95,17 @@ describe('FR04 suggestions over the API', () => {
     expect(shown.data!.items.find((i) => i.title === 'Thanked a helper')).toMatchObject({ used: 0, selectable: true })
   })
 
+  it('D-FR04-1 a record saved before its alias existed counts toward the group once the alias exists', async () => {
+    const s = await setup()
+    await s.record('Waved at the teacher', null, null)
+    const usedOf = async () => (await s.list(s.owner, s.assignment, { p_include_exhausted: true })).data!.items.find((i) => i.title === 'Bowed to the instructor')!.used
+    expect(await usedOf()).toBe(0)
+    await ok(s.sb.from('catalog_aliases').insert({ school_id: s.school, template_type: 'respect', normalized_title: 'waved at the teacher', activity_group_id: s.group }))
+    expect(await usedOf()).toBe(1)
+    const check = await s.owner.rpc('check_repetition', { p_assignment_id: s.assignment, p_source: 'catalog', p_catalog_id: s.id('Bowed to the instructor') })
+    expect((check.data as { data: { usage: number } }).data.usage).toBe(1)
+  })
+
   it('FR04-AC03 browsing and searching change no record, audit row or assignment', async () => {
     const s = await setup()
     await s.record('Bowed to the instructor', s.id('Bowed to the instructor'), s.group)
