@@ -93,7 +93,7 @@ insert into public.catalog_activities
 select md5('cat-' || key || '-1')::uuid, '00000000-0000-4000-8000-000000000001', 'teamwork',
        md5('grp-' || key)::uuid, title,
        array[md5('band-kinder')::uuid, md5('band-juniors')::uuid, md5('band-adult')::uuid],
-       'sample', true
+       null, true
 from _tw
 on conflict (id) do nothing;
 
@@ -102,7 +102,7 @@ insert into public.catalog_activities
 select md5('cat-' || key || '-2')::uuid, '00000000-0000-4000-8000-000000000001', 'teamwork',
        md5('grp-' || key)::uuid, variant_title,
        array[md5('band-kinder')::uuid, md5('band-juniors')::uuid, md5('band-adult')::uuid],
-       'sample', true
+       null, true
 from _tw where variant_title is not null
 on conflict (id) do nothing;
 
@@ -111,7 +111,7 @@ insert into public.catalog_activities
 select md5('cat-' || key || '-1')::uuid, '00000000-0000-4000-8000-000000000001', 'respect',
        md5('grp-' || key)::uuid, title,
        array[md5('band-kinder')::uuid, md5('band-juniors')::uuid, md5('band-adult')::uuid],
-       'sample', true
+       null, true
 from _rs
 on conflict (id) do nothing;
 

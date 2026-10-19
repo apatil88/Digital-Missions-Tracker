@@ -10,6 +10,7 @@ import { AdminRoster } from '@/routes/AdminRoster'
 import { FamilyProfiles } from '@/routes/FamilyProfiles'
 import { Invite } from '@/routes/Invite'
 import { ForgotPassword, ResetPassword } from '@/routes/Recovery'
+import { AddActivity } from '@/routes/AddActivity'
 import { AdminSettings, Family, Forbidden, MissionDetail, NotFound, SignIn, StaffReviews, StaffStatus } from '@/routes/pages'
 
 // No persisted query cache: authenticated data lives in page memory only.
@@ -38,6 +39,7 @@ export default function App() {
                   <Route path="family" element={<Family />} />
                   <Route path="family/profiles" element={<FamilyProfiles />} />
                   <Route path="family/students/:studentId/missions/:assignmentId" element={<MissionDetail />} />
+                  <Route path="family/students/:studentId/missions/:assignmentId/activities/new" element={<AddActivity />} />
                   <Route element={<RequireStaff />}>
                     <Route path="staff/reviews" element={<StaffReviews />} />
                     <Route path="staff/status" element={<StaffStatus />} />
