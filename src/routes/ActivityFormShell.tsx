@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react'
 import { Button, CheckboxField, ErrorSummary, Notice, type FormError } from '@/components/ui'
-import { useUnsavedChangesGuard } from '@/lib/useUnsavedChangesGuard'
 import type { ChosenActivity } from '@/lib/suggestions'
 
 const MIN = 10
@@ -11,12 +10,20 @@ const MAX = 500
  * seen and tested, but saving belongs to FR05, so nothing is saved and success is never reported.
  * Typed text lives in page memory only.
  */
-export function ActivityFormShell({ chosen, onChange }: { chosen: ChosenActivity; onChange: () => void }) {
-  const [participation, setParticipation] = useState('')
+export function ActivityFormShell({
+  chosen,
+  participation,
+  onParticipationChange,
+  onChange,
+}: {
+  chosen: ChosenActivity
+  participation: string
+  onParticipationChange: (text: string) => void
+  onChange: () => void
+}) {
   const [attested, setAttested] = useState(false)
   const [errors, setErrors] = useState<FormError[]>([])
   const [attempted, setAttempted] = useState(false)
-  useUnsavedChangesGuard(participation.trim().length > 0)
 
   function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -52,7 +59,7 @@ export function ActivityFormShell({ chosen, onChange }: { chosen: ChosenActivity
           id="participation"
           rows={5}
           value={participation}
-          onChange={(e) => setParticipation(e.target.value)}
+          onChange={(e) => onParticipationChange(e.target.value)}
           aria-invalid={msg('participation') ? true : undefined}
           aria-describedby={['participation-hint', msg('participation') ? 'participation-error' : ''].filter(Boolean).join(' ')}
           className="w-full rounded-control border border-line bg-card px-3 py-2 text-base"

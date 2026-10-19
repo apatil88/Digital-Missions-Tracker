@@ -172,6 +172,33 @@ test.describe('FR04 suggested activities and custom entry', () => {
     await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible()
   })
 
+  test('D-FR04-4 a malformed id in the address shows not found, not a load error', async ({ page }) => {
+    await signInAs(page, ctx.owner.email)
+    await page.goto(`/family/students/${ctx.kid}/missions/not-a-uuid/activities/new`)
+    await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible()
+    await expect(page.getByText(/could not load/i)).toHaveCount(0)
+    await page.goto(`/family/students/also-bad/missions/${ctx.a}/activities/new`)
+    await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible()
+  })
+
+  test('D-FR04-5 typed participation text is kept when the family chooses a different activity, the attestation is not', async ({ page }) => {
+    await open(page)
+    await page.getByRole('button', { name: 'Custom activity' }).click()
+    await page.getByLabel('Activity title').fill('Carried the teacher bag')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    const text = 'Sample text: the student carried it to the car.'
+    await page.getByLabel(/How did the student take part/).fill(text)
+    await page.getByLabel(/I confirm this is true/).check()
+    await page.getByRole('button', { name: 'Choose a different activity' }).click()
+    await expect(page.getByText(/Your description is kept/)).toBeVisible()
+    await page.getByLabel('Activity title').fill('Helped a friend feel welcome')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page.getByLabel(/How did the student take part/)).toHaveValue(text)
+    await expect(page.getByLabel(/I confirm this is true/)).not.toBeChecked()
+    await expectNoHorizontalOverflow(page)
+    await expectTouchTargets(page)
+  })
+
   test('FR04 another family cannot open the browse page', async ({ page }) => {
     const other = await newFamilyOwner('fr04-other')
     await signInAs(page, other.email)
