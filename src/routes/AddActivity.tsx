@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
+import { keepPreviousData, useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, CheckboxField, EmptyState, ErrorSummary, Field, LoadingState, Notice, SelectField, type FormError } from '@/components/ui'
 import { useUnsavedChangesGuard } from '@/lib/useUnsavedChangesGuard'
 import { formatInstant, missionName } from '@/lib/cycles'
@@ -14,6 +14,7 @@ import {
   type SuggestionFilters,
   type SuggestionPage,
 } from '@/lib/suggestions'
+import { readWorkingRecord, type WorkingRecord } from '@/lib/activities'
 import { ActivityForm } from './ActivityForm'
 import { NotFound } from './pages'
 
@@ -22,14 +23,41 @@ const NO_FILTERS: SuggestionFilters = { setting: '', search: '', includeExhauste
 
 /** FR04: browse approved suggestions or enter a custom activity. Choosing one records nothing. */
 export function AddActivity() {
+  return <ActivityFlow />
+}
+
+/** FR06: correct one saved record. It starts on the form with the saved values and an unchecked attestation. */
+export function EditActivity() {
+  const { recordId } = useParams()
+  const queryClient = useQueryClient()
+  const valid = Boolean(recordId && UUID.test(recordId))
+  const rec = useQuery({ queryKey: ['activity-record', recordId], enabled: valid, retry: false, staleTime: 0, queryFn: () => readWorkingRecord(recordId!) })
+  if (!valid) return <NotFound />
+  if (rec.isPending) return <LoadingState label="Loading the activity" />
+  if (rec.isError) {
+    return (
+      <div className="flex flex-col gap-3">
+        <Notice tone="warning">We could not load this activity. Nothing was changed. Try again.</Notice>
+        <Button onClick={() => void rec.refetch()}>Try again</Button>
+      </div>
+    )
+  }
+  if (!rec.data) return <NotFound />
+  return <ActivityFlow record={rec.data} refreshRecord={() => void queryClient.invalidateQueries({ queryKey: ['activity-record', recordId] })} />
+}
+
+function ActivityFlow({ record, refreshRecord }: { record?: WorkingRecord; refreshRecord?: () => void }) {
   const { studentId, assignmentId } = useParams()
-  const [chosen, setChosen] = useState<ChosenActivity | null>(null)
+  const [chosen, setChosen] = useState<ChosenActivity | null>(
+    record ? (record.source === 'catalog' && record.catalog_id ? { source: 'catalog', catalogId: record.catalog_id, title: record.original_title, sample: false } : { source: 'custom', title: record.original_title }) : null,
+  )
   const [filters, setFilters] = useState<SuggestionFilters>(NO_FILTERS)
   const [searchText, setSearchText] = useState('')
   const [customOpen, setCustomOpen] = useState(false)
   // Typed participation text survives a change of activity (page memory only). The attestation does not.
-  const [participation, setParticipation] = useState('')
-  useUnsavedChangesGuard(participation.trim().length > 0)
+  const [participation, setParticipation] = useState(record?.participation ?? '')
+  const [done, setDone] = useState(false)
+  useUnsavedChangesGuard(!done && (record ? participation !== record.participation : participation.trim().length > 0))
 
   const list = useInfiniteQuery({
     queryKey: ['suggestions', assignmentId, filters],
@@ -46,6 +74,8 @@ export function AddActivity() {
   })
 
   if (!assignmentId || !UUID.test(assignmentId) || !studentId || !UUID.test(studentId)) return <NotFound />
+  // The record must belong to the mission in the address.
+  if (record && record.assignment_id !== assignmentId) return <NotFound />
   if (list.isPending) return <LoadingState label="Loading suggestions" />
   if (list.isError) {
     const code = (list.error as { code?: string } | null)?.code
@@ -78,7 +108,7 @@ export function AddActivity() {
   if (chosen) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-bold">Add an activity</h1>
+        <h1 className="text-2xl font-bold">{record ? 'Edit an activity' : 'Add an activity'}</h1>
         {header}
         <ActivityForm
           assignmentId={assignmentId}
@@ -87,8 +117,15 @@ export function AddActivity() {
           participation={participation}
           onParticipationChange={setParticipation}
           onChange={() => setChosen(null)}
-          onSaved={() => setParticipation('')}
-          onAddAnother={() => setChosen(null)}
+          onSaved={() => {
+            setDone(true)
+            if (!record) setParticipation('')
+          }}
+          onAddAnother={() => {
+            setDone(false)
+            setChosen(null)
+          }}
+          edit={record && refreshRecord ? { recordId: record.id, revision: record.revision, completedOn: record.completed_on, refreshRecord } : undefined}
         />
       </div>
     )
@@ -101,7 +138,7 @@ export function AddActivity() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">Add an activity</h1>
+      <h1 className="text-2xl font-bold">{record ? 'Edit an activity' : 'Add an activity'}</h1>
       {header}
       <p className="text-sm text-muted">Choosing an activity does not record it or give any credit. You will describe what the student did next.</p>
       {participation.trim().length > 0 && <Notice>Your description is kept while you choose a different activity. It is not saved until you save the activity.</Notice>}

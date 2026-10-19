@@ -72,3 +72,63 @@ export function schoolToday(timezone: string, now = new Date()): string {
     return now.toISOString().slice(0, 10)
   }
 }
+
+// ------------------------------------------------------------------ FR06 edit and remove
+export type UpdatedActivity = CreatedActivity & { validation: { usage: number; limit: number; remaining: number } | null }
+
+export type UpdateActivityInput = {
+  recordId: string
+  chosen: ChosenActivity
+  participation: string
+  completedOn: string
+  expectedRevision: number
+  expectedContentVersion: number
+}
+
+export const updateActivity = (i: UpdateActivityInput, requestId: string): Promise<Envelope<UpdatedActivity>> =>
+  command('update_activity', {
+    p_record_id: i.recordId,
+    p_source: i.chosen.source,
+    p_catalog_id: i.chosen.source === 'catalog' ? i.chosen.catalogId : null,
+    p_title: i.chosen.source === 'custom' ? i.chosen.title : null,
+    p_participation: i.participation,
+    p_completed_on: i.completedOn,
+    p_attest: true,
+    p_expected_revision: i.expectedRevision,
+    p_expected_content_version: i.expectedContentVersion,
+    p_request_id: requestId,
+  })
+
+export type RemovedActivity = { record_id: string; active: false; revision: number; recorded_count: number; content_version: number; lifecycle_version: number; state: string }
+
+export const removeActivity = (i: { recordId: string; expectedRevision: number; expectedContentVersion: number }, requestId: string): Promise<Envelope<RemovedActivity>> =>
+  command('remove_activity', {
+    p_record_id: i.recordId,
+    p_confirmed: true,
+    p_expected_revision: i.expectedRevision,
+    p_expected_content_version: i.expectedContentVersion,
+    p_request_id: requestId,
+  })
+
+export type WorkingRecord = {
+  id: string
+  assignment_id: string
+  source: 'catalog' | 'custom'
+  catalog_id: string | null
+  original_title: string
+  participation: string
+  completed_on: string
+  revision: number
+}
+
+/** One active working record, read through row-level security. Null when it is missing, removed or not the caller's. */
+export async function readWorkingRecord(recordId: string): Promise<WorkingRecord | null> {
+  const { data, error } = await supabase
+    .from('activity_records')
+    .select('id, assignment_id, source, catalog_id, original_title, participation, completed_on, revision')
+    .eq('id', recordId)
+    .eq('active', true)
+    .maybeSingle()
+  if (error) throw error
+  return data as WorkingRecord | null
+}
