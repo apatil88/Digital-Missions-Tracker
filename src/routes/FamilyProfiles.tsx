@@ -240,7 +240,7 @@ export function FamilyProfiles() {
           <Field
             label="Display name"
             id="profile-name"
-            maxLength={200}
+            maxLength={60}
             hint="1 to 60 characters."
             value={draft.name}
             onChange={(e) => change({ name: e.target.value })}

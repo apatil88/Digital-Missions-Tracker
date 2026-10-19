@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p supabase/functions/tsconfig.json",
     "test": "vitest run",
     "test:db": "supabase test db",
     "test:e2e": "playwright test",
