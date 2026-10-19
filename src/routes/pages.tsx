@@ -63,6 +63,7 @@ export function SignIn() {
 type StudentRow = { id: string; display_name: string; kind: 'child' | 'adult' }
 type AssignedRow = {
   id: string
+  student_id: string
   student: { display_name: string } | null
   template: { type: string; version: number } | null
   cycle: { name: string; cutoff_at: string | null; timezone: string; archived_at: string | null } | null
@@ -84,7 +85,7 @@ export function Family() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('assignments')
-        .select('id, student:students(display_name), template:mission_templates(type, version), cycle:graduation_cycles(name, cutoff_at, timezone, archived_at)')
+        .select('id, student_id, student:students(display_name), template:mission_templates(type, version), cycle:graduation_cycles(name, cutoff_at, timezone, archived_at)')
         .order('created_at', { ascending: false })
       if (error) throw error
       return data as unknown as AssignedRow[]
@@ -128,6 +129,9 @@ export function Family() {
                   Cutoff {formatInstant(a.cycle.cutoff_at, a.cycle.timezone)} ({a.cycle.timezone})
                 </p>
               )}
+              <Link to={`/family/students/${a.student_id}/missions/${a.id}`} className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
+                Open mission
+              </Link>
             </li>
           ))}
         </ul>
@@ -138,10 +142,13 @@ export function Family() {
 }
 
 export function MissionDetail() {
-  const { assignmentId } = useParams()
+  const { studentId, assignmentId } = useParams()
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold">Mission</h1>
+      <Link to={`/family/students/${studentId}/missions/${assignmentId}/activities/new`} className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
+        Add an activity
+      </Link>
       <UnavailableFeature feature="Mission recording" id="FR05" />
       <p className="text-sm text-muted">Reference: {assignmentId?.slice(0, 8)}…</p>
       <Link to="/family" className="min-h-11 font-semibold text-primary-strong underline">
