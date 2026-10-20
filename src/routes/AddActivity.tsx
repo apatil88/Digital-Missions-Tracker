@@ -14,6 +14,7 @@ import {
   type SuggestionFilters,
   type SuggestionPage,
 } from '@/lib/suggestions'
+import { hasNul, NUL_MESSAGE } from '@/lib/text'
 import { readWorkingRecord, type WorkingRecord } from '@/lib/activities'
 import { ActivityForm } from './ActivityForm'
 import { NotFound } from './pages'
@@ -54,6 +55,7 @@ function ActivityFlow({ record, refreshRecord }: { record?: WorkingRecord; refre
   const [filters, setFilters] = useState<SuggestionFilters>(NO_FILTERS)
   const [searchText, setSearchText] = useState('')
   const [customOpen, setCustomOpen] = useState(false)
+  const [searchProblem, setSearchProblem] = useState<string | null>(null)
   // Typed participation text survives a change of activity (page memory only). The attestation does not.
   const [participation, setParticipation] = useState(record?.participation ?? '')
   const [done, setDone] = useState(false)
@@ -133,6 +135,11 @@ function ActivityFlow({ record, refreshRecord }: { record?: WorkingRecord; refre
 
   function applySearch(e: FormEvent) {
     e.preventDefault()
+    if (hasNul(searchText)) {
+      setSearchProblem(NUL_MESSAGE)
+      return
+    }
+    setSearchProblem(null)
     setFilters((f) => ({ ...f, search: searchText }))
   }
 
@@ -166,7 +173,7 @@ function ActivityFlow({ record, refreshRecord }: { record?: WorkingRecord; refre
         ) : (
           <>
             <form onSubmit={applySearch} role="search" className="flex flex-col gap-2">
-              <Field label="Search suggestions" id="search" value={searchText} maxLength={SEARCH_MAX} onChange={(e) => setSearchText(e.target.value)} />
+              <Field label="Search suggestions" id="search" value={searchText} maxLength={SEARCH_MAX} error={searchProblem ?? undefined} onChange={(e) => setSearchText(e.target.value)} />
               <Button type="submit" variant="secondary">
                 Search
               </Button>
@@ -240,6 +247,10 @@ function CustomEntry({ assignmentId, onChoose, onCancel }: { assignmentId: strin
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     const t = title.trim()
+    if (hasNul(t)) {
+      setErrors([{ fieldId: 'custom-title', message: NUL_MESSAGE }])
+      return
+    }
     if (t.length < CUSTOM_TITLE_MIN || t.length > CUSTOM_TITLE_MAX) {
       setErrors([{ fieldId: 'custom-title', message: `Use ${CUSTOM_TITLE_MIN} to ${CUSTOM_TITLE_MAX} characters.` }])
       return
