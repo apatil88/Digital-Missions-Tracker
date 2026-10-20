@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { findNul, NUL_MESSAGE } from './text'
 
 /** C04 mutation envelope returned by every Postgres command. */
 export type ApiError = { code: string; message: string; field_errors: Record<string, string>; retryable: boolean }
@@ -20,6 +21,8 @@ const unavailable = (code: 'TEMPORARILY_UNAVAILABLE' | 'UNAUTHENTICATED'): Envel
 
 /** Calls a Postgres command through RPC. Authority is decided by the database, never here. */
 export async function command<T>(fn: string, args: Record<string, unknown>): Promise<Envelope<T>> {
+  // D-FR05-1: a NUL character never reaches the database, which would answer with a raw error.
+  if (findNul(args)) return { ok: false, data: null, error: { code: 'VALIDATION_FAILED', message: NUL_MESSAGE, field_errors: {}, retryable: false } }
   try {
     const { data, error } = await supabase.rpc(fn, args)
     if (error) {

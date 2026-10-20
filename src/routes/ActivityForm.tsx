@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, CheckboxField, ErrorSummary, Field, LoadingState, Notice, type FormError } from '@/components/ui'
 import { createRequestKey } from '@/lib/api'
+import { hasNul, NUL_MESSAGE } from '@/lib/text'
 import {
   createActivity,
   updateActivity,
@@ -91,7 +92,8 @@ export function ActivityForm({
     if (busy) return
     const found: FormError[] = []
     const text = participation.trim()
-    if (text.length < PARTICIPATION_MIN || text.length > PARTICIPATION_MAX) found.push({ fieldId: 'participation', message: `Describe how the student took part in ${PARTICIPATION_MIN} to ${PARTICIPATION_MAX} characters.` })
+    if (hasNul(text)) found.push({ fieldId: 'participation', message: NUL_MESSAGE })
+    else if (text.length < PARTICIPATION_MIN || text.length > PARTICIPATION_MAX) found.push({ fieldId: 'participation', message: `Describe how the student took part in ${PARTICIPATION_MIN} to ${PARTICIPATION_MAX} characters.` })
     if (!date) found.push({ fieldId: 'completed-on', message: 'Enter the date the student did this.' })
     if (!attested) found.push({ fieldId: 'attested', message: 'Confirm the statement before saving.' })
     setErrors(found)
