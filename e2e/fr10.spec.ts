@@ -5,6 +5,7 @@ import { expect, test } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
 import { FIXTURE_EMAILS } from '../tests/helpers/env'
 import { newFamilyOwner, SCHOOL_ID, serviceClient } from '../tests/helpers/fr01'
+import { setServerClock } from './clock'
 import { expectNoHorizontalOverflow, expectTouchTargets, signInAs } from './helpers'
 
 const day = (offset: number) => new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10)
@@ -45,6 +46,9 @@ let ctx: Ctx
 test.beforeAll(async () => {
   ctx = await setup()
 })
+
+// D-FR10-6: the server clock is frozen in some tests; always release it.
+test.afterEach(() => setServerClock(null))
 
 test.describe('FR10 cutoffs and deadline extensions', () => {
   test('FR10-R01 / FR10-AC03 the cutoff form rejects a time that does not exist, asks which of two, and shows the exact moment', async ({ page }) => {
@@ -157,6 +161,34 @@ test.describe('FR10 cutoffs and deadline extensions', () => {
     await expect(page.getByTestId('cutoff-status')).toContainText('(America/New_York)')
     await expectNoHorizontalOverflow(page)
     await context.close()
+  })
+
+  test('FR10-AC01 / D-FR10-6 the mission page is open one second before the cutoff, open exactly at it, and closed one second after', async ({ page }) => {
+    const sb = ctx.sb
+    const band = (await sb.from('age_bands').select('id').eq('school_id', SCHOOL_ID).eq('catalog_key', 'kinder').single()).data!.id
+    const tmpl = (await sb.from('mission_templates').select('id').eq('school_id', SCHOOL_ID).eq('type', 'teamwork').order('version').limit(1).single()).data!.id
+    const tag = randomUUID().slice(0, 6)
+    const cycle = (
+      await sb
+        .from('graduation_cycles')
+        .insert({ school_id: SCHOOL_ID, name: `FR10 boundary cycle ${tag}`, activity_start_date: '2031-05-01', activity_end_date: '2031-06-01', graduation_date: '2031-06-03', timezone: 'America/New_York', cutoff_at: '2031-06-01T22:00:00Z' })
+        .select('id')
+        .single()
+    ).data!
+    const student = (await sb.from('students').insert({ family_id: ctx.owner.familyId, display_name: `Boundary Kid ${tag}`, age_band_id: band, kind: 'child' }).select('id').single()).data!.id as string
+    const assignment = (await sb.from('assignments').insert({ school_id: SCHOOL_ID, student_id: student, cycle_id: cycle.id, template_id: tmpl, frozen_template_version: 1, frozen_instructions: 'SAMPLE', frozen_required_count: 50, frozen_repeat_limit: 2 }).select('id').single()).data!.id as string
+    await signInAs(page, ctx.owner.email)
+    const status = page.getByTestId('cutoff-status')
+    for (const [at, expected] of [
+      ['2031-06-01T21:59:59Z', 'Submission is open'],
+      ['2031-06-01T22:00:00Z', 'Submission is open'],
+      ['2031-06-01T22:00:01Z', 'Submission is closed'],
+    ] as const) {
+      setServerClock(at)
+      await page.goto(ctx.mission({ student, assignment }))
+      await expect(status).toContainText(expected)
+      await expect(status).toContainText('(America/New_York)')
+    }
   })
 
   test('FR10 the exceptions page tells a signed-in family member nothing, and the page is not offered to them', async ({ page }) => {
