@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase'
 import { useUnsavedChangesGuard } from '@/lib/useUnsavedChangesGuard'
 import { Button, EmptyState, ErrorSummary, Field, LoadingState, Notice, UnavailableFeature, type FormError } from '@/components/ui'
 import { formatInstant, missionName } from '@/lib/cycles'
+import { command } from '@/lib/api'
+import type { CutoffInfo } from '@/lib/cutoffs'
 import { RemoveActivity } from './RemoveActivity'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -182,6 +184,18 @@ export function MissionDetail() {
       return { ...(data as unknown as Omit<MissionDetailData, 'records' | 'required'> & { frozen_required_count: number }), required: data.frozen_required_count, records: recs.data }
     },
   })
+  // FR10: the one authoritative cutoff (cycle cutoff or extension) and whether submission is open, from the server clock.
+  const cutoff = useQuery({
+    queryKey: ['cutoff', assignmentId],
+    enabled: valid,
+    retry: false,
+    staleTime: 0,
+    queryFn: async () => {
+      const res = await command<CutoffInfo & { exception: { expires_at: string } | null }>('get_cutoff', { p_assignment_id: assignmentId })
+      if (!res.ok) throw res.error
+      return res.data
+    },
+  })
   if (!valid) return <NotFound />
   if (detail.isPending) return <LoadingState label="Loading the mission" />
   if (detail.isError) return <Notice tone="warning">We could not load this mission. Nothing is shown because it could not be verified. Reload to retry.</Notice>
@@ -194,11 +208,22 @@ export function MissionDetail() {
       <div className="rounded-card border border-line bg-card p-4">
         <p className="break-words text-lg font-semibold">{d.student?.display_name}</p>
         <p className="text-sm">{d.template ? missionName(d.template.type) : 'Mission'} mission, {d.cycle?.name}</p>
-        {d.cycle && (
+        {cutoff.data ? (
+          <div data-testid="cutoff-status">
+            <p className="text-sm font-semibold">{cutoff.data.open ? 'Submission is open' : 'Submission is closed'}</p>
+            <p className="text-sm text-muted">
+              {cutoff.data.open ? 'Open until' : 'Closed since'} {formatInstant(cutoff.data.effective_cutoff, cutoff.data.display_timezone)} ({cutoff.data.display_timezone})
+              {cutoff.data.source === 'extension' ? ', extended by the school' : ''}
+            </p>
+            {!cutoff.data.open && open && <p className="text-sm text-muted">You can still add, change or remove activities. Ask the school if more time is needed to submit.</p>}
+          </div>
+        ) : cutoff.isError ? (
+          <p className="text-sm text-muted">The cutoff could not be loaded. Reload to retry.</p>
+        ) : d.cycle ? (
           <p className="text-sm text-muted">
             Cutoff {formatInstant(d.cycle.cutoff_at, d.cycle.timezone)} ({d.cycle.timezone})
           </p>
-        )}
+        ) : null}
         <p className="mt-1 font-semibold">{d.records.length} of {d.required} activities saved</p>
       </div>
       {open ? (
@@ -270,6 +295,7 @@ export const AdminSettings = () => (
     <h1 className="text-2xl font-bold">School settings</h1>
     {[
       ['/admin/settings/cycles', 'Graduation cycles'],
+      ['/admin/settings/exceptions', 'Deadline extensions'],
       ['/admin/settings/roster', 'Assign missions'],
       ['/admin/settings/catalog', 'Missions'],
       ['/admin/settings/invitations', 'Invitations'],

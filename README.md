@@ -2,7 +2,7 @@
 
 Mobile-first PWA for one martial arts school: families log and attest Teamwork and Respect mission activities, instructors review. React + TypeScript + Vite, Tailwind, shadcn/ui-style components, Supabase (Postgres, Auth, RLS). All data in this repository is fictional.
 
-Status: **F00 foundation, FR01 (account invitations and family profiles), FR02 (cycles, mission configuration and assignment) and FR07 (repetition validation engine, database only, no screens).** FR03 to FR06 and FR08 to FR15 are not built. Features are built in the order set out in the specs. Specifications live in `specs/`; start at `specs/00_START_HERE.md`.
+Status: **F00 foundation, FR01 (account invitations and family profiles), FR02 (cycles, mission configuration and assignment), FR04 to FR07 (suggestions, recording, editing and the repetition engine) and FR10 (cutoffs and deadline extensions).** FR03, FR08, FR09 and FR11 to FR15 are not built. Features are built in the order set out in the specs. Specifications live in `specs/`; start at `specs/00_START_HERE.md`.
 
 ## Prerequisites
 
@@ -37,6 +37,10 @@ Stop the stack with `npm run db:stop`.
 ### Missions locally (FR02)
 
 As `admin-1@example.test`, open **Settings** to create graduation cycles (with a school timezone and exact cutoff), enable approved missions, and assign them to students. A student holds one mission per type per cycle; assigning again returns the existing assignment.
+
+### Cutoffs and extensions locally (FR10)
+
+As `admin-1@example.test`, **Settings > Graduation cycles > Change cutoff** moves a cycle's cutoff after missions are assigned (with a reason; the exact moment is previewed first). **Settings > Deadline extensions** grants, replaces or revokes a per-mission extension. An extension moves the submission deadline only, never the activity dates. Nothing enforces the cutoff on submit yet because submit (FR09) is not built.
 
 ### Invitations locally (FR01)
 
