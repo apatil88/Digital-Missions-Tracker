@@ -267,6 +267,23 @@ describe('FR10 cutoffs and exceptions over the real API', () => {
     expect(inside.ok).toBe(true)
   })
 
+  it('D-FR10-5 the assignment_extensions view gives whole rows to the right readers: reasons only for staff, nothing for others or anonymous', async () => {
+    const s = await setup({ cutoffAt: hours(-2) })
+    expect(env(await s.grant(s.admin, s.a1, hours(5))).ok).toBe(true)
+    const family = await s.owner.from('assignment_extensions').select('*')
+    expect(family.error).toBeNull()
+    expect(family.data).toHaveLength(1)
+    expect(family.data![0].reason).toBeNull()
+    const staff = await s.instructor.from('assignment_extensions').select('*')
+    expect(staff.data![0].reason).toBe('Sample reason for the extension.')
+    expect((await s.other.from('assignment_extensions').select('*')).data).toHaveLength(0)
+    expect((await s.adminTwo.from('assignment_extensions').select('*')).data).toHaveLength(0)
+    expect((await anonClient().from('assignment_extensions').select('*')).error).toBeTruthy()
+    expect((await s.admin.from('assignment_extensions').insert({ assignment_id: s.a2, expires_at: hours(9) })).error).toBeTruthy()
+    // The table itself still refuses a whole-row read.
+    expect((await s.owner.from('deadline_exceptions').select('*')).error).toBeTruthy()
+  })
+
   it('FR10 list_cutoffs and get_cutoff are limited to the family owner and the school staff', async () => {
     const s = await setup({ cutoffAt: hours(-2) })
     expect(env(await s.other.rpc('get_cutoff', { p_assignment_id: s.a1 })).error?.code).toBe('NOT_FOUND')
