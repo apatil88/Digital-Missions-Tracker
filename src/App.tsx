@@ -5,6 +5,7 @@ import { AppShell } from '@/components/AppShell'
 import { Gate, RequireAdmin, RequireAuth, RequireStaff } from '@/routes/guards'
 import { AdminCatalog } from '@/routes/AdminCatalog'
 import { AdminCycles } from '@/routes/AdminCycles'
+import { AdminExceptions } from '@/routes/AdminExceptions'
 import { AdminInvitations } from '@/routes/AdminInvitations'
 import { AdminRoster } from '@/routes/AdminRoster'
 import { FamilyProfiles } from '@/routes/FamilyProfiles'
@@ -49,6 +50,7 @@ export default function App() {
                     <Route path="admin/settings" element={<AdminSettings />} />
                     <Route path="admin/settings/invitations" element={<AdminInvitations />} />
                     <Route path="admin/settings/cycles" element={<AdminCycles />} />
+                    <Route path="admin/settings/exceptions" element={<AdminExceptions />} />
                     <Route path="admin/settings/roster" element={<AdminRoster />} />
                     <Route path="admin/settings/catalog" element={<AdminCatalog />} />
                   </Route>

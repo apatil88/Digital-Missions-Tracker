@@ -8,6 +8,8 @@ import { supabase } from '@/lib/supabase'
 import { formatInstant, plainDate, toLocalInput, type Cycle } from '@/lib/cycles'
 import { useUnsavedChangesGuard } from '@/lib/useUnsavedChangesGuard'
 import { Button, ChoiceGroup, CheckboxField, ConfirmDialog, EmptyState, ErrorSummary, Field, LoadingState, Notice, type FormError } from '@/components/ui'
+import { CutoffForm } from './AdminCutoff'
+import { proposedDueDate } from '@/lib/cutoffs'
 
 type Preview = { status: string; instant?: string; candidates?: { choice: 'earlier' | 'later'; instant: string }[] }
 
@@ -132,12 +134,13 @@ function CycleForm({
   }
 
   const graduationChanged = editing && grad !== cycle.graduation_date
+  const proposedDue = proposedDueDate(grad)
   return (
     <form onSubmit={onSubmit} noValidate id="cycle-form" className="flex flex-col gap-4 rounded-card border border-line bg-card p-4">
       <h2 className="break-words text-lg font-semibold">{editing ? `Edit ${cycle.name}` : 'New cycle'}</h2>
       {locked && (
         <Notice>
-          Missions are assigned in this cycle. Activity dates, timezone and cutoff are locked here. Changes to them need the cutoff controls or a separately approved change plan. You can still rename the cycle or move the graduation date.
+          Missions are assigned in this cycle. Activity dates, timezone and cutoff are locked here. Use Change cutoff on the cycle to move the cutoff. Other changes need a separately approved change plan. You can still rename the cycle or move the graduation date.
         </Notice>
       )}
       <ErrorSummary errors={errors} />
@@ -157,6 +160,7 @@ function CycleForm({
       />
       <Field
         label="Submission cutoff (school local time)"
+        hint={!editing && proposedDue ? `Proposed date: ${plainDate(proposedDue)} (two calendar days before graduation). You choose the time and confirm it. Nothing is set for you.` : undefined}
         id="cycle-cutoff"
         type="datetime-local"
         value={local}
@@ -210,6 +214,7 @@ export function AdminCycles() {
   const rowKey = useRef(createRequestKey())
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<Cycle | null>(null)
+  const [cutoffFor, setCutoffFor] = useState<Cycle | null>(null)
   const [archiving, setArchiving] = useState<Cycle | null>(null)
   const [restoring, setRestoring] = useState<Cycle | null>(null)
   const [reason, setReason] = useState('')
@@ -330,6 +335,21 @@ export function AdminCycles() {
         />
       )}
 
+      {cycles.data && cutoffFor && (
+        <CutoffForm
+          key={`${cutoffFor.id}-${cutoffFor.version}`}
+          cycle={cutoffFor}
+          hasAssignments={(cycles.data.counts.get(cutoffFor.id) ?? 0) > 0}
+          onDone={(message) => {
+            setCutoffFor(null)
+            setResult({ tone: 'info', text: message })
+            void refresh()
+          }}
+          onCancel={() => setCutoffFor(null)}
+          onConflict={() => void refresh()}
+        />
+      )}
+
       {cycles.data && sorted.length === 0 && !creating && <EmptyState title="No cycles yet">Create a cycle to start assigning missions.</EmptyState>}
       <ul className="flex flex-col gap-2">
         {sorted.map((c) => {
@@ -350,12 +370,20 @@ export function AdminCycles() {
               <div className="flex flex-wrap gap-2">
                 {!c.archived_at && (
                   <>
-                    <Button variant="secondary" disabled={rowBusy} onClick={() => { setCreating(false); setEditing(c) }} aria-label={`Edit ${c.name}`}>
+                    <Button variant="secondary" disabled={rowBusy} onClick={() => { setCreating(false); setCutoffFor(null); setEditing(c) }} aria-label={`Edit ${c.name}`}>
                       Edit
                     </Button>
                     <Button asChild variant="secondary">
                       <Link to={`/admin/settings/roster?cycle=${c.id}`} aria-label={`Assign missions in ${c.name}`}>
                         Assign missions
+                      </Link>
+                    </Button>
+                    <Button variant="secondary" disabled={rowBusy} onClick={() => { setCreating(false); setEditing(null); setCutoffFor(c) }} aria-label={`Change cutoff for ${c.name}`}>
+                      Change cutoff
+                    </Button>
+                    <Button asChild variant="secondary">
+                      <Link to={`/admin/settings/exceptions?cycle=${c.id}`} aria-label={`Extensions in ${c.name}`}>
+                        Extensions
                       </Link>
                     </Button>
                     <Button variant="secondary" disabled={rowBusy} onClick={() => setArchiving(c)} aria-label={`Archive ${c.name}`}>
