@@ -81,7 +81,7 @@ test.describe('FR02 administrator controls', () => {
     await expect(page.getByText('That local time happens twice')).toBeVisible()
     await page.getByRole('button', { name: 'Create cycle', exact: true }).click()
     await expect(page.getByRole('alert')).toContainText('That local time happens twice')
-    await page.getByLabel('Later', { exact: false }).check()
+    await page.getByRole('radio', { name: /^Later:/ }).check()
     await page.getByRole('button', { name: 'Create cycle', exact: true }).click()
     await expect(page.getByText('Cycle created.')).toBeVisible()
     await expect(cycleCard(page, name)).toContainText('1:30:00 AM EST')
