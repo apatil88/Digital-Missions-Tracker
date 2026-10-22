@@ -6,6 +6,7 @@ import { Gate, RequireAdmin, RequireAuth, RequireStaff } from '@/routes/guards'
 import { AdminCatalog } from '@/routes/AdminCatalog'
 import { AdminCycles } from '@/routes/AdminCycles'
 import { AdminExceptions } from '@/routes/AdminExceptions'
+import { ReviewSubmission } from '@/routes/ReviewSubmission'
 import { AdminInvitations } from '@/routes/AdminInvitations'
 import { AdminRoster } from '@/routes/AdminRoster'
 import { FamilyProfiles } from '@/routes/FamilyProfiles'
@@ -40,6 +41,7 @@ export default function App() {
                   <Route path="family" element={<Family />} />
                   <Route path="family/profiles" element={<FamilyProfiles />} />
                   <Route path="family/students/:studentId/missions/:assignmentId" element={<MissionDetail />} />
+                  <Route path="family/students/:studentId/missions/:assignmentId/review" element={<ReviewSubmission />} />
                   <Route path="family/students/:studentId/missions/:assignmentId/activities/new" element={<AddActivity />} />
                   <Route path="family/students/:studentId/missions/:assignmentId/activities/:recordId/edit" element={<EditActivity />} />
                   <Route element={<RequireStaff />}>

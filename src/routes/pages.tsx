@@ -227,9 +227,14 @@ export function MissionDetail() {
         <p className="mt-1 font-semibold">{d.records.length} of {d.required} activities saved</p>
       </div>
       {open ? (
-        <Link to={`/family/students/${studentId}/missions/${assignmentId}/activities/new`} className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
-          Add an activity
-        </Link>
+        <div className="flex flex-wrap gap-x-6">
+          <Link to={`/family/students/${studentId}/missions/${assignmentId}/activities/new`} className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
+            Add an activity
+          </Link>
+          <Link to={`/family/students/${studentId}/missions/${assignmentId}/review`} className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
+            Review submission
+          </Link>
+        </div>
       ) : (
         <Notice>This mission is submitted or approved, so activities cannot be added, changed or removed.</Notice>
       )}
