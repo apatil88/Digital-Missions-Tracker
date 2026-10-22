@@ -13,7 +13,9 @@ import { FamilyProfiles } from '@/routes/FamilyProfiles'
 import { Invite } from '@/routes/Invite'
 import { ForgotPassword, ResetPassword } from '@/routes/Recovery'
 import { AddActivity, EditActivity } from '@/routes/AddActivity'
-import { AdminSettings, Family, Forbidden, MissionDetail, NotFound, SignIn, StaffReviews, StaffStatus } from '@/routes/pages'
+import { AdminSettings, Forbidden, NotFound, SignIn, StaffReviews, StaffStatus } from '@/routes/pages'
+import { Family } from '@/routes/Family'
+import { MissionDetail } from '@/routes/MissionDetail'
 
 // No persisted query cache: authenticated data lives in page memory only.
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false, gcTime: 5 * 60_000 } } })

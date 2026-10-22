@@ -121,6 +121,7 @@ export function ActivityForm({
       void queryClient.invalidateQueries({ queryKey: ['suggestions'] })
       void queryClient.invalidateQueries({ queryKey: ['assignment-window', assignmentId] })
       void queryClient.invalidateQueries({ queryKey: ['mission-detail', assignmentId] })
+      void queryClient.invalidateQueries({ queryKey: ['family-dashboard'] })
       if (edit) void queryClient.invalidateQueries({ queryKey: ['activity-record', edit.recordId] })
       return
     }

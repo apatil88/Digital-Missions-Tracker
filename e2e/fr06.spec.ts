@@ -137,7 +137,7 @@ test.describe('FR06 edit and remove recorded activities', () => {
     const second = await ctx.plant(k.assignment, 'Stacked the chairs')
     await signInAs(page, ctx.owner.email)
     await page.goto(ctx.mission(k))
-    await expect(page.getByText('2 of 50 activities saved')).toBeVisible()
+    await expect(page.getByText('2 of 50 recorded')).toBeVisible()
     await page.getByRole('button', { name: 'Remove Wiped the tables' }).click()
     const dialog = page.getByRole('dialog')
     await expect(dialog).toContainText(k.name)
@@ -146,7 +146,7 @@ test.describe('FR06 edit and remove recorded activities', () => {
     expect((await ctx.row(first)).active).toBe(true)
     await page.getByRole('button', { name: 'Remove Wiped the tables' }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Yes, remove it' }).click()
-    await expect(page.getByText('1 of 50 activities saved')).toBeVisible()
+    await expect(page.getByText('1 of 50 recorded')).toBeVisible()
     await expect(page.getByText('“Wiped the tables” was removed')).toBeVisible()
     expect((await ctx.row(first)).active).toBe(false)
     expect(await ctx.state(k.assignment)).toBe('in_progress')
@@ -155,7 +155,7 @@ test.describe('FR06 edit and remove recorded activities', () => {
     // AC05: removing the last record of an in-progress mission returns it to not started.
     await page.getByRole('button', { name: 'Remove Stacked the chairs' }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Yes, remove it' }).click()
-    await expect(page.getByText('0 of 50 activities saved')).toBeVisible()
+    await expect(page.getByText('0 of 50 recorded')).toBeVisible()
     expect((await ctx.row(second)).active).toBe(false)
     expect(await ctx.state(k.assignment)).toBe('not_started')
   })
@@ -168,10 +168,10 @@ test.describe('FR06 edit and remove recorded activities', () => {
     await page.goto(ctx.mission(k))
     await page.getByRole('button', { name: 'Remove Returned mission activity' }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Yes, remove it' }).click()
-    await expect(page.getByText('0 of 50 activities saved')).toBeVisible()
+    await expect(page.getByText('0 of 50 recorded')).toBeVisible()
     expect(await ctx.state(k.assignment)).toBe('needs_changes')
     // Still editable: a new activity can be added.
-    await expect(page.getByRole('link', { name: 'Add an activity' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Add activity' })).toBeVisible()
   })
 
   test('FR06-AC06 a second window with the same revision gets a conflict, its text is kept, and the first edit is not overwritten', async ({ page, context }) => {
