@@ -113,10 +113,7 @@ export function ReviewSubmission() {
           <ul className="mt-2 flex flex-col">
             {r.blockers.map((b, i) => (
               <li key={`${b.code}-${b.record_id ?? 'x'}-${b.field ?? ''}-${i}`} className="flex flex-col gap-1 border-t border-line py-3 first:border-t-0">
-                <p className="break-words text-sm">
-                  <span className="font-semibold">{b.ordinal ? `Entry ${b.ordinal}: ` : ''}</span>
-                  {b.message}
-                </p>
+                <p className="break-words text-sm">{b.message}</p>
                 <Link to={linkFor(b)} className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
                   {linkLabel(b)}
                 </Link>
@@ -144,7 +141,7 @@ export function ReviewSubmission() {
               <li key={e.entry_id} className={`flex items-start gap-3 border-t border-line p-4 first:border-t-0 ${e.needs_classification ? 'bg-warning/10' : ''}`}>
                 <span className="w-7 shrink-0 font-semibold text-muted">{e.ordinal}</span>
                 <span className="min-w-0 flex-1 break-words">
-                  {e.title}
+                  {e.title.trim() === '' ? <span className="italic text-muted">No title</span> : e.title}
                   {e.source === 'custom' && e.needs_classification && <span className="ml-2 inline-block rounded-full bg-warning/20 px-2 text-sm font-semibold text-warning">Custom</span>}
                 </span>
                 <span className="shrink-0 text-sm text-muted">{shortDate(e.completed_on)}</span>
