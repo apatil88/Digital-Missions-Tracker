@@ -2,7 +2,7 @@
 -- atomicity, authority and immutability. Builds its own fictional school inside the transaction; everything rolls back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(100);
+select plan(103);
 
 -- ------------------------------------------------------------------ fixture
 insert into auth.users (id, email, email_confirmed_at) values
@@ -431,6 +431,12 @@ select throws_ok($$delete from public.submission_entries$$, '42501', null, 'FR09
 set local role anon;
 select throws_ok($$select count(*) from public.submissions$$, '42501', null, 'FR09-R02 anonymous cannot read submissions');
 reset role;
+
+-- D-FR09-3: TRUNCATE is stopped on the snapshot tables too (the append-only row triggers fire on UPDATE and DELETE only).
+select throws_ok($$truncate public.submission_entries$$, '42501', null, 'D-FR09-3 not even the owner can truncate the snapshot entries');
+set constraints all immediate;
+select throws_ok($$truncate public.submissions cascade$$, '42501', null, 'D-FR09-3 or truncate the submissions, with cascade');
+select is((select count(*)::integer from public.submissions) > 0 and (select count(*)::integer from public.submission_entries) > 0, true, 'D-FR09-3 and the snapshot rows are still there');
 
 select * from finish();
 rollback;

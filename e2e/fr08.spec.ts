@@ -79,7 +79,7 @@ test.describe('FR08 review before submitting', () => {
     await page.goto(`/family/students/${k.student}/missions/${k.assignment}`)
     await page.getByRole('link', { name: 'Review submission' }).click()
     await expect(page.getByRole('heading', { name: 'Review submission' })).toBeVisible()
-    await expect(page.getByText(k.name)).toBeVisible()
+    await expect(page.getByText(k.name).first()).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Ready to submit', exact: true })).toBeVisible()
     await expect(page.getByText('50 activities recorded')).toBeVisible()
     await expect(page.getByText('No known activity family used more than twice')).toBeVisible()
