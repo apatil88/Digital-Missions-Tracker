@@ -63,6 +63,8 @@ test.describe('FR09 submit a mission', () => {
     await page.goto(ctx.review(k))
     await expect(page.getByRole('heading', { name: 'Ready to submit', exact: true })).toBeVisible()
     await expect(page.getByText(/does not mean the school has accepted it/)).toBeVisible()
+    // D-FR09-2: the student's name is visible next to the Submit button, whatever the scroll position.
+    await expect(page.locator('div.sticky', { has: page.getByRole('button', { name: 'Submit mission' }) }).getByText(k.name)).toBeVisible()
     await expectNoHorizontalOverflow(page)
     await expectTouchTargets(page)
     await page.getByRole('button', { name: 'Submit mission' }).click()
@@ -129,6 +131,11 @@ test.describe('FR09 submit a mission', () => {
     await page.getByRole('button', { name: 'Submit mission' }).click()
     await expect(page.getByRole('heading', { name: 'We could not confirm your submission' })).toBeVisible()
     await expect(page.getByText('Do not change this mission yet.')).toBeVisible()
+    // D-FR09-1: only the unknown-outcome wording; never the generic claim that nothing was saved.
+    await expect(page.getByText(/Nothing was saved/)).toHaveCount(0)
+    await expect(page.getByText(/may or may not have been received/)).toBeVisible()
+    // D-FR09-2: the student is still named on this screen.
+    await expect(page.getByText(k.name)).toBeVisible()
     // No success is claimed, and no edit control is offered.
     await expect(page.getByRole('heading', { name: /Submission \d+ received/ })).toHaveCount(0)
     await expect(page.getByRole('link', { name: /Open entry|Add an activity|Back to the mission/ })).toHaveCount(0)

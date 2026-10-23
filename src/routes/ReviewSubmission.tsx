@@ -72,7 +72,7 @@ export function ReviewSubmission() {
       return
     }
     if (outcomeUnknown(res.error.code)) {
-      setUnknown(res.error.message)
+      setUnknown(res.error.code)
       return
     }
     // A definite refusal: nothing was submitted. Read the preflight again so the list is current.
@@ -89,7 +89,12 @@ export function ReviewSubmission() {
         <h1 className="text-2xl font-bold">Review submission</h1>
         <div role="alert" className="rounded-card border border-warning bg-card p-4">
           <h2 className="text-lg font-semibold text-warning">We could not confirm your submission</h2>
-          <p className="mt-2 text-sm">{unknown}</p>
+          <p className="mt-2 break-words text-sm font-semibold">
+            {r0.student_name} · {missionName(r0.mission_type)}
+          </p>
+          <p className="mt-2 text-sm">
+            {unknown === 'UNAUTHENTICATED' ? 'Your sign-in may have ended before the answer arrived.' : 'The answer from the service did not arrive.'}
+          </p>
           <p className="mt-2 text-sm">
             It may or may not have been received. Do not change this mission yet. Try again: if it was received, you will get the same receipt, and nothing is submitted twice.
           </p>
@@ -227,6 +232,9 @@ export function ReviewSubmission() {
       </div>
 
       <div className="sticky bottom-0 -mx-4 flex flex-col gap-2 border-t border-line bg-canvas p-4">
+        <p className="break-words text-sm font-semibold">
+          {r.student_name} · {missionName(r.mission_type)}
+        </p>
         {rejected && (
           <div role="alert">
             <Notice tone="warning">{rejected}</Notice>
