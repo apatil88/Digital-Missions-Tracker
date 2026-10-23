@@ -40,6 +40,7 @@ export function RemoveActivity({
     if (res.ok) {
       // Re-read the mission before saying it is done, and refresh what depends on the allowance.
       await queryClient.invalidateQueries({ queryKey: ['mission-detail', assignmentId] })
+      void queryClient.invalidateQueries({ queryKey: ['family-dashboard'] })
       void queryClient.invalidateQueries({ queryKey: ['suggestions'] })
       void queryClient.invalidateQueries({ queryKey: ['assignment-window', assignmentId] })
       setBusy(false)
@@ -51,6 +52,7 @@ export function RemoveActivity({
     setBusy(false)
     if (res.error.code === 'VERSION_CONFLICT' || res.error.code === 'INVALID_STATE') {
       void queryClient.invalidateQueries({ queryKey: ['mission-detail', assignmentId] })
+      void queryClient.invalidateQueries({ queryKey: ['family-dashboard'] })
     }
     setProblem(res.error.message)
   }

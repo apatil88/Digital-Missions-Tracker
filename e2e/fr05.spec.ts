@@ -64,7 +64,7 @@ test.describe('FR05 record participation and attest', () => {
     expect(await ctx.count(ctx.main.assignment)).toBe(1)
     await page.getByRole('link', { name: 'Back to the mission' }).click()
     await page.reload()
-    await expect(page.getByText('1 of 50 activities saved')).toBeVisible()
+    await expect(page.getByText('1 of 50 recorded')).toBeVisible()
     await expect(page.getByRole('list', { name: 'Saved activities' }).getByText('Carried the teacher bag')).toBeVisible()
     await expect(page.getByText(PARTICIPATION)).toBeVisible()
     await expectNoHorizontalOverflow(page)

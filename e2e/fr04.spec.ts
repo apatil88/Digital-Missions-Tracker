@@ -53,8 +53,9 @@ const open = async (page: Page) => {
 test.describe('FR04 suggested activities and custom entry', () => {
   test('FR04-R01 / FR04-AC01 the family reaches the browse page from the mission and sees the student, mission and cutoff', async ({ page }) => {
     await signInAs(page, ctx.owner.email)
-    await page.getByRole('listitem').filter({ hasText: 'Browse Kid' }).getByRole('link', { name: 'Open mission' }).click()
-    await page.getByRole('link', { name: 'Add an activity' }).click()
+    await page.getByRole('tab', { name: /Browse Kid/ }).click()
+    await page.getByRole('tabpanel').getByRole('link', { name: 'Teamwork' }).click()
+    await page.getByRole('link', { name: 'Add activity' }).click()
     await expect(page.getByRole('heading', { name: 'Add an activity' })).toBeVisible()
     await expect(page.getByText('Browse Kid')).toBeVisible()
     await expect(page.getByText(/Teamwork mission, FR04 cycle/)).toBeVisible()
