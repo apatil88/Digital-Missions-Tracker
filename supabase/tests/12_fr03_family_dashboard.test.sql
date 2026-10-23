@@ -3,7 +3,7 @@
 -- Builds its own fictional school inside the transaction; everything rolls back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(123);
+select plan(127);
 
 -- ------------------------------------------------------------------ fixture
 insert into auth.users (id, email, email_confirmed_at) values
@@ -291,6 +291,10 @@ select pg_temp.who('fa300000-0000-4000-8000-00000000000a');
 select is(pg_temp.item('02', 3) -> 'cutoff' ->> 'open', 'true', 'FR03-R04 an FR10 extension reopens submission');
 select is(pg_temp.item('02', 3) -> 'cutoff' ->> 'source', 'extension', 'FR03-R04 and the source is named');
 select is(pg_temp.item('02', 3) ->> 'display_status', 'ready_to_submit', 'FR03-R04 the mission is ready again under the extension');
+select ok(not (pg_temp.item('02', 3) -> 'cutoff' ? 'exception_id'), 'D-FR03-4 the dashboard cutoff does not expose exception_id while an extension applies');
+select ok(not (pg_temp.md(3) -> 'data' -> 'cutoff' ? 'exception_id'), 'D-FR03-4 the mission detail cutoff does not expose exception_id while an extension applies');
+select ok(pg_temp.md(3) -> 'data' -> 'cutoff' ? 'effective_cutoff' and pg_temp.md(3) -> 'data' -> 'cutoff' ? 'open' and pg_temp.md(3) -> 'data' -> 'cutoff' ? 'source', 'D-FR03-4 the detail cutoff keeps the effective cutoff, open flag and source');
+select ok(not (pg_temp.item('01', 1) -> 'cutoff' ? 'exception_id'), 'D-FR03-4 and a mission with no extension has no exception_id either');
 reset role; select pg_temp.setclock('2026-12-10 15:00:00+00'); set local role authenticated;
 select pg_temp.who('fa300000-0000-4000-8000-00000000000a');
 
