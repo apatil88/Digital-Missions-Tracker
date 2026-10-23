@@ -135,6 +135,11 @@ export function MissionDetail() {
         </section>
       )}
       {d.state === 'needs_changes' && !returned && <Notice tone="warning">This mission was returned for changes.</Notice>}
+      {live && d.state === 'needs_changes' && d.ready && (
+        <Link to={`${base}/review`} className={cn(barLink, 'flex-none bg-primary-strong text-white')}>
+          Resubmit
+        </Link>
+      )}
       {d.state === 'submitted' && latest && (
         <Notice>
           Submission {latest.sequence} was submitted {formatDeadline(latest.submitted_at, tz)}. It is waiting for an instructor.

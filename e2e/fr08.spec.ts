@@ -79,7 +79,7 @@ test.describe('FR08 review before submitting', () => {
     await page.goto(`/family/students/${k.student}/missions/${k.assignment}`)
     await page.getByRole('link', { name: 'Review submission' }).click()
     await expect(page.getByRole('heading', { name: 'Review submission' })).toBeVisible()
-    await expect(page.getByText(k.name)).toBeVisible()
+    await expect(page.getByText(k.name).first()).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Ready to submit', exact: true })).toBeVisible()
     await expect(page.getByText('50 activities recorded')).toBeVisible()
     await expect(page.getByText('No known activity family used more than twice')).toBeVisible()
@@ -88,9 +88,9 @@ test.describe('FR08 review before submitting', () => {
     await expect(page.getByRole('heading', { name: /Fix these before submitting/ })).toHaveCount(0)
     await expect(page.getByRole('heading', { name: 'Entries (50)' })).toBeVisible()
     await expect(page.getByText('Custom', { exact: true })).toBeVisible()
-    // The submit button is present but disabled; submitting belongs to the next feature.
-    await expect(page.getByRole('button', { name: 'Submit mission' })).toBeDisabled()
-    await expect(page.getByText('Submitting is not available yet.')).toBeVisible()
+    // D-FR08-2 (closed by FR09): a ready mission offers Submit mission. This test never clicks it, so nothing changes.
+    await expect(page.getByRole('button', { name: 'Submit mission' })).toBeEnabled()
+    await expect(page.getByText(/does not mean the school has accepted it/)).toBeVisible()
     await expectNoHorizontalOverflow(page)
     await expectTouchTargets(page)
     // Show all entries.

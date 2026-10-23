@@ -1,11 +1,14 @@
-// FR08: the review screen before submitting. It shows the server's preflight and changes nothing.
-// Submitting itself belongs to FR09, so the Submit button stays disabled here.
-import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { AlertTriangle, CheckCircle2, Circle } from 'lucide-react'
+// FR08: the review screen before submitting. It shows the server's preflight.
+// FR09: the Submit (or Resubmit) button sends the versions it checked and one request key. Success is never shown
+// here: the receipt page reads the mission afresh and shows it only if the database says it is submitted.
+import { useRef, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { Button, LoadingState, Notice } from '@/components/ui'
+import { createRequestKey } from '@/lib/api'
 import { checklist, validateSubmission, type Blocker, type Readiness } from '@/lib/readiness'
+import { outcomeUnknown, submitMission } from '@/lib/submission'
 import { formatInstant, missionName } from '@/lib/cycles'
 import { NotFound } from './pages'
 
@@ -29,6 +32,15 @@ export function ReviewSubmission() {
   const { studentId, assignmentId } = useParams()
   const valid = Boolean(assignmentId && UUID.test(assignmentId) && studentId && UUID.test(studentId))
   const [showAll, setShowAll] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [rejected, setRejected] = useState<string | null>(null)
+  // Set when the answer never arrived: the mission may already be submitted, so editing stays out of reach here.
+  const [unknown, setUnknown] = useState<string | null>(null)
+  const requestKey = useRef(createRequestKey())
+  const attempted = useRef<Readiness | null>(null)
+  const inFlight = useRef(false) // a second click in the same instant must not send a second request
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const result = useQuery({
     queryKey: ['readiness', assignmentId],
     enabled: valid,
@@ -40,7 +52,59 @@ export function ReviewSubmission() {
       return { ok: false as const, error: res.error }
     },
   })
+  async function send(r: Readiness) {
+    if (inFlight.current) return
+    inFlight.current = true
+    attempted.current = r
+    setSending(true)
+    setRejected(null)
+    // The same versions give the same key, so a retry after a lost answer reaches the original receipt.
+    const key = requestKey.current.for(`${assignmentId}:${r.content_version}:${r.lifecycle_version}`)
+    const res = await submitMission(assignmentId!, r.content_version, r.lifecycle_version, key)
+    inFlight.current = false
+    setSending(false)
+    if (res.ok) {
+      setUnknown(null)
+      void queryClient.invalidateQueries({ queryKey: ['mission-detail', assignmentId] })
+      void queryClient.invalidateQueries({ queryKey: ['family-dashboard'] })
+      void queryClient.invalidateQueries({ queryKey: ['readiness', assignmentId] })
+      navigate(`/family/students/${studentId}/missions/${assignmentId}/submission`, { replace: true })
+      return
+    }
+    if (outcomeUnknown(res.error.code)) {
+      setUnknown(res.error.code)
+      return
+    }
+    // A definite refusal: nothing was submitted. Read the preflight again so the list is current.
+    requestKey.current.reset()
+    setRejected(res.error.message)
+    void result.refetch()
+  }
+
   if (!valid) return <NotFound />
+  if (unknown !== null && attempted.current) {
+    const r0 = attempted.current
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-bold">Review submission</h1>
+        <div role="alert" className="rounded-card border border-warning bg-card p-4">
+          <h2 className="text-lg font-semibold text-warning">We could not confirm your submission</h2>
+          <p className="mt-2 break-words text-sm font-semibold">
+            {r0.student_name} · {missionName(r0.mission_type)}
+          </p>
+          <p className="mt-2 text-sm">
+            {unknown === 'UNAUTHENTICATED' ? 'Your sign-in may have ended before the answer arrived.' : 'The answer from the service did not arrive.'}
+          </p>
+          <p className="mt-2 text-sm">
+            It may or may not have been received. Do not change this mission yet. Try again: if it was received, you will get the same receipt, and nothing is submitted twice.
+          </p>
+        </div>
+        <Button onClick={() => void send(r0)} disabled={sending}>
+          {sending ? 'Trying…' : 'Try again'}
+        </Button>
+      </div>
+    )
+  }
   if (result.isPending) return <LoadingState label="Checking the mission" />
   if (result.isError) {
     return (
@@ -168,12 +232,21 @@ export function ReviewSubmission() {
       </div>
 
       <div className="sticky bottom-0 -mx-4 flex flex-col gap-2 border-t border-line bg-canvas p-4">
-        <p className="flex items-start gap-2 text-sm text-muted">
-          <Circle aria-hidden className="mt-1 size-3 shrink-0" />
-          Submitting is not available yet. This page only checks your mission and changes nothing.
+        <p className="break-words text-sm font-semibold">
+          {r.student_name} · {missionName(r.mission_type)}
         </p>
-        <Button disabled aria-disabled="true">
-          Submit mission
+        {rejected && (
+          <div role="alert">
+            <Notice tone="warning">{rejected}</Notice>
+          </div>
+        )}
+        <p className="text-sm text-muted">
+          {r.ready
+            ? `Submitting sends all ${r.required_count} entries to the school as one numbered version. You cannot change it afterwards unless an instructor returns it. The receipt shows the app received it. It does not mean the school has accepted it.`
+            : 'Fix the items above first. Submitting stays off until every check passes.'}
+        </p>
+        <Button disabled={!r.ready || sending || result.isFetching} onClick={() => void send(r)}>
+          {sending ? 'Submitting…' : r.state === 'needs_changes' ? 'Resubmit' : 'Submit mission'}
         </Button>
       </div>
     </div>
