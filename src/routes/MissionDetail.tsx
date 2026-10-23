@@ -79,8 +79,10 @@ export function MissionDetail() {
 
   const tz = d.cutoff.display_timezone
   const live = d.permissions.can_edit
-  const returned = d.state === 'needs_changes' ? d.submissions.find((s) => s.outcome === 'returned') : undefined
   const latest = d.submissions[0]
+  // The latest submission's own decision decides the banner: an older return is not current after a reopen or resubmission.
+  const returned = d.state === 'needs_changes' && latest?.outcome === 'returned' ? latest : undefined
+  const reopened = d.state === 'needs_changes' && latest?.outcome === 'approved' ? d.reopenings.find((r) => r.submission_id === latest.submission_id) : undefined
   const titles = new Map(d.groups.flatMap((g) => g.entries.map((e) => [e.id, e.title] as const)))
   const reviewItems = d.validation?.review_items ?? []
   const fixes = (d.validation?.blockers ?? []).filter((b) => b.code !== 'CUTOFF_PASSED' && b.code !== 'POLICY_NOT_CONFIGURED' && b.code !== 'COUNT_REQUIRED').length
@@ -134,7 +136,21 @@ export function MissionDetail() {
           <p className="whitespace-pre-wrap break-words p-4">{returned.reason}</p>
         </section>
       )}
-      {d.state === 'needs_changes' && !returned && <Notice tone="warning">This mission was returned for changes.</Notice>}
+      {reopened && (
+        <section aria-labelledby="reopened-heading" className="overflow-hidden rounded-card border border-danger/40 bg-card">
+          <div className="bg-danger/10 p-4">
+            <h2 id="reopened-heading" className="text-xl font-bold text-danger">
+              Reopened for changes
+            </h2>
+            <p className="text-sm text-danger">
+              Submission {reopened.sequence} was approved · Reopened {formatDeadline(reopened.reopened_at, tz)}
+            </p>
+          </div>
+          <p className="whitespace-pre-wrap break-words p-4">{reopened.reason}</p>
+          <p className="border-t border-line p-4 text-sm text-muted">The approval of submission {reopened.sequence} stays in your history. Make your changes, then submit again for a new review.</p>
+        </section>
+      )}
+      {d.state === 'needs_changes' && !returned && !reopened && <Notice tone="warning">This mission was returned for changes.</Notice>}
       {live && d.state === 'needs_changes' && d.ready && (
         <Link to={`${base}/review`} className={cn(barLink, 'flex-none bg-primary-strong text-white')}>
           Resubmit
@@ -242,6 +258,36 @@ export function MissionDetail() {
           </Button>
         )}
       </section>
+
+      {d.submissions.length > 0 && (
+        <section aria-labelledby="history-heading" className="flex flex-col gap-3">
+          <h2 id="history-heading" className="text-xl font-bold">
+            Submission history
+          </h2>
+          <ol aria-label="Submission history" className="flex flex-col gap-3">
+            {d.submissions.map((s) => (
+              <li key={s.submission_id} className="flex flex-col gap-1 rounded-card border border-line bg-card p-4">
+                <p className="font-semibold">
+                  Submission {s.sequence} ({s.outcome === 'approved' ? 'Approved' : s.outcome === 'returned' ? 'Returned for changes' : 'Waiting for an instructor'})
+                </p>
+                <p className="text-sm text-muted">
+                  Submitted {formatDeadline(s.submitted_at, tz)}
+                  {s.decided_at ? ` · ${s.outcome === 'approved' ? 'Approved' : 'Returned'} ${formatDeadline(s.decided_at, tz)}` : ''}
+                </p>
+                {/* The banner above already shows the current return or reopen, so the history does not repeat it. */}
+                {s.outcome === 'returned' && s.reason && s !== returned && <p className="whitespace-pre-wrap break-words text-sm">{s.reason}</p>}
+                {d.reopenings
+                  .filter((r) => r.submission_id === s.submission_id && r.id !== reopened?.id)
+                  .map((r) => (
+                    <p key={r.id} className="whitespace-pre-wrap break-words text-sm">
+                      <span className="font-semibold">Reopened {formatDeadline(r.reopened_at, tz)}:</span> {r.reason}
+                    </p>
+                  ))}
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       {live && (
         <div className="sticky bottom-0 -mx-4 flex gap-2 border-t border-line bg-canvas p-4">

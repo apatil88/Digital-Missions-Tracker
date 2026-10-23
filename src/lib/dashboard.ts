@@ -60,6 +60,8 @@ export type DetailSubmission = {
   decided_at: string | null
 }
 
+export type DetailReopening = { id: string; submission_id: string; sequence: number; reason: string; reopened_at: string }
+
 export type MissionDetailView = {
   assignment_id: string
   student: DashStudent
@@ -78,6 +80,7 @@ export type MissionDetailView = {
   validation: { ready: boolean; blocking_count: number; blockers: { code: string; ordinal: number | null; message: string }[]; review_items: { ordinal: number; record_id: string }[]; cutoff_open: boolean } | null
   validation_error: string | null
   submissions: DetailSubmission[]
+  reopenings: DetailReopening[]
   permissions: { can_edit: boolean; can_review: boolean }
   server_now: string
 }
