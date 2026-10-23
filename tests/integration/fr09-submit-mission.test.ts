@@ -227,6 +227,36 @@ describe('FR09 submit_mission over the real API', () => {
     expect((await s.headers(s.a[0])).map((h) => h.sequence)).toEqual([1, 2])
   })
 
+  it('FR09-AC05 / FR10-AC04 a returned mission past its cutoff can still be edited, but resubmitting fails until an administrator grants an extension', async () => {
+    const s = await setup()
+    await s.plant(s.a[0], 50)
+    const first = await s.submit(s.owner, s.a[0], randomUUID())
+    expect(first.ok).toBe(true)
+    // Returning belongs to FR12; the returned state is set up directly. Then the cutoff passes.
+    const reviewer = (await s.admin.auth.getUser()).data.user!.id
+    await ok(s.sb.from('review_decisions').insert({ submission_id: first.data!.submission_id, outcome: 'returned', reviewer_id: reviewer, reason: 'Please add more detail to entry 3.', decided_at: new Date().toISOString() }).select('id'))
+    await ok(s.sb.from('assignments').update({ state: 'needs_changes', lifecycle_version: 3 }).eq('id', s.a[0]).select('id'))
+    await ok(s.sb.from('graduation_cycles').update({ cutoff_at: hours(-1) }).eq('id', s.cycle).select('id'))
+    // Draft editing stays permitted after the cutoff.
+    const rec = (await ok(s.sb.from('activity_records').select('id, revision').eq('assignment_id', s.a[0]).order('created_at').order('id').range(2, 2)))[0]
+    const edit = env(
+      await s.owner.rpc('update_activity', {
+        p_record_id: rec.id, p_source: 'catalog', p_catalog_id: s.items[1].id, p_title: null, p_participation: 'Corrected after the cutoff.',
+        p_completed_on: day(-3), p_attest: true, p_expected_revision: rec.revision, p_expected_content_version: (await s.versions(s.a[0])).content_version, p_request_id: randomUUID(),
+      }),
+    )
+    expect(edit.ok).toBe(true)
+    const blocked = await s.submit(s.owner, s.a[0], randomUUID())
+    expect(blocked.error?.code).toBe('CUTOFF_PASSED')
+    expect(await s.headers(s.a[0])).toHaveLength(1)
+    const g = env(await s.admin.rpc('grant_extension', { p_assignment_id: s.a[0], p_expires_at: hours(5), p_reason: 'Sample reason for the extension.', p_expected_lifecycle_version: (await s.versions(s.a[0])).lifecycle_version, p_request_id: randomUUID() }))
+    expect(g.ok).toBe(true)
+    const second = await s.submit(s.owner, s.a[0], randomUUID())
+    expect(second.ok).toBe(true)
+    expect(second.data!.sequence).toBe(2)
+    expect((await s.entries(second.data!.submission_id))[2].participation).toBe('Corrected after the cutoff.')
+  })
+
   it('FR09-R01 refusals: another family, an instructor, an administrator, an unknown id, no session; incomplete missions; nothing is written', async () => {
     const s = await setup()
     await s.plant(s.a[0], 50)
