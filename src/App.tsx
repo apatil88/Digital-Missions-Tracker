@@ -15,7 +15,10 @@ import { FamilyProfiles } from '@/routes/FamilyProfiles'
 import { Invite } from '@/routes/Invite'
 import { ForgotPassword, ResetPassword } from '@/routes/Recovery'
 import { AddActivity, EditActivity } from '@/routes/AddActivity'
-import { AdminSettings, Forbidden, NotFound, SignIn, StaffReviews, StaffStatus } from '@/routes/pages'
+import { AdminSettings, Forbidden, NotFound, SignIn, StaffStatus } from '@/routes/pages'
+import { ReviewDetail } from '@/routes/ReviewDetail'
+import { StaffReviews } from '@/routes/StaffReviews'
+import { SubmissionSnapshot } from '@/routes/SubmissionSnapshot'
 import { Family } from '@/routes/Family'
 import { MissionDetail } from '@/routes/MissionDetail'
 
@@ -47,10 +50,12 @@ export default function App() {
                   <Route path="family/students/:studentId/missions/:assignmentId" element={<MissionDetail />} />
                   <Route path="family/students/:studentId/missions/:assignmentId/review" element={<ReviewSubmission />} />
                   <Route path="family/students/:studentId/missions/:assignmentId/submission" element={<SubmissionReceipt />} />
+                  <Route path="family/students/:studentId/missions/:assignmentId/submissions/:submissionId" element={<SubmissionSnapshot />} />
                   <Route path="family/students/:studentId/missions/:assignmentId/activities/new" element={<AddActivity />} />
                   <Route path="family/students/:studentId/missions/:assignmentId/activities/:recordId/edit" element={<EditActivity />} />
                   <Route element={<RequireStaff />}>
                     <Route path="staff/reviews" element={<StaffReviews />} />
+                    <Route path="staff/reviews/:submissionId" element={<ReviewDetail />} />
                     <Route path="staff/status" element={<StaffStatus />} />
                   </Route>
                   <Route element={<RequireAdmin />}>

@@ -134,6 +134,11 @@ export function MissionDetail() {
             </p>
           </div>
           <p className="whitespace-pre-wrap break-words p-4">{returned.reason}</p>
+          <p className="border-t border-line px-4">
+            <Link to={`${base}/submissions/${returned.submission_id}`} className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
+              View submission {returned.sequence} (read-only)
+            </Link>
+          </p>
         </section>
       )}
       {reopened && (
@@ -148,6 +153,11 @@ export function MissionDetail() {
           </div>
           <p className="whitespace-pre-wrap break-words p-4">{reopened.reason}</p>
           <p className="border-t border-line p-4 text-sm text-muted">The approval of submission {reopened.sequence} stays in your history. Make your changes, then submit again for a new review.</p>
+          <p className="border-t border-line px-4">
+            <Link to={`${base}/submissions/${reopened.submission_id}`} className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
+              View submission {reopened.sequence} (read-only)
+            </Link>
+          </p>
         </section>
       )}
       {d.state === 'needs_changes' && !returned && !reopened && <Notice tone="warning">This mission was returned for changes.</Notice>}
@@ -275,6 +285,11 @@ export function MissionDetail() {
                   {s.decided_at ? ` · ${s.outcome === 'approved' ? 'Approved' : 'Returned'} ${formatDeadline(s.decided_at, tz)}` : ''}
                 </p>
                 {/* The banner above already shows the current return or reopen, so the history does not repeat it. */}
+                {s !== returned && s.submission_id !== reopened?.submission_id && (
+                  <Link to={`${base}/submissions/${s.submission_id}`} className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
+                    View submission {s.sequence} (read-only)
+                  </Link>
+                )}
                 {s.outcome === 'returned' && s.reason && s !== returned && <p className="whitespace-pre-wrap break-words text-sm">{s.reason}</p>}
                 {d.reopenings
                   .filter((r) => r.submission_id === s.submission_id && r.id !== reopened?.id)
