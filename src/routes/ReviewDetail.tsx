@@ -3,7 +3,7 @@
 // the version it read and shows what the database answers. A stale screen (another reviewer decided first) re-reads
 // the submission and shows the current result instead of overwriting it.
 import { useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, CheckCircle2, ChevronLeft } from 'lucide-react'
 import { Button, CheckboxField, ConfirmDialog, ErrorSummary, LoadingState, Notice, type FormError } from '@/components/ui'
@@ -22,6 +22,7 @@ import {
   type ReviewEntry,
   type SubmissionView,
 } from '@/lib/reviewDesk'
+import { safeStatusBack } from '@/lib/schoolStatus'
 import { cn } from '@/lib/utils'
 import { NotFound } from './pages'
 
@@ -56,6 +57,8 @@ function groupLine(e: ReviewEntry, limit: number) {
 
 export function ReviewDetail() {
   const { submissionId } = useParams()
+  const [searchParams] = useSearchParams()
+  const statusBack = safeStatusBack(searchParams.get('back'))
   const valid = Boolean(submissionId && UUID.test(submissionId))
   const queryClient = useQueryClient()
   const keys = useRef(createRequestKey())
@@ -79,6 +82,7 @@ export function ReviewDetail() {
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ['review-submission', submissionId] })
     void queryClient.invalidateQueries({ queryKey: ['review-queue'] })
+    void queryClient.invalidateQueries({ queryKey: ['school-status'] })
   }
 
   if (!valid) return <NotFound />
@@ -247,8 +251,8 @@ export function ReviewDetail() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link to="/staff/reviews" className="inline-flex min-h-11 items-center gap-1 font-semibold text-primary-strong">
-        <ChevronLeft aria-hidden className="size-5" /> Review queue
+      <Link to={statusBack ?? '/staff/reviews'} className="inline-flex min-h-11 items-center gap-1 font-semibold text-primary-strong">
+        <ChevronLeft aria-hidden className="size-5" /> {statusBack ? 'Mission status' : 'Review queue'}
       </Link>
       <header className="flex flex-col gap-1">
         <h1 className="break-words text-2xl font-bold">

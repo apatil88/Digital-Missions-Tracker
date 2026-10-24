@@ -60,7 +60,7 @@ export function AppShell() {
                   Reviews
                 </NavLink>
                 <NavLink to="/staff/status" className={link}>
-                  Status
+                  Mission status
                 </NavLink>
               </>
             )}
