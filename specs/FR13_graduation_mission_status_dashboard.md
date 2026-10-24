@@ -1,6 +1,6 @@
 # [Unverified] FR13 Graduation mission status dashboard
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions the owner approved during the build. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -36,7 +36,7 @@ Open /staff/status, select cycle, and view roster rows with per-mission state an
 
 ## 5 Functional requirements
 
-FR13-R01 Query active enrolled students in the school, including those with no assignments. Scope before aggregation and pagination. Display the chosen cycle prominently.
+FR13-R01 Query active enrolled students in the school, including those with no assignments. Scope before aggregation and pagination. Display the chosen cycle prominently. (Clarified in 15.2.)
 
 FR13-R02 Aggregate Mission requirements approved only when at least one required assignment exists and every required assignment for the cycle is currently approved.
 
@@ -44,7 +44,7 @@ FR13-R03 Zero assignments displays Not assigned, never Complete. One approved an
 
 FR13-R04 Reopened approval immediately changes the authoritative aggregate after refresh. Do not infer completion from 50 records, attestation, readiness or submission alone.
 
-FR13-R05 Provide counts derived from the same filtered dataset as rows. Preserve selected cycle/filter when returning from review. Refresh on successful relevant decisions and foreground navigation.
+FR13-R05 Provide counts derived from the same filtered dataset as rows. Preserve selected cycle/filter when returning from review. Refresh on successful relevant decisions and foreground navigation. (Clarified in 15.1: the shown total follows the filter; the category counts cover the whole cycle.)
 
 FR13-R06 Use Mission requirements approved wording. No belt eligibility conclusion. Avoid public roster, rankings, or family access to school aggregates.
 
@@ -103,3 +103,21 @@ Implement the approved FR13 plan and this specification. Work on the current fea
 ## 14 Verification prompt for a coding agent
 
 Verify FR13 in this fresh session against every requirement and acceptance ID in specs/FR13_graduation_mission_status_dashboard.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR13_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
+
+## 15 Implementation decisions (v0.3)
+
+Approved by the owner in the FR13 plan and built on main (PR #19). Verified 2026-10-23 (all AC pass).
+
+15.1 Counts. "N of M students shown" (total) is computed from the same filtered dataset as the rows. The category counts (Mission requirements approved, Incomplete, Not assigned, Awaiting review, Returned for changes) are always totals for the whole cycle, so the filter does not hide how the cycle stands overall. Awaiting review and Returned overlap with Incomplete. The shown total is announced to screen readers when it changes.
+
+15.2 "Enrolled" means students.active and families.active in the school.
+
+15.3 Student names come from the live profile, not the name frozen in a submission.
+
+15.4 A mission with no submission shows only its state, record count and cutoff. Staff never read an unsubmitted family's working records.
+
+15.5 Returned for changes includes approvals reopened by an administrator (both are needs_changes). The cutoff is not shown for approved missions.
+
+15.6 Rows are ordered by student name, 20 per page with Load more. There is no search or other sort, on purpose (no rankings).
+
+Known limits (not requirements): staff who belong to two schools see only the first school (as FR11).

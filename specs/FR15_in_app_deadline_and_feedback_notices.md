@@ -1,6 +1,6 @@
 # [Unverified] FR15 In app deadline and feedback notices
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions the owner approved during the build. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -38,9 +38,9 @@ On family dashboard load and foreground refresh, compute notices from current st
 
 FR15-R01 Use read-time computed notices, not a scheduled messaging service. No email, push, SMS or background delivery requirement. Closed applications receive no promised alert.
 
-FR15-R02 Default thresholds are seven days and one day expressed as elapsed durations of 7\*24 and 24 hours before effective cutoff. These are proposed implementation defaults. Exact cutoff display remains in school-local time.
+FR15-R02 Default thresholds are seven days and one day expressed as elapsed durations of 7\*24 and 24 hours before effective cutoff. These are proposed implementation defaults. Exact cutoff display remains in school-local time. (Boundaries and allowed range in 15.1 and 15.2.)
 
-FR15-R03 Priority: Needs changes feedback first, closed-submission notice next for editable missions, one-day notice, then seven-day notice. Do not show duplicate one-day and seven-day banners for the same assignment.
+FR15-R03 Priority: Needs changes feedback first, closed-submission notice next for editable missions, one-day notice, then seven-day notice. Do not show duplicate one-day and seven-day banners for the same assignment. (Reopened approvals and missions without a cutoff in 15.4.)
 
 FR15-R04 Suppress deadline-to-submit reminders for submitted and approved states. Needs changes shows correction action, plus extension-required status when closed. A returned mission is not silently treated as a successful submitted state.
 
@@ -50,9 +50,11 @@ FR15-R06 Provide accessible status text and action links. No persistent dismissa
 
 ## 6 Data and logical operation contracts
 
-get_family_notices() -> assignment_id, student display context, notice_type, message, target_route, effective_cutoff, generated_at, primary_action.
+get_family_notices() -> assignment_id, student display context, notice_type, message, target_route, effective_cutoff, generated_at, primary_action. (v0.3: also returns next_refresh_at; see 15.6.)
 
-set_reminder_thresholds(seven_day_hours, urgent_hours, expected_settings_version, request_id) -> settings. Admin only, positive integer hours, urgent \<= early. This is FR15-owned school-setting command using C04.
+set_reminder_thresholds(early_hours, urgent_hours, expected_settings_version, request_id) -> settings. Admin only, positive integer hours, urgent \<= early. This is FR15-owned school-setting command using C04. (v0.3: the first parameter is named early_hours because the value is configurable; range and storage in 15.2.)
+
+get_notice_settings() -> early_hours, urgent_hours, configured, defaults, min_hours, max_hours, settings_version. Admin only. (Added in v0.3 so the settings screen can show the current values.)
 
 Persist thresholds only. Compute notices from authoritative assignments and feedback. No notification table required in MVP.
 
@@ -107,3 +109,26 @@ Implement the approved FR15 plan and this specification. Work on the current fea
 ## 14 Verification prompt for a coding agent
 
 Verify FR15 in this fresh session against every requirement and acceptance ID in specs/FR15_in_app_deadline_and_feedback_notices.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR15_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
+
+## 15 Implementation decisions (v0.3)
+
+Approved by the owner in the FR15 plan and built on main (PR #21). Verified 2026-10-23 (all AC pass). The threshold values and the wording remain demo defaults until the founder decides D09 and P03.
+
+15.1 Boundaries. Time left is the effective cutoff minus the server time. Urgent while 0 <= time left <= urgent hours; early while urgent < time left <= early hours. Both thresholds include their boundary. At the cutoff instant the mission is still open (D06), so it is urgent; one second after, it is closed.
+
+15.2 Thresholds. Defaults 168 and 24 hours. Allowed range is 1 to 2160 whole hours (90 days); urgent may equal early (then the early notice never shows). Stored in schools.policy_settings.reminder_thresholds, keeping the other settings, with schools.version as the settings version. Each save is idempotent by request id and recorded as an audit event. The administrator screen is /admin/settings/notices.
+
+15.3 Message. The server writes the notice message from fixed templates; the browser only displays it. A message never contains a return or reopen reason or any activity text.
+- Feedback: "An instructor asked for changes." or "The school reopened this mission for changes.", then the number of flagged activities when there are any, then "Make the changes, then submit again." or, when submissions are closed, "Submissions are closed, so ask the school for more time to submit."
+- Closed: "Submissions are closed. You can still add or change activities. Ask the school for more time to submit."
+- Urgent: "Due within {N}. Submit before the deadline."
+- Early: "Due within {N}. Finish and submit before the deadline."
+{N} is written in days when the hours divide by 24 (for example "7 days", "1 day"), otherwise in hours.
+
+15.4 Scope. A reopened approval counts as feedback. A mission with no cutoff set gets no deadline notice; its feedback still shows. Submitted, approved and archived-cycle missions and inactive students get no notice. Staff memberships never reveal family notices.
+
+15.5 Placement. One "Needs attention" list for every student of the family, on the family dashboard between the deadline banner and the student tabs. Each notice names the student and mission, keeps the cutoff in school time, and has one link to that student's mission. When nothing needs attention the list is hidden. When the read fails, the list says notices are unavailable and never that nothing is due.
+
+15.6 Refresh. get_family_notices also returns next_refresh_at, the next moment a notice changes by time alone (a threshold or a cutoff). The dashboard reads again at that moment, when the app returns to the foreground, and after the family's own changes.
+
+Known limit (not a requirement): a direct API call with a fractional hour value receives a raw type error rather than VALIDATION_FAILED (D-FR15-1, open).
