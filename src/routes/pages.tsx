@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { useUnsavedChangesGuard } from '@/lib/useUnsavedChangesGuard'
-import { Button, ErrorSummary, Field, UnavailableFeature, type FormError } from '@/components/ui'
+import { Button, ErrorSummary, Field, type FormError } from '@/components/ui'
 
 function homeFor(isStaff: boolean, hasFamily: boolean) {
   return isStaff && !hasFamily ? '/staff/reviews' : '/family'
@@ -57,12 +57,6 @@ export function SignIn() {
   )
 }
 
-export const StaffStatus = () => (
-  <div className="flex flex-col gap-4">
-    <h1 className="text-2xl font-bold">Graduation mission status</h1>
-    <UnavailableFeature feature="The status dashboard" id="FR13" />
-  </div>
-)
 export const AdminSettings = () => (
   <div className="flex flex-col gap-4">
     <h1 className="text-2xl font-bold">School settings</h1>

@@ -21,7 +21,10 @@ export function AdminApprovals() {
   const [result, setResult] = useState<{ tone: 'info' | 'warning'; text: string } | null>(null)
 
   const list = useQuery({ queryKey: ['approved-missions', user?.id], retry: false, staleTime: 0, queryFn: listApprovedMissions })
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ['approved-missions', user?.id] })
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: ['school-status'] })
+    return queryClient.invalidateQueries({ queryKey: ['approved-missions', user?.id] })
+  }
 
   async function reopen(m: ApprovedMission) {
     setBusy(true)
