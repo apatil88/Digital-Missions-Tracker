@@ -1,7 +1,7 @@
-// Browser checks for the UI defect fixes D-FR12-1, D-FR12-2, D-FR12-4, D-FR11-4 and D-FR13-2, at 360 CSS pixels against
-// the real local backend. A fresh family has its own cycle. Records are planted with the service role as test setup;
-// missions are submitted by the family and approved by a reviewer through the real commands.
-import { expect, test } from '@playwright/test'
+// Browser checks for the UI defect fixes D-FR12-1, D-FR12-2, D-FR12-4, D-FR11-4, D-FR13-2 and D-FR09-5, at 360 CSS pixels
+// against the real local backend. A fresh family has its own cycle. Records are planted with the service role as test setup;
+// missions are submitted by the family and approved or returned by a reviewer through the real commands.
+import { expect, test, type Locator } from '@playwright/test'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { randomUUID } from 'node:crypto'
 import { FIXTURE_EMAILS } from '../tests/helpers/env'
@@ -63,8 +63,29 @@ async function setup() {
   const waiting = await kid('Waiting Kid', open, false)
   const archivedKid = await kid('Archived Kid', archived, true)
   await sb.from('graduation_cycles').update({ archived_at: new Date().toISOString() }).eq('id', archived)
-  return { owner, open, approved, waiting, archivedKid }
+  const returned = await kid('Returned Kid', open, false)
+  const flagged = (await sb.from('submission_entries').select('id').eq('submission_id', returned.submissionId).eq('ordinal', 3).single()).data!.id as string
+  await call(reviewer, 'return_submission', {
+    p_submission_id: returned.submissionId, p_reason: 'Please add more detail to entry 3.', p_flagged_entry_ids: [flagged],
+    p_expected_lifecycle_version: (await versions(returned.assignment)).lifecycle_version, p_request_id: randomUUID(),
+  })
+  return { owner, open, approved, waiting, archivedKid, returned }
 }
+
+// True when the element is inside the viewport and nothing (such as a sticky bar) is drawn over its centre or its top and
+// bottom edges. The edges are tested at the middle because rounded corners do not hit-test as the element.
+const uncovered = (l: Locator) =>
+  l.evaluate((el) => {
+    const r = el.getBoundingClientRect()
+    const x = r.left + r.width / 2
+    const points = [[x, r.top + r.height / 2], [x, r.top + 2], [x, r.bottom - 2]]
+    return points.every(([x, y]) => {
+      const hit = document.elementFromPoint(x, y)
+      return hit !== null && el.contains(hit)
+    })
+  })
+// Scrolls so the element sits fully on screen with its bottom edge 6 px above the screen's, where a sticky bar is drawn.
+const parkAtBottom = (l: Locator) => l.evaluate((el) => window.scrollBy(0, el.getBoundingClientRect().bottom - (window.innerHeight - 6)))
 
 test.beforeAll(async () => {
   ctx = await setup()
@@ -139,5 +160,32 @@ test.describe('UI defect fixes', () => {
     await expectNoHorizontalOverflow(page)
     await page.goto(`/staff/status?cycle=${ctx.open}&filter=approved`)
     await expect(page.getByRole('link', { name: `View Teamwork submission for ${ctx.approved.name}` })).toBeVisible()
+  })
+
+  test('D-FR09-5 Resubmit is fully visible on a returned mission, and focused controls are not hidden by the bottom bar', async ({ page }) => {
+    await signInAs(page, ctx.owner.email)
+    await page.goto(`/family/students/${ctx.returned.studentId}/missions/${ctx.returned.assignment}`)
+    await expect(page.getByRole('heading', { name: 'Returned for changes' })).toBeVisible()
+    // On first load, without scrolling, the one Resubmit link is wholly on screen and nothing covers it.
+    const resubmit = page.getByRole('link', { name: 'Resubmit' })
+    await expect(resubmit).toHaveCount(1)
+    await expect(resubmit).toBeInViewport({ ratio: 1 })
+    expect(await uncovered(resubmit)).toBe(true)
+    await resubmit.focus()
+    expect(await uncovered(resubmit)).toBe(true)
+    await expectTouchTargets(page)
+    await expectNoHorizontalOverflow(page)
+    // A control that sits under the bar scrolls clear of it when it takes keyboard focus.
+    const edit = page.getByRole('link', { name: /^Edit / }).last()
+    await parkAtBottom(edit)
+    await edit.focus()
+    expect(await uncovered(edit)).toBe(true)
+    // The same holds on the review screen, whose bar is taller.
+    await resubmit.click()
+    await expect(page.getByRole('button', { name: 'Resubmit' })).toBeEnabled()
+    const checkAgain = page.getByRole('button', { name: 'Check again' })
+    await parkAtBottom(checkAgain)
+    await checkAgain.focus()
+    expect(await uncovered(checkAgain)).toBe(true)
   })
 })

@@ -321,6 +321,31 @@ export function ConfirmDialog({
   )
 }
 
+// --------------------------------------------------------------- Sticky bar
+/** The action bar pinned to the bottom of the screen. While it is shown, the page keeps the bar's height as bottom scroll
+ *  padding, so a control that takes keyboard focus is scrolled clear of the bar instead of staying behind it (D-FR09-5). */
+export function StickyBar({ className, children }: { className?: string; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const bar = ref.current
+    if (!bar || typeof ResizeObserver === 'undefined') return
+    const root = document.documentElement
+    const observer = new ResizeObserver(() => {
+      root.style.scrollPaddingBottom = `${bar.offsetHeight}px`
+    })
+    observer.observe(bar)
+    return () => {
+      observer.disconnect()
+      root.style.scrollPaddingBottom = ''
+    }
+  }, [])
+  return (
+    <div ref={ref} className={cn('sticky bottom-0 -mx-4 border-t border-line bg-canvas p-4', className)}>
+      {children}
+    </div>
+  )
+}
+
 // ------------------------------------------------- Loading / empty / notices
 export function LoadingState({ label = 'Loading' }: { label?: string }) {
   return (
