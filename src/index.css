@@ -36,3 +36,24 @@
     outline-offset: 2px;
   }
 }
+
+/* FR14-R05: print in black on white, on Letter or A4. The table header repeats on each page and rows are not split.
+   Navigation and controls carry print:hidden where they are drawn. */
+@media print {
+  @page {
+    margin: 12mm;
+  }
+  html,
+  body {
+    background: #fff;
+    color: #000;
+  }
+  thead {
+    display: table-header-group;
+  }
+  tr,
+  th,
+  td {
+    break-inside: avoid;
+  }
+}

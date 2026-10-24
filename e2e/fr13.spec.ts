@@ -107,15 +107,26 @@ async function openStatus(page: Page, email: string, query = '') {
   await page.goto(`/staff/status?cycle=${ctx.cycle}${query}`)
   await expect(page.getByRole('heading', { name: 'Graduation mission status' })).toBeVisible()
 }
+/**
+ * Clicks Load more and waits until the next page has really arrived: more rows on screen, or no paging button left.
+ * Waiting only for "no Loading… button" can pass before the label changes (D-FR14-1).
+ */
+async function loadMore(page: Page) {
+  const rows = page.getByRole('list', { name: 'Students' }).getByRole('heading', { level: 3 })
+  const before = await rows.count()
+  await page.getByRole('button', { name: 'Load more' }).click()
+  await expect
+    .poll(async () => (await rows.count()) > before || (await page.getByRole('button', { name: /^(Load more|Loading…)$/ }).count()) === 0)
+    .toBe(true)
+  await expect(page.getByRole('button', { name: /Loading…/ })).toHaveCount(0)
+}
 /** The roster is paged and alphabetical, so a student can be on a later page. */
 async function findStudent(page: Page, name: string) {
   const heading = page.getByRole('heading', { name, exact: true })
   for (let i = 0; i < 60; i++) {
     if (await heading.isVisible()) return heading.locator('xpath=ancestor::li[1]')
-    const more = page.getByRole('button', { name: 'Load more' })
-    if (!(await more.isVisible())) break
-    await more.click()
-    await expect(page.getByRole('button', { name: /Loading…/ })).toHaveCount(0)
+    if (!(await page.getByRole('button', { name: 'Load more' }).isVisible())) break
+    await loadMore(page)
   }
   await expect(heading).toBeVisible()
   return heading.locator('xpath=ancestor::li[1]')
@@ -225,10 +236,7 @@ test.describe('FR13 graduation mission status dashboard', () => {
       await expect(rows).toHaveCount(20)
       await expect(page.getByRole('button', { name: 'Load more' })).toBeVisible()
     }
-    while (await page.getByRole('button', { name: 'Load more' }).isVisible()) {
-      await page.getByRole('button', { name: 'Load more' }).click()
-      await expect(page.getByRole('button', { name: /Loading…/ })).toHaveCount(0)
-    }
+    while (await page.getByRole('button', { name: 'Load more' }).isVisible()) await loadMore(page)
     await expect(rows).toHaveCount(e.notAssigned)
     await expect(page.getByLabel('Counts')).toContainText(`Mission requirements approved ${e.approved}`)
 

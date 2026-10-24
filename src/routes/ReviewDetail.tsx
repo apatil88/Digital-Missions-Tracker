@@ -5,7 +5,7 @@
 import { useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, CheckCircle2, ChevronLeft } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, ChevronLeft, Printer } from 'lucide-react'
 import { Button, CheckboxField, ConfirmDialog, ErrorSummary, LoadingState, Notice, type FormError } from '@/components/ui'
 import { createRequestKey } from '@/lib/api'
 import { outcomeUnknown } from '@/lib/submission'
@@ -22,6 +22,7 @@ import {
   type ReviewEntry,
   type SubmissionView,
 } from '@/lib/reviewDesk'
+import { printPath } from '@/lib/printRecord'
 import { safeStatusBack } from '@/lib/schoolStatus'
 import { cn } from '@/lib/utils'
 import { NotFound } from './pages'
@@ -264,6 +265,9 @@ export function ReviewDetail() {
           {attestation.size === 1 ? (attestation.has('self') ? ' · Self-attested' : ' · Parent-attested') : ''}
         </p>
         <p className="text-sm text-muted">{d.submission.cycle_label}</p>
+        <Link to={printPath(d.assignment.id, d.submission.id)} className="inline-flex min-h-11 items-center gap-2 self-start font-semibold text-primary-strong underline">
+          <Printer aria-hidden className="size-5" /> Print record
+        </Link>
       </header>
 
       {notice && (

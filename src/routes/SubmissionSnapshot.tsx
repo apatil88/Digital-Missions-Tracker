@@ -3,9 +3,10 @@
 // mission page, never here. Reviewer grouping is not shown to families.
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Printer } from 'lucide-react'
 import { LoadingState, Notice } from '@/components/ui'
 import { formatDeadline, shortDate } from '@/lib/dashboard'
+import { printPath } from '@/lib/printRecord'
 import { getSubmission } from '@/lib/reviewDesk'
 import { cn } from '@/lib/utils'
 import { NotFound } from './pages'
@@ -46,6 +47,9 @@ export function SubmissionSnapshot() {
         <p className="text-sm text-muted">
           Received {formatDeadline(d.submission.submitted_at, tz)} · {d.submission.cycle_label}
         </p>
+        <Link to={printPath(assignmentId!, d.submission.id)} className="inline-flex min-h-11 items-center gap-2 self-start font-semibold text-primary-strong underline">
+          <Printer aria-hidden className="size-5" /> Print this submission
+        </Link>
       </header>
       <Notice>This is exactly what was submitted. It cannot be changed. To make corrections, edit your activities on the mission page and submit again.</Notice>
       {d.decision && (
