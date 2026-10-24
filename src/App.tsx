@@ -22,6 +22,7 @@ import { StaffReviews } from '@/routes/StaffReviews'
 import { SubmissionSnapshot } from '@/routes/SubmissionSnapshot'
 import { Family } from '@/routes/Family'
 import { MissionDetail } from '@/routes/MissionDetail'
+import { PrintRecord } from '@/routes/PrintRecord'
 
 // No persisted query cache: authenticated data lives in page memory only.
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false, gcTime: 5 * 60_000 } } })
@@ -54,6 +55,7 @@ export default function App() {
                   <Route path="family/students/:studentId/missions/:assignmentId/submissions/:submissionId" element={<SubmissionSnapshot />} />
                   <Route path="family/students/:studentId/missions/:assignmentId/activities/new" element={<AddActivity />} />
                   <Route path="family/students/:studentId/missions/:assignmentId/activities/:recordId/edit" element={<EditActivity />} />
+                  <Route path="missions/:assignmentId/print" element={<PrintRecord />} />
                   <Route element={<RequireStaff />}>
                     <Route path="staff/reviews" element={<StaffReviews />} />
                     <Route path="staff/reviews/:submissionId" element={<ReviewDetail />} />

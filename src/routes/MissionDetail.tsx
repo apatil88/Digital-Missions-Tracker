@@ -4,11 +4,12 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Check, ChevronLeft, Pencil } from 'lucide-react'
+import { Check, ChevronLeft, Pencil, Printer } from 'lucide-react'
 import { Button, EmptyState, LoadingState, Notice } from '@/components/ui'
 import { MissionStatus } from '@/components/MissionStatus'
 import { missionName } from '@/lib/cycles'
 import { countdownText, formatDeadline, getMissionDetail, shortDate, useRefreshTriggers, useServerNow, type DetailGroup } from '@/lib/dashboard'
+import { printPath } from '@/lib/printRecord'
 import { cn } from '@/lib/utils'
 import { RemoveActivity } from './RemoveActivity'
 import { NotFound } from './pages'
@@ -92,6 +93,8 @@ export function MissionDetail() {
   const shown = showAll ? d.groups : d.groups.filter(mustShow)
   const hidden = d.groups.length - shown.length
   const base = `/family/students/${studentId}/missions/${assignmentId}`
+  // FR14: the draft while the mission is editable, otherwise the latest submitted version.
+  const printVersion = ['not_started', 'in_progress', 'needs_changes'].includes(d.state) ? 'draft' : latest?.submission_id
 
   return (
     <div className="flex flex-col gap-4">
@@ -120,6 +123,11 @@ export function MissionDetail() {
           </div>
         ) : (
           <p className="text-sm text-muted">The school has not set a submission cutoff yet.</p>
+        )}
+        {printVersion && (
+          <Link to={printPath(d.assignment_id, printVersion)} className="inline-flex min-h-11 items-center gap-2 self-start font-semibold text-primary-strong underline">
+            <Printer aria-hidden className="size-5" /> Print record
+          </Link>
         )}
       </header>
 

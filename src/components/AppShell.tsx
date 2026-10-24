@@ -15,7 +15,7 @@ function UpdateBanner() {
   } = useRegisterSW()
   if (!needRefresh) return null
   return (
-    <div className="mx-auto max-w-3xl px-4 pt-3">
+    <div className="mx-auto max-w-3xl px-4 pt-3 print:hidden">
       <Notice tone="warning">
         <p>A newer version of the app is ready. Finish what you are typing first: reloading discards unsaved text.</p>
         <div className="mt-2 flex gap-2">
@@ -34,10 +34,10 @@ export function AppShell() {
   const signedIn = status === 'authenticated'
   return (
     <div className="flex min-h-dvh flex-col">
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-control focus:bg-card focus:p-3">
+      <a href="#main" className="print:hidden sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-control focus:bg-card focus:p-3">
         Skip to content
       </a>
-      <header className="border-b border-line bg-card">
+      <header className="border-b border-line bg-card print:hidden">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-x-4 px-4">
           <p className="py-2 text-lg font-bold text-primary-strong">Missions Tracker</p>
           {signedIn && (
@@ -73,10 +73,10 @@ export function AppShell() {
         )}
       </header>
       <UpdateBanner />
-      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-3xl flex-1 px-4 py-6">
+      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 print:max-w-none print:p-0">
         <Outlet />
       </main>
-      <footer className="border-t border-line px-4 py-3 text-center text-sm text-muted">
+      <footer className="border-t border-line px-4 py-3 text-center text-sm text-muted print:hidden">
         Demo build. All records are fictional. The paper process stays authoritative.
       </footer>
     </div>
