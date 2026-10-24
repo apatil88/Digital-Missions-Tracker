@@ -622,7 +622,7 @@ No tests in this document have been executed against an application. The coding 
 
 ## [Unverified] FR01 Account invitation and family profiles
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -662,7 +662,7 @@ FR01-R01 Use provider-managed email authentication and recovery. Select the exac
 
 FR01-R02 An invitation expires after the proposed seven days, is single-use, and supports revocation. Resending replaces the prior token. Membership and invitation acceptance commit without duplicate families on retry.
 
-FR01-R03 Apply C08 profile limits and reject adult profiles linked to another user. One managing account per family. A staff member with a family membership retains both scopes without impersonation.
+FR01-R03 Apply C08 profile limits and reject adult profiles linked to another user. One managing account per family. A staff member with a family membership retains both scopes without impersonation. (Profile and family limits in 15.1 and 15.2.)
 
 FR01-R04 Require notice acceptance before real profile creation. Demo notice is labeled sample. Recovery responses do not disclose whether an email has an account.
 
@@ -730,13 +730,29 @@ Implement the approved FR01 plan and this specification. Work on the current fea
 
 Verify FR01 in this fresh session against every requirement and acceptance ID in specs/FR01_account_invitation_and_family_profiles.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR01_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
 
+## 15 Implementation decisions (v0.3)
+
+Built on main (on main, then fix/FR01-defects PR #5) and independently verified (all AC pass). Items 15.1 to 15.3 are owner decisions made during the build; the others are implementation proposals. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 A family has at most 10 active student profiles. The 11th is refused with PROFILE_LIMIT; existing profiles stay editable at the limit.
+
+15.2 One managed family per account. An account is neither invited to nor allowed to accept a second family (INVALID_STATE).
+
+15.3 Each invitation is sent at most 3 times. The 4th send is refused (INVALID_STATE) with a contact-the-school message; the administrator list shows "Sent n of 3". A failed delivery does not use up a send (D-FR01-5).
+
+15.4 Invitations expire 7 days after creation by server time; acceptance exactly at expiry is allowed. One pending invitation per address (D02 proposal).
+
+15.5 Display names are 1 to 60 characters.
+
+Known limits (not requirements): the notice text is sample content (P06); email was tested only with the local mail catcher; the invitation token travels in the query string (D-FR01-7, open); the password is set after acceptance (D-FR01-8, open).
+
 ---
 
 # FILE FR02_mission_configuration_and_assignment.md
 
 ## [Unverified] FR02 Mission configuration and assignment
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. FR02-R07 and FR02-AC08 were added in 0.2 by the owner-approved fix D-FR02-2 (one assignment per student, mission type and cycle); the other requirements and acceptance scenarios are unchanged.
 
 Status Proposed for fictional-data implementation
 
@@ -856,13 +872,27 @@ Implement the approved FR02 plan and this specification. Work on the current fea
 
 Verify FR02 in this fresh session against every requirement and acceptance ID in specs/FR02_mission_configuration_and_assignment.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR02_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
 
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #1, then fix/FR02-defects PR #13) and independently verified (all AC pass). Items are builder defaults confirmed by verification unless marked as owner decisions. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 One assignment per student, mission type and cycle (owner decision, D-FR02-2; FR02-R07, FR02-AC08). Assigning a different template version of the same type is refused.
+
+15.2 Field limits: cycle names 1 to 120 characters; restore and other administrator reasons 10 to 1000 characters.
+
+15.3 Once any assignment exists in a cycle, the timezone and activity dates are locked. The cutoff can still change through FR10 (set_cycle_cutoff).
+
+15.4 Archive follows D07 as written. Content enablement is a simple enable or disable on approved content (D10).
+
+Known limits (not requirements): school timezone and cutoff (P03) and content approval (P01) are founder decisions, so all cutoffs and content are fictional; families can read every mission template row of their school, including disabled ones (review before real content).
+
 ---
 
 # FILE FR07_repetition_validation_engine.md
 
 ## [Unverified] FR07 Repetition validation engine
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -974,13 +1004,27 @@ Implement the approved FR07 plan and this specification. Work on the current fea
 
 Verify FR07 in this fresh session against every requirement and acceptance ID in specs/FR07_repetition_validation_engine.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR07_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
 
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #2, #3, then fix/FR07-defects PR #4) and independently verified (all AC pass). Items were approved in the FR07 plan. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 A custom entry whose text equals a catalog title counts as that catalog item's group.
+
+15.2 check_repetition is callable by the family owner only.
+
+15.3 Review keys use the form group:<catalog group id> (confirmed by FR12).
+
+15.4 FR07 is database only; it has no browser screen of its own.
+
+Founder decisions still open: P04 grouping policy (the demo allows two occurrences per group, even on one date); D04 review reset on each submission (implemented in FR12).
+
 ---
 
 # FILE FR04_suggested_activities_and_custom_entry.md
 
 ## [Unverified] FR04 Suggested activities and custom entry
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -1086,13 +1130,31 @@ Implement the approved FR04 plan and this specification. Work on the current fea
 
 Verify FR04 in this fresh session against every requirement and acceptance ID in specs/FR04_suggested_activities_and_custom_entry.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR04_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
 
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #6, then fix/FR04-defects PR #7) and independently verified (all AC pass). Items were approved in the FR04 plan. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 Catalog rows carry a sample_content flag, and sample items are labelled as samples.
+
+15.2 "Catalog disabled" means the template is disabled or its content is unapproved. It is returned as data in the suggestion list, not as an error.
+
+15.3 Continuing with a custom entry calls check_repetition before saving.
+
+15.4 The unfinished form keeps its selection in page memory while the family moves between steps. Choosing a different activity keeps the typed description (D-FR04-5).
+
+15.5 Missions whose submission window is closed can be browsed, but nothing is selectable.
+
+15.6 Search matches activity titles only.
+
+Founder decisions still open: P01 sample labelling, P04 grouping policy, D10 controlled content import. Known limit: on the edit screen the suggestion list counts the record being edited (D-FR06-4, open).
+
 ---
 
 # FILE FR05_record_participation_and_attest.md
 
 ## [Unverified] FR05 Record participation and attest
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -1198,13 +1260,25 @@ Implement the approved FR05 plan and this specification. Work on the current fea
 
 Verify FR05 in this fresh session against every requirement and acceptance ID in specs/FR05_record_participation_and_attest.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR05_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
 
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #8, then fix/FR05-defects PR #12) and independently verified (all AC pass). Items are builder decisions confirmed by verification. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 Adult self-attestation gate: in a school whose environment_mode is pilot, an adult's save is refused with ADULT_POLICY_UNCONFIRMED unless schools.policy_settings.adult_self_attestation_confirmed is true. Demo mode permits adults. This is not founder approval of P05.
+
+15.2 Same-day repeats follow the demo default in P04 (two per group, even on one date).
+
+15.3 Failed saves are not stored as idempotency receipts, so a corrected retry may reuse its request key.
+
+15.4 A NUL character in any text field is refused before it reaches the database (D-FR05-1).
+
 ---
 
 # FILE FR06_edit_and_remove_recorded_activities.md
 
 ## [Unverified] FR06 Edit and remove recorded activities
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -1310,13 +1384,29 @@ Implement the approved FR06 plan and this specification. Work on the current fea
 
 Verify FR06 in this fresh session against every requirement and acceptance ID in specs/FR06_edit_and_remove_recorded_activities.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR06_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
 
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #9) and independently verified (all AC pass). Items were defaults proposed in the FR06 plan. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 An edit that changes nothing is refused with VALIDATION_FAILED ("Nothing was changed").
+
+15.2 Only the adult student can edit or remove an adult's own record (FORBIDDEN otherwise), as in FR05.
+
+15.3 There is no edit history table. The audit event records the changed field names, the previous revision and the versions, never narrative text. The old description is not kept.
+
+15.4 Changing only the description or date does not re-resolve the group, so a record on a since-retired catalog item stays editable. Changing the source, catalog item or title re-runs the group and repeat check.
+
+15.5 Read-only states on the mission page show the status, the current feedback and the submission history (delivered by FR03, FR11 and FR12; D-FR06-3).
+
+Known limits (not requirements): update_activity repeats the date, window and attester checks of create_activity (D-FR06-5, open); the edit screen's suggestion list counts the record being edited (D-FR06-4, open).
+
 ---
 
 # FILE FR10_submission_cutoffs_and_administrator_exceptions.md
 
 ## [Unverified] FR10 Submission cutoffs and administrator exceptions
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -1426,13 +1516,31 @@ Implement the approved FR10 plan and this specification. Work on the current fea
 
 Verify FR10 in this fresh session against every requirement and acceptance ID in specs/FR10_submission_cutoffs_and_administrator_exceptions.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR10_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
 
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #10, then fix/FR10-defects PR #11) and independently verified (all AC pass). Items were defaults proposed in the FR10 plan. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 The expected settings version for a cutoff change is graduation_cycles.version.
+
+15.2 After missions are assigned, set_cycle_cutoff may change the cutoff only. The timezone and activity dates stay locked (INVALID_STATE). A cutoff change does not bump assignment lifecycle versions.
+
+15.3 An extension cannot be granted for a submitted or approved mission (INVALID_STATE) or in an archived cycle (CYCLE_ARCHIVED). Revoking is allowed in any state of an unarchived cycle. Granting the same end time again is refused (INVALID_EXTENSION). An extension only ever moves the deadline later.
+
+15.4 An administrator may grant an extension for their own family's mission.
+
+15.5 Reasons are 10 to 1000 characters. Families see an extension's dates but not its reason or who granted it (column-level read, D-FR10-1).
+
+15.6 list_cutoffs(cycle_id) is a staff read of every mission's effective cutoff in a cycle, added for the extensions screen. Instructors see every cutoff on the FR13 status page (D-FR10-4).
+
+15.7 A local time that does not exist (clocks move forward) or happens twice (clocks move back) in the school timezone is refused with INVALID_LOCAL_TIME or AMBIGUOUS_LOCAL_TIME; the administrator chooses the earlier or later instant.
+
 ---
 
 # FILE FR08_submission_readiness_validation.md
 
 ## [Unverified] FR08 Submission readiness validation
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -1538,13 +1646,33 @@ Implement the approved FR08 plan and this specification. Work on the current fea
 
 Verify FR08 in this fresh session against every requirement and acceptance ID in specs/FR08_submission_readiness_validation.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR08_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
 
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #14) and independently verified (all AC pass). Items 15.1 to 15.4 were approved in the FR08 plan; the rest are builder defaults. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 A passed cutoff is reported as CUTOFF_PASSED, the first blocker of a normal result, followed by the record blockers.
+
+15.2 Staff calling the family preflight get NOT_FOUND. Staff structural checks go through validate_content (FR12).
+
+15.3 The shared date and attester helper (D-FR06-5) is not refactored; validate_content and validate_submission carry their own copies of those rules.
+
+15.4 The receipt sentence from the mockup arrives with FR09.
+
+15.5 Entries are numbered in the order they were saved. Removing an entry renumbers the ones after it.
+
+15.6 The entries list shows the first three, every flagged entry and the last one, with "Show all 50 entries" for the rest.
+
+15.7 A confirmation by a person who is no longer the family owner is a blocker (attestation is current, not historical).
+
+15.8 The result includes student_name, mission_type and cycle_name, so the screen needs no second read.
+
 ---
 
 # FILE FR03_family_mission_dashboard.md
 
 ## [Unverified] FR03 Family mission dashboard
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -1650,13 +1778,33 @@ Implement the approved FR03 plan and this specification. Work on the current fea
 
 Verify FR03 in this fresh session against every requirement and acceptance ID in specs/FR03_family_mission_dashboard.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR03_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
 
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #15) and independently verified (all AC pass). Items 15.1 to 15.6 were approved in the FR03 plan; the rest are builder defaults. Where a later feature changed the behaviour, the current behaviour is stated. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 get_family_dashboard takes an optional student id, so choosing a profile loads that student's cards.
+
+15.2 An activity family is labelled by the first catalog title (alphabetical) of its group; custom entries are grouped as "Custom, not yet grouped". (A real label per group needs a data-model change: D-FR03-2, open.)
+
+15.3 "View submission" and "View approval" open the mission page, which links each version's read-only snapshot (FR11) and lists the submission history (FR12); Resubmit is offered from FR09 (D-FR03-1).
+
+15.4 The deadline banner shows the soonest open cutoff among the selected student's editable missions, "Submissions are closed" when all are closed, and nothing when none is editable. Below it, FR15 adds the "Needs attention" list.
+
+15.5 A mission with 50 records and blockers shows Review submission, with "n issues to fix" in the status line.
+
+15.6 Missions in an archived cycle show an "Archived" label and read-only actions.
+
+15.7 blocking_count counts every FR08 record blocker, including a count shortage; issue_count leaves the shortage out for display; a closed cutoff is reported through the cutoff fields, not as a blocker. Each card shows its cycle name.
+
+Known limit (not a requirement): the shared app header was not restyled to the mockup (D-FR03-3, open).
+
 ---
 
 # FILE FR09_mission_submission_and_immutable_versions.md
 
 ## [Unverified] FR09 Mission submission and immutable versions
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -1762,13 +1910,31 @@ Implement the approved FR09 plan and this specification. Work on the current fea
 
 Verify FR09 in this fresh session against every requirement and acceptance ID in specs/FR09_mission_submission_and_immutable_versions.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR09_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
 
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #16) and independently verified (all AC pass). Items 15.1 to 15.6 were approved in the FR09 plan; the rest are builder defaults. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 submit_mission checks in this order: state, then expected versions, then FR08 validation including the cutoff.
+
+15.2 A refused submit carries the first blocker's code and message; the review page re-reads the preflight for the full list.
+
+15.3 There is no confirmation step: one button, disabled while sending, with an in-flight guard so a double click sends one request.
+
+15.4 Resubmit is the same button on the review screen (it reads "Resubmit" in needs_changes) and a link on the mission page.
+
+15.5 No schema change. Frozen context lives in submissions.frozen_policy_metadata, and each entry stores the group resolved at submit time (late aliases included).
+
+15.6 The receipt route is /family/students/:studentId/missions/:assignmentId/submission.
+
+15.7 The frozen mission label is the mission type with a capital letter ("Teamwork"). For an adult profile, the adult check runs before the receipt lookup. UNAUTHENTICATED and TEMPORARILY_UNAVAILABLE both open the unknown-outcome panel, because a retry with the same key is safe.
+
 ---
 
 # FILE FR12_review_decisions_history_and_reopening.md
 
 ## [Unverified] FR12 Review decisions history and reopening
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -1884,13 +2050,33 @@ Implement the approved FR12 plan and this specification. Work on the current fea
 
 Verify FR12 in this fresh session against every requirement and acceptance ID in specs/FR12_review_decisions_history_and_reopening.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR12_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
 
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #17) and independently verified (all AC pass). Items were approved in the FR12 plan. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 Reopen events are stored in a new append-only table, approval_reopenings, so families can read the reason. Audit events stay administrator-only.
+
+15.2 TRUNCATE is refused on review_decisions, audit_events, mutation_receipts and approval_reopenings.
+
+15.3 flagged_entry_ids hold submission_entries.id. Classifications are keyed by the entry's source_record_id (C02).
+
+15.4 Review keys are group:<catalog group id> or a free label: lowercased, single spaces, up to 60 characters, not starting with group: or title:.
+
+15.5 An old, decided or not-current submission gives INVALID_STATE; a stale version gives VERSION_CONFLICT.
+
+15.6 The family banner follows the latest submission's own decision (return or reopen), so an older return is never shown as current.
+
+15.7 Closing the reopen dialog returns focus to the Reopen button that opened it; approval times use the school-time format of the family pages (D-FR12-1, D-FR12-4).
+
+Open owner decision: whether service_role keeps write access to the review tables (D-FR12-3).
+
 ---
 
 # FILE FR11_instructor_review_workspace.md
 
 ## [Unverified] FR11 Instructor review workspace
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions the owner approved during the build. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -1926,7 +2112,7 @@ Open /staff/reviews, choose cycle and filters, then open a submission. Show stud
 
 ## 5 Functional requirements
 
-FR11-R01 Queue lists current submissions with server-side school scope, stable pagination and filters for mission state, cycle and flagged status. Names are visible only to authorized staff.
+FR11-R01 Queue lists current submissions with server-side school scope, stable pagination and filters for mission state, cycle and flagged status. Names are visible only to authorized staff. (Clarified in 15.1 and 15.6.)
 
 FR11-R02 Review detail always names the submission version being reviewed. Do not substitute editable working records for submitted content. Older versions are view-only history.
 
@@ -1942,7 +2128,7 @@ FR11-R06 Use FR12 for all review writes. Handle stale version or already-decided
 
 get_review_queue(cycle_id, filters, cursor) -> items, counts, next_cursor.
 
-get_submission(submission_id) -> immutable entries, review overlay, grouped checks, decisions, permissions, lifecycle_version.
+get_submission(submission_id) -> immutable entries, review overlay, grouped checks, decisions, permissions, lifecycle_version. (Also serves the family owner's read-only view without the review overlay; see 15.3.)
 
 Mutations delegate to classify_entry, merge_review_groups, approve_submission and return_submission owned by FR12. No second review endpoint or direct status update.
 
@@ -1996,13 +2182,35 @@ Implement the approved FR11 plan and this specification. Work on the current fea
 
 Verify FR11 in this fresh session against every requirement and acceptance ID in specs/FR11_instructor_review_workspace.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR11_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
 
+## 15 Implementation decisions (v0.3)
+
+Approved by the owner in the FR11 plan and built on main (PR #18). Verified 2026-10-23 (all AC pass).
+
+15.1 The "flagged" queue filter means needs grouping: custom entries that are not yet grouped. Over-limit groups are shown in the review detail, not as a queue filter. On screen the filter is a select ("All submissions" or "Needs grouping only"), because a bare checkbox is below the 44 px touch target.
+
+15.2 Submissions of the reviewer's own family are listed and labelled in the queue. They open read-only, with no review controls (FR11-R06), and the database refuses any review command on them.
+
+15.3 The family's read-only view of one submitted version is part of FR11: route /family/students/:studentId/missions/:assignmentId/submissions/:submissionId, read through get_submission opened to the family owner without the review overlay. Staff who open that address see the same read-only page, with "Back to the review" (D-FR11-4).
+
+15.4 There is no merge screen. merge_review_groups (FR12) stays a command only.
+
+15.5 Decisions are attributed to "an instructor". The schema holds no staff display names.
+
+15.6 Queue defaults: state submitted, oldest first, 20 per page with Load more, all cycles. There is no search by student name.
+
+15.7 Confirmation dialogs return keyboard focus to the control that opened them.
+
+15.8 The entries heading reads "Entries, needing attention first": ungrouped, then over-limit, then flagged by a return. The entries preview shows the unresolved entries and at least six.
+
+Known limits (not requirements): queue counts are for the chosen cycle only; a decision cannot be undone on this screen (an administrator reopens an approval through FR12); classification labels are stored lowercased (FR12). Open owner question: whether the review header should also show "On time" (D-FR11-3).
+
 ---
 
 # FILE FR13_graduation_mission_status_dashboard.md
 
 ## [Unverified] FR13 Graduation mission status dashboard
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions the owner approved during the build. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -2038,7 +2246,7 @@ Open /staff/status, select cycle, and view roster rows with per-mission state an
 
 ## 5 Functional requirements
 
-FR13-R01 Query active enrolled students in the school, including those with no assignments. Scope before aggregation and pagination. Display the chosen cycle prominently.
+FR13-R01 Query active enrolled students in the school, including those with no assignments. Scope before aggregation and pagination. Display the chosen cycle prominently. (Clarified in 15.2.)
 
 FR13-R02 Aggregate Mission requirements approved only when at least one required assignment exists and every required assignment for the cycle is currently approved.
 
@@ -2046,7 +2254,7 @@ FR13-R03 Zero assignments displays Not assigned, never Complete. One approved an
 
 FR13-R04 Reopened approval immediately changes the authoritative aggregate after refresh. Do not infer completion from 50 records, attestation, readiness or submission alone.
 
-FR13-R05 Provide counts derived from the same filtered dataset as rows. Preserve selected cycle/filter when returning from review. Refresh on successful relevant decisions and foreground navigation.
+FR13-R05 Provide counts derived from the same filtered dataset as rows. Preserve selected cycle/filter when returning from review. Refresh on successful relevant decisions and foreground navigation. (Clarified in 15.1: the shown total follows the filter; the category counts cover the whole cycle.)
 
 FR13-R06 Use Mission requirements approved wording. No belt eligibility conclusion. Avoid public roster, rankings, or family access to school aggregates.
 
@@ -2106,13 +2314,31 @@ Implement the approved FR13 plan and this specification. Work on the current fea
 
 Verify FR13 in this fresh session against every requirement and acceptance ID in specs/FR13_graduation_mission_status_dashboard.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR13_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
 
+## 15 Implementation decisions (v0.3)
+
+Approved by the owner in the FR13 plan and built on main (PR #19). Verified 2026-10-23 (all AC pass).
+
+15.1 Counts. "N of M students shown" (total) is computed from the same filtered dataset as the rows. The category counts (Mission requirements approved, Incomplete, Not assigned, Awaiting review, Returned for changes) are always totals for the whole cycle, so the filter does not hide how the cycle stands overall. Awaiting review and Returned overlap with Incomplete. The shown total is announced to screen readers when it changes.
+
+15.2 "Enrolled" means students.active and families.active in the school.
+
+15.3 Student names come from the live profile, not the name frozen in a submission.
+
+15.4 A mission with no submission shows only its state, record count and cutoff. Staff never read an unsubmitted family's working records.
+
+15.5 Returned for changes includes approvals reopened by an administrator (both are needs_changes). The cutoff is not shown for approved missions.
+
+15.6 Rows are ordered by student name, 20 per page with Load more. There is no search or other sort, on purpose (no rankings).
+
+Known limits (not requirements): staff who belong to two schools see only the first school (as FR11).
+
 ---
 
 # FILE FR14_printable_mission_record.md
 
 ## [Unverified] FR14 Printable mission record
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -2216,13 +2442,29 @@ Implement the approved FR14 plan and this specification. Work on the current fea
 
 Verify FR14 in this fresh session against every requirement and acceptance ID in specs/FR14_printable_mission_record.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR14_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
 
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #20) and independently verified (all AC pass). Items were approved in the FR14 plan. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 One print address for families and staff: /missions/:assignmentId/print?version=draft or ?version=<submission id>.
+
+15.2 Staff print submitted versions only; a staff request for the draft is FORBIDDEN.
+
+15.3 The draft is offered only while the mission is editable (not_started, in_progress, needs_changes); otherwise the mission page links to the latest submission.
+
+15.4 A returned version prints the return reason and marks the flagged entries. A reopened approval prints both the historical approval and the current status.
+
+15.5 The footer reads "A copy of what was recorded in the app. Not a signed or official school record." In demo mode the record is marked "Sample data, fictional records". Print format approval stays with the founder (P02).
+
+15.6 A submitted version prints only frozen content (its entries and the name, labels and policy stored at submission). Another family, staff of another school and unknown ids all get the same NOT_FOUND; no session is refused before any lookup.
+
 ---
 
 # FILE FR15_in_app_deadline_and_feedback_notices.md
 
 ## [Unverified] FR15 In app deadline and feedback notices
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions the owner approved during the build. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -2260,9 +2502,9 @@ On family dashboard load and foreground refresh, compute notices from current st
 
 FR15-R01 Use read-time computed notices, not a scheduled messaging service. No email, push, SMS or background delivery requirement. Closed applications receive no promised alert.
 
-FR15-R02 Default thresholds are seven days and one day expressed as elapsed durations of 7\*24 and 24 hours before effective cutoff. These are proposed implementation defaults. Exact cutoff display remains in school-local time.
+FR15-R02 Default thresholds are seven days and one day expressed as elapsed durations of 7\*24 and 24 hours before effective cutoff. These are proposed implementation defaults. Exact cutoff display remains in school-local time. (Boundaries and allowed range in 15.1 and 15.2.)
 
-FR15-R03 Priority: Needs changes feedback first, closed-submission notice next for editable missions, one-day notice, then seven-day notice. Do not show duplicate one-day and seven-day banners for the same assignment.
+FR15-R03 Priority: Needs changes feedback first, closed-submission notice next for editable missions, one-day notice, then seven-day notice. Do not show duplicate one-day and seven-day banners for the same assignment. (Reopened approvals and missions without a cutoff in 15.4.)
 
 FR15-R04 Suppress deadline-to-submit reminders for submitted and approved states. Needs changes shows correction action, plus extension-required status when closed. A returned mission is not silently treated as a successful submitted state.
 
@@ -2272,9 +2514,11 @@ FR15-R06 Provide accessible status text and action links. No persistent dismissa
 
 ## 6 Data and logical operation contracts
 
-get_family_notices() -> assignment_id, student display context, notice_type, message, target_route, effective_cutoff, generated_at, primary_action.
+get_family_notices() -> assignment_id, student display context, notice_type, message, target_route, effective_cutoff, generated_at, primary_action. (v0.3: also returns next_refresh_at; see 15.6.)
 
-set_reminder_thresholds(seven_day_hours, urgent_hours, expected_settings_version, request_id) -> settings. Admin only, positive integer hours, urgent \<= early. This is FR15-owned school-setting command using C04.
+set_reminder_thresholds(early_hours, urgent_hours, expected_settings_version, request_id) -> settings. Admin only, positive integer hours, urgent \<= early. This is FR15-owned school-setting command using C04. (v0.3: the first parameter is named early_hours because the value is configurable; range and storage in 15.2.)
+
+get_notice_settings() -> early_hours, urgent_hours, configured, defaults, min_hours, max_hours, settings_version. Admin only. (Added in v0.3 so the settings screen can show the current values.)
 
 Persist thresholds only. Compute notices from authoritative assignments and feedback. No notification table required in MVP.
 
@@ -2329,6 +2573,29 @@ Implement the approved FR15 plan and this specification. Work on the current fea
 ## 14 Verification prompt for a coding agent
 
 Verify FR15 in this fresh session against every requirement and acceptance ID in specs/FR15_in_app_deadline_and_feedback_notices.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR15_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
+
+## 15 Implementation decisions (v0.3)
+
+Approved by the owner in the FR15 plan and built on main (PR #21). Verified 2026-10-23 (all AC pass). The threshold values and the wording remain demo defaults until the founder decides D09 and P03.
+
+15.1 Boundaries. Time left is the effective cutoff minus the server time. Urgent while 0 <= time left <= urgent hours; early while urgent < time left <= early hours. Both thresholds include their boundary. At the cutoff instant the mission is still open (D06), so it is urgent; one second after, it is closed.
+
+15.2 Thresholds. Defaults 168 and 24 hours. Allowed range is 1 to 2160 whole hours (90 days); urgent may equal early (then the early notice never shows). Stored in schools.policy_settings.reminder_thresholds, keeping the other settings, with schools.version as the settings version. Each save is idempotent by request id and recorded as an audit event. The administrator screen is /admin/settings/notices.
+
+15.3 Message. The server writes the notice message from fixed templates; the browser only displays it. A message never contains a return or reopen reason or any activity text.
+- Feedback: "An instructor asked for changes." or "The school reopened this mission for changes.", then the number of flagged activities when there are any, then "Make the changes, then submit again." or, when submissions are closed, "Submissions are closed, so ask the school for more time to submit."
+- Closed: "Submissions are closed. You can still add or change activities. Ask the school for more time to submit."
+- Urgent: "Due within {N}. Submit before the deadline."
+- Early: "Due within {N}. Finish and submit before the deadline."
+{N} is written in days when the hours divide by 24 (for example "7 days", "1 day"), otherwise in hours.
+
+15.4 Scope. A reopened approval counts as feedback. A mission with no cutoff set gets no deadline notice; its feedback still shows. Submitted, approved and archived-cycle missions and inactive students get no notice. Staff memberships never reveal family notices.
+
+15.5 Placement. One "Needs attention" list for every student of the family, on the family dashboard between the deadline banner and the student tabs. Each notice names the student and mission, keeps the cutoff in school time, and has one link to that student's mission. When nothing needs attention the list is hidden. When the read fails, the list says notices are unavailable and never that nothing is due.
+
+15.6 Refresh. get_family_notices also returns next_refresh_at, the next moment a notice changes by time alone (a threshold or a cutoff). The dashboard reads again at that moment, when the app returns to the foreground, and after the family's own changes.
+
+Known limit (not a requirement): a direct API call with a fractional hour value receives a raw type error rather than VALIDATION_FAILED (D-FR15-1, open).
 
 ---
 

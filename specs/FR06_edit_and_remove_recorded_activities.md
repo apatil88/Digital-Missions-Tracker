@@ -1,6 +1,6 @@
 # [Unverified] FR06 Edit and remove recorded activities
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -105,3 +105,19 @@ Implement the approved FR06 plan and this specification. Work on the current fea
 ## 14 Verification prompt for a coding agent
 
 Verify FR06 in this fresh session against every requirement and acceptance ID in specs/FR06_edit_and_remove_recorded_activities.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR06_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
+
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #9) and independently verified (all AC pass). Items were defaults proposed in the FR06 plan. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 An edit that changes nothing is refused with VALIDATION_FAILED ("Nothing was changed").
+
+15.2 Only the adult student can edit or remove an adult's own record (FORBIDDEN otherwise), as in FR05.
+
+15.3 There is no edit history table. The audit event records the changed field names, the previous revision and the versions, never narrative text. The old description is not kept.
+
+15.4 Changing only the description or date does not re-resolve the group, so a record on a since-retired catalog item stays editable. Changing the source, catalog item or title re-runs the group and repeat check.
+
+15.5 Read-only states on the mission page show the status, the current feedback and the submission history (delivered by FR03, FR11 and FR12; D-FR06-3).
+
+Known limits (not requirements): update_activity repeats the date, window and attester checks of create_activity (D-FR06-5, open); the edit screen's suggestion list counts the record being edited (D-FR06-4, open).

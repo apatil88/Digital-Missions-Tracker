@@ -1,6 +1,6 @@
 # [Unverified] FR07 Repetition validation engine
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -111,3 +111,17 @@ Implement the approved FR07 plan and this specification. Work on the current fea
 ## 14 Verification prompt for a coding agent
 
 Verify FR07 in this fresh session against every requirement and acceptance ID in specs/FR07_repetition_validation_engine.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR07_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
+
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #2, #3, then fix/FR07-defects PR #4) and independently verified (all AC pass). Items were approved in the FR07 plan. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 A custom entry whose text equals a catalog title counts as that catalog item's group.
+
+15.2 check_repetition is callable by the family owner only.
+
+15.3 Review keys use the form group:<catalog group id> (confirmed by FR12).
+
+15.4 FR07 is database only; it has no browser screen of its own.
+
+Founder decisions still open: P04 grouping policy (the demo allows two occurrences per group, even on one date); D04 review reset on each submission (implemented in FR12).

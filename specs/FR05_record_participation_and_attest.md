@@ -1,6 +1,6 @@
 # [Unverified] FR05 Record participation and attest
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -105,3 +105,15 @@ Implement the approved FR05 plan and this specification. Work on the current fea
 ## 14 Verification prompt for a coding agent
 
 Verify FR05 in this fresh session against every requirement and acceptance ID in specs/FR05_record_participation_and_attest.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR05_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
+
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #8, then fix/FR05-defects PR #12) and independently verified (all AC pass). Items are builder decisions confirmed by verification. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 Adult self-attestation gate: in a school whose environment_mode is pilot, an adult's save is refused with ADULT_POLICY_UNCONFIRMED unless schools.policy_settings.adult_self_attestation_confirmed is true. Demo mode permits adults. This is not founder approval of P05.
+
+15.2 Same-day repeats follow the demo default in P04 (two per group, even on one date).
+
+15.3 Failed saves are not stored as idempotency receipts, so a corrected retry may reuse its request key.
+
+15.4 A NUL character in any text field is refused before it reaches the database (D-FR05-1).
