@@ -33,11 +33,13 @@ export function SubmissionSnapshot() {
   const d = res.data
   if (d.assignment.id !== assignmentId || d.assignment.student_id !== studentId) return <NotFound />
   const base = `/family/students/${studentId}/missions/${assignmentId}`
+  // D-FR11-4: staff who do not manage this family cannot open the family mission page, so they go back to the review.
+  const staffOnly = d.permissions.reason !== 'FAMILY' && d.permissions.reason !== 'SELF_REVIEW_FORBIDDEN'
   const tz = d.submission.timezone
   return (
     <div className="flex flex-col gap-4">
-      <Link to={base} className="inline-flex min-h-11 items-center gap-1 font-semibold text-primary-strong">
-        <ChevronLeft aria-hidden className="size-5" /> Back to the mission
+      <Link to={staffOnly ? `/staff/reviews/${d.submission.id}` : base} className="inline-flex min-h-11 items-center gap-1 font-semibold text-primary-strong">
+        <ChevronLeft aria-hidden className="size-5" /> {staffOnly ? 'Back to the review' : 'Back to the mission'}
       </Link>
       <header className="flex flex-col gap-1">
         <h1 className="break-words text-2xl font-bold">

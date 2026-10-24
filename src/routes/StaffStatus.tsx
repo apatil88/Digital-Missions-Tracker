@@ -35,7 +35,7 @@ function cutoffText(m: StatusMission, timezone: string): string | null {
   return `${m.cutoff.open ? 'Closes' : 'Closed'} ${when}${m.cutoff.source === 'extension' ? ' · Extension applied' : ''}`
 }
 
-function Mission({ m, timezone, back }: { m: StatusMission; timezone: string; back: string }) {
+function Mission({ m, timezone, back, student }: { m: StatusMission; timezone: string; back: string; student: string }) {
   const cutoff = cutoffText(m, timezone)
   const label = missionName(m.mission_type)
   return (
@@ -57,6 +57,7 @@ function Mission({ m, timezone, back }: { m: StatusMission; timezone: string; ba
           className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline"
         >
           {m.state === 'submitted' ? `Review ${label}` : `View ${label} submission`}
+          <span className="sr-only"> for {student}</span>
         </Link>
       )}
     </li>
@@ -75,7 +76,7 @@ function Student({ item, timezone, back }: { item: StatusItem; timezone: string;
       ) : (
         <ul aria-label={`Missions for ${item.display_name}`} className="flex flex-col gap-2">
           {item.assignments.map((m) => (
-            <Mission key={m.assignment_id} m={m} timezone={timezone} back={back} />
+            <Mission key={m.assignment_id} m={m} timezone={timezone} back={back} student={item.display_name} />
           ))}
         </ul>
       )}
@@ -172,8 +173,8 @@ export function StaffStatus() {
           )}
 
           {counts && (
-            <div className="flex flex-col gap-1 text-sm" aria-label="Counts">
-              <p className="flex items-center gap-1 font-semibold">
+            <section className="flex flex-col gap-1 text-sm" aria-label="Counts">
+              <p role="status" aria-live="polite" data-testid="shown-count" className="flex items-center gap-1 font-semibold">
                 <Users aria-hidden className="size-4" />
                 {counts.total} of {counts.roster_total} {counts.roster_total === 1 ? 'student' : 'students'} shown
               </p>
@@ -186,7 +187,7 @@ export function StaffStatus() {
                 <span>Awaiting review {counts.awaiting_review}</span>
                 <span>Returned for changes {counts.returned}</span>
               </p>
-            </div>
+            </section>
           )}
 
           {status.isPending ? (
