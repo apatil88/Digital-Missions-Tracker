@@ -49,7 +49,10 @@ test.describe('F00-R04 routes and guards', () => {
   test('staff see honest unavailable states, never mock dashboards', async ({ page }) => {
     await signIn(page, FIXTURE_EMAILS.admin1)
     await page.goto('/staff/reviews')
-    await expect(page.getByText('The review queue is not available yet')).toBeVisible()
+    // FR11 delivers the review queue, so the placeholder is gone; the page now answers from the real read.
+    await expect(page.getByRole('heading', { name: 'Reviews' })).toBeVisible()
+    await expect(page.getByRole('form', { name: 'Queue filters' })).toBeVisible()
+    await expect(page.getByText('The review queue is not available yet')).toHaveCount(0)
     await page.goto('/admin/settings')
     // FR02 delivers the administrator settings; the honest placeholder remains for features not built yet.
     await expect(page.getByRole('link', { name: 'Graduation cycles' })).toBeVisible()

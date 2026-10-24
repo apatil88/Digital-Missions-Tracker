@@ -6,6 +6,7 @@ import {
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
+  type RefObject,
   type SelectHTMLAttributes,
 } from 'react'
 import { Slot } from '@radix-ui/react-slot'
@@ -274,6 +275,7 @@ export function ConfirmDialog({
   onConfirm,
   busy,
   destructive,
+  returnFocusTo,
   children,
 }: {
   open: boolean
@@ -284,13 +286,23 @@ export function ConfirmDialog({
   onConfirm: () => void
   busy?: boolean
   destructive?: boolean
+  /** The control to focus when the dialog closes (a controlled dialog has no trigger to return to). */
+  returnFocusTo?: RefObject<HTMLElement | null>
   children?: ReactNode
 }) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-ink/50" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 w-[calc(100vw-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-card bg-card p-5 shadow-lg">
+        <Dialog.Content
+          className="fixed left-1/2 top-1/2 max-h-[90dvh] w-[calc(100vw-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-card bg-card p-5 shadow-lg"
+          onCloseAutoFocus={(e) => {
+            if (returnFocusTo?.current) {
+              e.preventDefault()
+              returnFocusTo.current.focus()
+            }
+          }}
+        >
           <Dialog.Title className="text-lg font-semibold">{title}</Dialog.Title>
           <Dialog.Description className="mt-2 text-muted">{description}</Dialog.Description>
           {children}

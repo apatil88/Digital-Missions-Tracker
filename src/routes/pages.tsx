@@ -57,12 +57,6 @@ export function SignIn() {
   )
 }
 
-export const StaffReviews = () => (
-  <div className="flex flex-col gap-4">
-    <h1 className="text-2xl font-bold">Reviews</h1>
-    <UnavailableFeature feature="The review queue" id="FR11" />
-  </div>
-)
 export const StaffStatus = () => (
   <div className="flex flex-col gap-4">
     <h1 className="text-2xl font-bold">Graduation mission status</h1>
