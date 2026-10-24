@@ -1,6 +1,6 @@
 # [Unverified] FR02 Mission configuration and assignment
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. FR02-R07 and FR02-AC08 were added in 0.2 by the owner-approved fix D-FR02-2 (one assignment per student, mission type and cycle); the other requirements and acceptance scenarios are unchanged.
 
 Status Proposed for fictional-data implementation
 
@@ -119,3 +119,17 @@ Implement the approved FR02 plan and this specification. Work on the current fea
 ## 14 Verification prompt for a coding agent
 
 Verify FR02 in this fresh session against every requirement and acceptance ID in specs/FR02_mission_configuration_and_assignment.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR02_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
+
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #1, then fix/FR02-defects PR #13) and independently verified (all AC pass). Items are builder defaults confirmed by verification unless marked as owner decisions. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 One assignment per student, mission type and cycle (owner decision, D-FR02-2; FR02-R07, FR02-AC08). Assigning a different template version of the same type is refused.
+
+15.2 Field limits: cycle names 1 to 120 characters; restore and other administrator reasons 10 to 1000 characters.
+
+15.3 Once any assignment exists in a cycle, the timezone and activity dates are locked. The cutoff can still change through FR10 (set_cycle_cutoff).
+
+15.4 Archive follows D07 as written. Content enablement is a simple enable or disable on approved content (D10).
+
+Known limits (not requirements): school timezone and cutoff (P03) and content approval (P01) are founder decisions, so all cutoffs and content are fictional; families can read every mission template row of their school, including disabled ones (review before real content).

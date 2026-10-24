@@ -1,6 +1,6 @@
 # [Unverified] FR01 Account invitation and family profiles
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -40,7 +40,7 @@ FR01-R01 Use provider-managed email authentication and recovery. Select the exac
 
 FR01-R02 An invitation expires after the proposed seven days, is single-use, and supports revocation. Resending replaces the prior token. Membership and invitation acceptance commit without duplicate families on retry.
 
-FR01-R03 Apply C08 profile limits and reject adult profiles linked to another user. One managing account per family. A staff member with a family membership retains both scopes without impersonation.
+FR01-R03 Apply C08 profile limits and reject adult profiles linked to another user. One managing account per family. A staff member with a family membership retains both scopes without impersonation. (Profile and family limits in 15.1 and 15.2.)
 
 FR01-R04 Require notice acceptance before real profile creation. Demo notice is labeled sample. Recovery responses do not disclose whether an email has an account.
 
@@ -107,3 +107,19 @@ Implement the approved FR01 plan and this specification. Work on the current fea
 ## 14 Verification prompt for a coding agent
 
 Verify FR01 in this fresh session against every requirement and acceptance ID in specs/FR01_account_invitation_and_family_profiles.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR01_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
+
+## 15 Implementation decisions (v0.3)
+
+Built on main (on main, then fix/FR01-defects PR #5) and independently verified (all AC pass). Items 15.1 to 15.3 are owner decisions made during the build; the others are implementation proposals. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 A family has at most 10 active student profiles. The 11th is refused with PROFILE_LIMIT; existing profiles stay editable at the limit.
+
+15.2 One managed family per account. An account is neither invited to nor allowed to accept a second family (INVALID_STATE).
+
+15.3 Each invitation is sent at most 3 times. The 4th send is refused (INVALID_STATE) with a contact-the-school message; the administrator list shows "Sent n of 3". A failed delivery does not use up a send (D-FR01-5).
+
+15.4 Invitations expire 7 days after creation by server time; acceptance exactly at expiry is allowed. One pending invitation per address (D02 proposal).
+
+15.5 Display names are 1 to 60 characters.
+
+Known limits (not requirements): the notice text is sample content (P06); email was tested only with the local mail catcher; the invitation token travels in the query string (D-FR01-7, open); the password is set after acceptance (D-FR01-8, open).

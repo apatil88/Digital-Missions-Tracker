@@ -1,6 +1,6 @@
 # [Unverified] FR14 Printable mission record
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -103,3 +103,19 @@ Implement the approved FR14 plan and this specification. Work on the current fea
 ## 14 Verification prompt for a coding agent
 
 Verify FR14 in this fresh session against every requirement and acceptance ID in specs/FR14_printable_mission_record.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR14_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
+
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #20) and independently verified (all AC pass). Items were approved in the FR14 plan. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 One print address for families and staff: /missions/:assignmentId/print?version=draft or ?version=<submission id>.
+
+15.2 Staff print submitted versions only; a staff request for the draft is FORBIDDEN.
+
+15.3 The draft is offered only while the mission is editable (not_started, in_progress, needs_changes); otherwise the mission page links to the latest submission.
+
+15.4 A returned version prints the return reason and marks the flagged entries. A reopened approval prints both the historical approval and the current status.
+
+15.5 The footer reads "A copy of what was recorded in the app. Not a signed or official school record." In demo mode the record is marked "Sample data, fictional records". Print format approval stays with the founder (P02).
+
+15.6 A submitted version prints only frozen content (its entries and the name, labels and policy stored at submission). Another family, staff of another school and unknown ids all get the same NOT_FOUND; no session is refused before any lookup.

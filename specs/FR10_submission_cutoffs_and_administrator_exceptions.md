@@ -1,6 +1,6 @@
 # [Unverified] FR10 Submission cutoffs and administrator exceptions
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -109,3 +109,21 @@ Implement the approved FR10 plan and this specification. Work on the current fea
 ## 14 Verification prompt for a coding agent
 
 Verify FR10 in this fresh session against every requirement and acceptance ID in specs/FR10_submission_cutoffs_and_administrator_exceptions.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR10_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
+
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #10, then fix/FR10-defects PR #11) and independently verified (all AC pass). Items were defaults proposed in the FR10 plan. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 The expected settings version for a cutoff change is graduation_cycles.version.
+
+15.2 After missions are assigned, set_cycle_cutoff may change the cutoff only. The timezone and activity dates stay locked (INVALID_STATE). A cutoff change does not bump assignment lifecycle versions.
+
+15.3 An extension cannot be granted for a submitted or approved mission (INVALID_STATE) or in an archived cycle (CYCLE_ARCHIVED). Revoking is allowed in any state of an unarchived cycle. Granting the same end time again is refused (INVALID_EXTENSION). An extension only ever moves the deadline later.
+
+15.4 An administrator may grant an extension for their own family's mission.
+
+15.5 Reasons are 10 to 1000 characters. Families see an extension's dates but not its reason or who granted it (column-level read, D-FR10-1).
+
+15.6 list_cutoffs(cycle_id) is a staff read of every mission's effective cutoff in a cycle, added for the extensions screen. Instructors see every cutoff on the FR13 status page (D-FR10-4).
+
+15.7 A local time that does not exist (clocks move forward) or happens twice (clocks move back) in the school timezone is refused with INVALID_LOCAL_TIME or AMBIGUOUS_LOCAL_TIME; the administrator chooses the earlier or later instant.

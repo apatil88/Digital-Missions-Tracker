@@ -1,6 +1,6 @@
 # [Unverified] FR09 Mission submission and immutable versions
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -105,3 +105,21 @@ Implement the approved FR09 plan and this specification. Work on the current fea
 ## 14 Verification prompt for a coding agent
 
 Verify FR09 in this fresh session against every requirement and acceptance ID in specs/FR09_mission_submission_and_immutable_versions.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR09_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
+
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #16) and independently verified (all AC pass). Items 15.1 to 15.6 were approved in the FR09 plan; the rest are builder defaults. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 submit_mission checks in this order: state, then expected versions, then FR08 validation including the cutoff.
+
+15.2 A refused submit carries the first blocker's code and message; the review page re-reads the preflight for the full list.
+
+15.3 There is no confirmation step: one button, disabled while sending, with an in-flight guard so a double click sends one request.
+
+15.4 Resubmit is the same button on the review screen (it reads "Resubmit" in needs_changes) and a link on the mission page.
+
+15.5 No schema change. Frozen context lives in submissions.frozen_policy_metadata, and each entry stores the group resolved at submit time (late aliases included).
+
+15.6 The receipt route is /family/students/:studentId/missions/:assignmentId/submission.
+
+15.7 The frozen mission label is the mission type with a capital letter ("Teamwork"). For an adult profile, the adult check runs before the receipt lookup. UNAUTHENTICATED and TEMPORARILY_UNAVAILABLE both open the unknown-outcome panel, because a retry with the same key is safe.

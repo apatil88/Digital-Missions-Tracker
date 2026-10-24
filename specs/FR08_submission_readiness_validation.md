@@ -1,6 +1,6 @@
 # [Unverified] FR08 Submission readiness validation
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -105,3 +105,23 @@ Implement the approved FR08 plan and this specification. Work on the current fea
 ## 14 Verification prompt for a coding agent
 
 Verify FR08 in this fresh session against every requirement and acceptance ID in specs/FR08_submission_readiness_validation.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR08_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
+
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #14) and independently verified (all AC pass). Items 15.1 to 15.4 were approved in the FR08 plan; the rest are builder defaults. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 A passed cutoff is reported as CUTOFF_PASSED, the first blocker of a normal result, followed by the record blockers.
+
+15.2 Staff calling the family preflight get NOT_FOUND. Staff structural checks go through validate_content (FR12).
+
+15.3 The shared date and attester helper (D-FR06-5) is not refactored; validate_content and validate_submission carry their own copies of those rules.
+
+15.4 The receipt sentence from the mockup arrives with FR09.
+
+15.5 Entries are numbered in the order they were saved. Removing an entry renumbers the ones after it.
+
+15.6 The entries list shows the first three, every flagged entry and the last one, with "Show all 50 entries" for the rest.
+
+15.7 A confirmation by a person who is no longer the family owner is a blocker (attestation is current, not historical).
+
+15.8 The result includes student_name, mission_type and cycle_name, so the screen needs no second read.

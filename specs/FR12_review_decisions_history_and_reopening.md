@@ -1,6 +1,6 @@
 # [Unverified] FR12 Review decisions history and reopening
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -115,3 +115,23 @@ Implement the approved FR12 plan and this specification. Work on the current fea
 ## 14 Verification prompt for a coding agent
 
 Verify FR12 in this fresh session against every requirement and acceptance ID in specs/FR12_review_decisions_history_and_reopening.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR12_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
+
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #17) and independently verified (all AC pass). Items were approved in the FR12 plan. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 Reopen events are stored in a new append-only table, approval_reopenings, so families can read the reason. Audit events stay administrator-only.
+
+15.2 TRUNCATE is refused on review_decisions, audit_events, mutation_receipts and approval_reopenings.
+
+15.3 flagged_entry_ids hold submission_entries.id. Classifications are keyed by the entry's source_record_id (C02).
+
+15.4 Review keys are group:<catalog group id> or a free label: lowercased, single spaces, up to 60 characters, not starting with group: or title:.
+
+15.5 An old, decided or not-current submission gives INVALID_STATE; a stale version gives VERSION_CONFLICT.
+
+15.6 The family banner follows the latest submission's own decision (return or reopen), so an older return is never shown as current.
+
+15.7 Closing the reopen dialog returns focus to the Reopen button that opened it; approval times use the school-time format of the family pages (D-FR12-1, D-FR12-4).
+
+Open owner decision: whether service_role keeps write access to the review tables (D-FR12-3).

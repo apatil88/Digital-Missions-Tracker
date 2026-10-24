@@ -1,6 +1,6 @@
 # [Unverified] FR11 Instructor review workspace
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions the owner approved during the build. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -36,7 +36,7 @@ Open /staff/reviews, choose cycle and filters, then open a submission. Show stud
 
 ## 5 Functional requirements
 
-FR11-R01 Queue lists current submissions with server-side school scope, stable pagination and filters for mission state, cycle and flagged status. Names are visible only to authorized staff.
+FR11-R01 Queue lists current submissions with server-side school scope, stable pagination and filters for mission state, cycle and flagged status. Names are visible only to authorized staff. (Clarified in 15.1 and 15.6.)
 
 FR11-R02 Review detail always names the submission version being reviewed. Do not substitute editable working records for submitted content. Older versions are view-only history.
 
@@ -52,7 +52,7 @@ FR11-R06 Use FR12 for all review writes. Handle stale version or already-decided
 
 get_review_queue(cycle_id, filters, cursor) -> items, counts, next_cursor.
 
-get_submission(submission_id) -> immutable entries, review overlay, grouped checks, decisions, permissions, lifecycle_version.
+get_submission(submission_id) -> immutable entries, review overlay, grouped checks, decisions, permissions, lifecycle_version. (Also serves the family owner's read-only view without the review overlay; see 15.3.)
 
 Mutations delegate to classify_entry, merge_review_groups, approve_submission and return_submission owned by FR12. No second review endpoint or direct status update.
 
@@ -105,3 +105,25 @@ Implement the approved FR11 plan and this specification. Work on the current fea
 ## 14 Verification prompt for a coding agent
 
 Verify FR11 in this fresh session against every requirement and acceptance ID in specs/FR11_instructor_review_workspace.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR11_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
+
+## 15 Implementation decisions (v0.3)
+
+Approved by the owner in the FR11 plan and built on main (PR #18). Verified 2026-10-23 (all AC pass).
+
+15.1 The "flagged" queue filter means needs grouping: custom entries that are not yet grouped. Over-limit groups are shown in the review detail, not as a queue filter. On screen the filter is a select ("All submissions" or "Needs grouping only"), because a bare checkbox is below the 44 px touch target.
+
+15.2 Submissions of the reviewer's own family are listed and labelled in the queue. They open read-only, with no review controls (FR11-R06), and the database refuses any review command on them.
+
+15.3 The family's read-only view of one submitted version is part of FR11: route /family/students/:studentId/missions/:assignmentId/submissions/:submissionId, read through get_submission opened to the family owner without the review overlay. Staff who open that address see the same read-only page, with "Back to the review" (D-FR11-4).
+
+15.4 There is no merge screen. merge_review_groups (FR12) stays a command only.
+
+15.5 Decisions are attributed to "an instructor". The schema holds no staff display names.
+
+15.6 Queue defaults: state submitted, oldest first, 20 per page with Load more, all cycles. There is no search by student name.
+
+15.7 Confirmation dialogs return keyboard focus to the control that opened them.
+
+15.8 The entries heading reads "Entries, needing attention first": ungrouped, then over-limit, then flagged by a return. The entries preview shows the unresolved entries and at least six.
+
+Known limits (not requirements): queue counts are for the chosen cycle only; a decision cannot be undone on this screen (an administrator reopens an approval through FR12); classification labels are stored lowercased (FR12). Open owner question: whether the review header should also show "On time" (D-FR11-3).

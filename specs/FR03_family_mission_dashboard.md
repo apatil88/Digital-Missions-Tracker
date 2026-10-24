@@ -1,6 +1,6 @@
 # [Unverified] FR03 Family mission dashboard
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -105,3 +105,23 @@ Implement the approved FR03 plan and this specification. Work on the current fea
 ## 14 Verification prompt for a coding agent
 
 Verify FR03 in this fresh session against every requirement and acceptance ID in specs/FR03_family_mission_dashboard.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR03_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
+
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #15) and independently verified (all AC pass). Items 15.1 to 15.6 were approved in the FR03 plan; the rest are builder defaults. Where a later feature changed the behaviour, the current behaviour is stated. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 get_family_dashboard takes an optional student id, so choosing a profile loads that student's cards.
+
+15.2 An activity family is labelled by the first catalog title (alphabetical) of its group; custom entries are grouped as "Custom, not yet grouped". (A real label per group needs a data-model change: D-FR03-2, open.)
+
+15.3 "View submission" and "View approval" open the mission page, which links each version's read-only snapshot (FR11) and lists the submission history (FR12); Resubmit is offered from FR09 (D-FR03-1).
+
+15.4 The deadline banner shows the soonest open cutoff among the selected student's editable missions, "Submissions are closed" when all are closed, and nothing when none is editable. Below it, FR15 adds the "Needs attention" list.
+
+15.5 A mission with 50 records and blockers shows Review submission, with "n issues to fix" in the status line.
+
+15.6 Missions in an archived cycle show an "Archived" label and read-only actions.
+
+15.7 blocking_count counts every FR08 record blocker, including a count shortage; issue_count leaves the shortage out for display; a closed cutoff is reported through the cutoff fields, not as a blocker. Each card shows its cycle name.
+
+Known limit (not a requirement): the shared app header was not restyled to the mockup (D-FR03-3, open).

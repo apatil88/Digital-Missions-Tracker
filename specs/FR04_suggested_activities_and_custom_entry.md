@@ -1,6 +1,6 @@
 # [Unverified] FR04 Suggested activities and custom entry
 
-Specification version 0.2, coding-agent prompts. Requirements and acceptance scenarios unchanged from 0.1
+Specification version 0.3 (2026-10-24). Adds section 15, the implementation decisions made during the build and confirmed by independent verification. Requirements and acceptance scenarios are unchanged from 0.1; where a decision clarifies one, a note points to section 15.
 
 Status Proposed for fictional-data implementation
 
@@ -105,3 +105,21 @@ Implement the approved FR04 plan and this specification. Work on the current fea
 ## 14 Verification prompt for a coding agent
 
 Verify FR04 in this fresh session against every requirement and acceptance ID in specs/FR04_suggested_activities_and_custom_entry.md. Do not rely on earlier summaries. Inspect the implemented code and migrations, run npm run db:reset, and run the relevant tests yourself. Exercise the user flow with Playwright at a 360 CSS pixel viewport. Include direct unauthorized backend attempts, calling database functions and tables with another family's session or no session rather than only checking hidden controls, and concurrency/time boundaries where specified. Report each acceptance ID as PASS, FAIL or NOT RUN with the command and observed result as evidence. Do not claim unexecuted tests passed, and do not change tests or acceptance criteria to fit the implementation. Write the completion report defined in specs/00_START_HERE.md to specs/reports/FR04_completion.md, including changed files and migrations, unresolved decisions and remaining defects. List defects rather than fixing them unless asked.
+
+## 15 Implementation decisions (v0.3)
+
+Built on main (PR #6, then fix/FR04-defects PR #7) and independently verified (all AC pass). Items were approved in the FR04 plan. Founder and pilot decisions in 03_DECISIONS.md stay open unless stated.
+
+15.1 Catalog rows carry a sample_content flag, and sample items are labelled as samples.
+
+15.2 "Catalog disabled" means the template is disabled or its content is unapproved. It is returned as data in the suggestion list, not as an error.
+
+15.3 Continuing with a custom entry calls check_repetition before saving.
+
+15.4 The unfinished form keeps its selection in page memory while the family moves between steps. Choosing a different activity keeps the typed description (D-FR04-5).
+
+15.5 Missions whose submission window is closed can be browsed, but nothing is selectable.
+
+15.6 Search matches activity titles only.
+
+Founder decisions still open: P01 sample labelling, P04 grouping policy, D10 controlled content import. Known limit: on the edit screen the suggestion list counts the record being edited (D-FR06-4, open).
