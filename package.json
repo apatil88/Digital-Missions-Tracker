@@ -12,6 +12,7 @@
     "test:db": "supabase test db",
     "test:e2e": "playwright test",
     "db:reset": "node scripts/db-reset.mjs",
+    "demo:reset": "node scripts/db-reset.mjs && node scripts/demo-data.mjs",
     "fixtures:users": "node scripts/create-fixture-users.mjs",
     "bootstrap:admin": "node scripts/bootstrap-admin.mjs",
     "env:local": "node scripts/setup-env.mjs",
