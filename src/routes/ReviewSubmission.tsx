@@ -67,6 +67,7 @@ export function ReviewSubmission() {
       setUnknown(null)
       void queryClient.invalidateQueries({ queryKey: ['mission-detail', assignmentId] })
       void queryClient.invalidateQueries({ queryKey: ['family-dashboard'] })
+      void queryClient.invalidateQueries({ queryKey: ['family-notices'] })
       void queryClient.invalidateQueries({ queryKey: ['readiness', assignmentId] })
       navigate(`/family/students/${studentId}/missions/${assignmentId}/submission`, { replace: true })
       return

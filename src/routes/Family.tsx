@@ -8,6 +8,7 @@ import { Plus } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { Button, EmptyState, LoadingState, Notice } from '@/components/ui'
 import { MissionStatus } from '@/components/MissionStatus'
+import { FamilyNotices } from '@/components/FamilyNotices'
 import { missionName } from '@/lib/cycles'
 import {
   actionLabel,
@@ -197,6 +198,7 @@ export function Family() {
     body = (
       <>
         {data && <Hero missions={data.assignments} now={nowMs} />}
+        <FamilyNotices />
         <div role="tablist" aria-label="Students" className="flex overflow-x-auto border-b border-line">
           {students.map((s, i) => {
             const on = s.id === selectedId
