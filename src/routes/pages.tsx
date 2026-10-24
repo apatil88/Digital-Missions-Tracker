@@ -63,6 +63,7 @@ export const AdminSettings = () => (
     {[
       ['/admin/settings/cycles', 'Graduation cycles'],
       ['/admin/settings/exceptions', 'Deadline extensions'],
+      ['/admin/settings/notices', 'Deadline notices'],
       ['/admin/settings/approvals', 'Approved missions'],
       ['/admin/settings/roster', 'Assign missions'],
       ['/admin/settings/catalog', 'Missions'],

@@ -7,6 +7,7 @@ import { AdminCatalog } from '@/routes/AdminCatalog'
 import { AdminApprovals } from '@/routes/AdminApprovals'
 import { AdminCycles } from '@/routes/AdminCycles'
 import { AdminExceptions } from '@/routes/AdminExceptions'
+import { AdminNotices } from '@/routes/AdminNotices'
 import { ReviewSubmission } from '@/routes/ReviewSubmission'
 import { SubmissionReceipt } from '@/routes/SubmissionReceipt'
 import { AdminInvitations } from '@/routes/AdminInvitations'
@@ -66,6 +67,7 @@ export default function App() {
                     <Route path="admin/settings/invitations" element={<AdminInvitations />} />
                     <Route path="admin/settings/cycles" element={<AdminCycles />} />
                     <Route path="admin/settings/exceptions" element={<AdminExceptions />} />
+                    <Route path="admin/settings/notices" element={<AdminNotices />} />
                     <Route path="admin/settings/approvals" element={<AdminApprovals />} />
                     <Route path="admin/settings/roster" element={<AdminRoster />} />
                     <Route path="admin/settings/catalog" element={<AdminCatalog />} />
