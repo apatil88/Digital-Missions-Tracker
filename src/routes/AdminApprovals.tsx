@@ -6,7 +6,8 @@ import { Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth'
 import { createRequestKey } from '@/lib/api'
-import { formatInstant, missionName } from '@/lib/cycles'
+import { missionName } from '@/lib/cycles'
+import { formatDeadline } from '@/lib/dashboard'
 import { listApprovedMissions, reopenApproval, type ApprovedMission } from '@/lib/review'
 import { Button, ConfirmDialog, EmptyState, Field, LoadingState, Notice } from '@/components/ui'
 
@@ -14,6 +15,8 @@ export function AdminApprovals() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const key = useRef(createRequestKey())
+  // D-FR12-1: the Reopen button that opened the dialog gets focus back when it closes.
+  const opener = useRef<HTMLButtonElement | null>(null)
   const [reopening, setReopening] = useState<ApprovedMission | null>(null)
   const [reason, setReason] = useState('')
   const [reasonError, setReasonError] = useState<string | undefined>()
@@ -87,14 +90,14 @@ export function AdminApprovals() {
                 {m.student_name} · {missionName(m.mission_type)}
               </p>
               <p className="text-sm text-muted">
-                {m.cycle_name} · Submission {m.sequence} approved {formatInstant(m.approved_at, m.timezone)}
+                {m.cycle_name} · Submission {m.sequence} approved {formatDeadline(m.approved_at, m.timezone)}
               </p>
               {m.own_family ? (
                 <p className="text-sm text-muted">This is your own family's mission. Another administrator reopens it.</p>
               ) : m.cycle_archived ? (
                 <p className="text-sm text-muted">
                   This cycle is archived. Restore it on the{' '}
-                  <Link to="/admin/settings/cycles" className="font-semibold text-primary-strong underline">
+                  <Link to="/admin/settings/cycles" className="inline-flex min-h-11 items-center font-semibold text-primary-strong underline">
                     cycles page
                   </Link>{' '}
                   first.
@@ -104,7 +107,8 @@ export function AdminApprovals() {
                   <Button
                     variant="secondary"
                     aria-label={`Reopen ${m.student_name} ${missionName(m.mission_type)}`}
-                    onClick={() => {
+                    onClick={(e) => {
+                      opener.current = e.currentTarget
                       setResult(null)
                       setReason('')
                       setReasonError(undefined)
@@ -127,6 +131,7 @@ export function AdminApprovals() {
         description="The mission goes back to Needs changes. The family can edit it and submit again. The earlier approval stays in the history. The reason is recorded and the family can read it."
         confirmLabel="Reopen mission"
         busy={busy}
+        returnFocusTo={opener}
         onConfirm={() => reopening && void reopen(reopening)}
       >
         <div className="mt-3">

@@ -38,7 +38,7 @@ export default defineConfig({
       },
     }),
   ],
-  resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
+  resolve: { alias: { '@': path.resolve(import.meta.dirname, 'src') } },
   server: { port: 5173, strictPort: true },
   preview: { port: 4173, strictPort: true },
   test: {
