@@ -5,7 +5,7 @@ import { useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, CheckCircle2 } from 'lucide-react'
-import { Button, LoadingState, Notice } from '@/components/ui'
+import { Button, LoadingState, Notice, StickyBar } from '@/components/ui'
 import { createRequestKey } from '@/lib/api'
 import { checklist, validateSubmission, type Blocker, type Readiness } from '@/lib/readiness'
 import { outcomeUnknown, submitMission } from '@/lib/submission'
@@ -232,7 +232,7 @@ export function ReviewSubmission() {
         </Button>
       </div>
 
-      <div className="sticky bottom-0 -mx-4 flex flex-col gap-2 border-t border-line bg-canvas p-4">
+      <StickyBar className="flex flex-col gap-2">
         <p className="break-words text-sm font-semibold">
           {r.student_name} · {missionName(r.mission_type)}
         </p>
@@ -249,7 +249,7 @@ export function ReviewSubmission() {
         <Button disabled={!r.ready || sending || result.isFetching} onClick={() => void send(r)}>
           {sending ? 'Submitting…' : r.state === 'needs_changes' ? 'Resubmit' : 'Submit mission'}
         </Button>
-      </div>
+      </StickyBar>
     </div>
   )
 }

@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Check, ChevronLeft, Pencil, Printer } from 'lucide-react'
-import { Button, EmptyState, LoadingState, Notice } from '@/components/ui'
+import { Button, EmptyState, LoadingState, Notice, StickyBar } from '@/components/ui'
 import { MissionStatus } from '@/components/MissionStatus'
 import { missionName } from '@/lib/cycles'
 import { countdownText, formatDeadline, getMissionDetail, shortDate, useRefreshTriggers, useServerNow, type DetailGroup } from '@/lib/dashboard'
@@ -88,6 +88,7 @@ export function MissionDetail() {
   const reviewItems = d.validation?.review_items ?? []
   const fixes = (d.validation?.blockers ?? []).filter((b) => b.code !== 'CUTOFF_PASSED' && b.code !== 'POLICY_NOT_CONFIGURED' && b.code !== 'COUNT_REQUIRED').length
   const left = d.cutoff.effective_cutoff && nowMs !== null ? Date.parse(d.cutoff.effective_cutoff) - nowMs : null
+  const resubmit = live && d.state === 'needs_changes' && d.ready
 
   const mustShow = (g: DetailGroup, i: number) => i < PREVIEW_FAMILIES || g.custom || (g.used ?? 0) > (g.limit ?? Infinity) || g.entries.some((e) => e.flagged)
   const shown = showAll ? d.groups : d.groups.filter(mustShow)
@@ -169,11 +170,6 @@ export function MissionDetail() {
         </section>
       )}
       {d.state === 'needs_changes' && !returned && !reopened && <Notice tone="warning">This mission was returned for changes.</Notice>}
-      {live && d.state === 'needs_changes' && d.ready && (
-        <Link to={`${base}/review`} className={cn(barLink, 'flex-none bg-primary-strong text-white')}>
-          Resubmit
-        </Link>
-      )}
       {d.state === 'submitted' && latest && (
         <Notice>
           Submission {latest.sequence} was submitted {formatDeadline(latest.submitted_at, tz)}. It is waiting for an instructor.
@@ -312,15 +308,16 @@ export function MissionDetail() {
         </section>
       )}
 
+      {/* D-FR09-5: Resubmit lives in the bar, so the bar never hides it. Once a returned mission is ready it is the main action. */}
       {live && (
-        <div className="sticky bottom-0 -mx-4 flex gap-2 border-t border-line bg-canvas p-4">
-          <Link to={`${base}/activities/new`} className={cn(barLink, 'bg-primary-strong text-white')}>
+        <StickyBar className="flex gap-2">
+          <Link to={`${base}/activities/new`} className={cn(barLink, resubmit ? 'border border-line bg-card text-ink' : 'bg-primary-strong text-white')}>
             Add activity
           </Link>
-          <Link to={`${base}/review`} className={cn(barLink, 'border border-line bg-card text-ink')}>
-            Review submission
+          <Link to={`${base}/review`} className={cn(barLink, resubmit ? 'bg-primary-strong text-white' : 'border border-line bg-card text-ink')}>
+            {resubmit ? 'Resubmit' : 'Review submission'}
           </Link>
-        </div>
+        </StickyBar>
       )}
     </div>
   )
